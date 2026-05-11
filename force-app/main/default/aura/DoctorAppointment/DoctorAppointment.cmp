@@ -1,0 +1,2015 @@
+<aura:component description="LightningFlow" implements="lightning:isUrlAddressable,force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction"
+                access="global" controller="DoctorAppointmentController">
+
+    <aura:attribute name="showspinnerontoggeletouch" type="Boolean" default="false" />
+    <aura:attribute name="setUserId" type="String"/>
+    <aura:attribute name="setsplitInvatationId" type="String"/>
+    <!-- Spinner component -->
+    <!-- <aura:if isTrue="{!v.showspinnerontoggeletouch}">
+
+    <lightning:spinner aura:id="mySpinnerinaura" variant="brand" size="small" />
+
+    </aura:if> -->
+
+    <aura:attribute name="hidePatientprofile" type="boolean" default="false"/>
+
+
+
+    <aura:handler name="componentEvent" event="c:componentEvent" action="{!c.handleCmpEvent}" />
+    <aura:if isTrue="{!v.hidePatientprofile}">
+        <c:Patientprofile />
+    </aura:if>
+
+
+    <aura:attribute name="Showpatientprofileui" type="boolean" default="false"/>
+    <aura:attribute name="callcomponentmessage" type="String" />
+    <aura:attribute name="hideprvsbtn" type="boolean" default="false"/>
+    <aura:attribute name="showLeadForminChildComponet" type="boolean" default="false"/>
+    <aura:attribute name="LeadFormComponent" type="boolean" default="false"/>
+    <aura:attribute name="careSpcId" type="String" />
+    <aura:attribute name="leadIdsss" type="String" />
+    <aura:attribute name="CareSpecilityforHeading" type="String" />
+    <aura:attribute name="HospitalforHeading" type="String" />
+    <aura:attribute name="CheckForSpecilaity" type="boolean" default="false"/>
+    <aura:attribute name="doNull" type="List" />
+    <aura:attribute name="completeWrap" type="Object"/>
+    <aura:attribute type="Account[]" name="acctList"/>
+    <aura:attribute name="CareList" type="HealthcareProviderSpecialty[]" />
+    <aura:attribute name="AccId" type="String" />
+    <aura:attribute name="selectedParentId" type="String" />
+    <aura:attribute name="LeadId" type="String" />
+    <aura:attribute name="timezonename" type="String" />
+    <aura:attribute name="servId" type="String" />
+    <aura:attribute name="ConId" type="String" />
+    <aura:attribute name="WorkTypeGroupId" type="String" />
+    <aura:attribute name="workTypeId" type="String" />
+    <aura:attribute name="FacilityId" type="String" />
+    <aura:attribute name="AppointmentId" type="String" />
+    <aura:attribute name="FacilityName" type="String" />
+    <aura:attribute name="addingbutton" type="String" />
+    
+    <aura:attribute name="hidepreviousbtn" type="boolean" default="false"/>
+    <aura:attribute name="shownextbtn" type="boolean" default="true"/>
+    <aura:attribute name="homebuttonhide" type="boolean" default="true"/>
+    
+    <aura:attribute name="SubCareList" type="SObject[]" />
+    <aura:attribute name="EmailZoom" type="String" />
+    <!--login Page-->
+    <aura:attribute name="isShowModal" type="boolean" default="false"/>
+    <aura:attribute name="isNextModals" type="boolean" default="false"/>
+    <aura:attribute name="isNextModal" type="boolean" default="false"/>
+    <aura:attribute name="buttondisable" type="boolean" default="false"/>
+    <aura:attribute name="otpCode" type="String"/>
+    <aura:attribute name="PatientId" type="String"/>
+    <aura:attribute name="contactId" type="String"/>
+    <aura:attribute name="AppointmentType" type="String"/>
+    <ltng:require scripts="{!$Resource.jsOTP}" afterScriptsLoaded="{!c.afterLoad}" />
+    
+    <aura:attribute name="salutationOptions" type="List" 
+        default="[
+                    {'label': 'Mr.', 'value': 'Mr.'},
+                    {'label': 'Ms.', 'value': 'Ms.'},
+                    {'label': 'Mrs.', 'value': 'Mrs.'},
+                    {'label': 'Dr.', 'value': 'Dr.'},
+                    {'label': 'Prof.', 'value': 'Prof.'},
+                ]"/>
+    <aura:attribute name="newLead" type="Lead"
+        default="{ 'sobjectType': 'Lead',
+                    'Title': '',
+                    'FirstName': '',
+                    'LastName': '',
+                    'Email': '',
+                    'Address': '',
+                    'Company': '',
+                    'Phone': ''}" />
+    <aura:attribute name="message" type="String" default=""/>
+    <aura:handler name="init" value="{! this }" action="{! c.init }"/>
+    
+    <aura:attribute name="showrecords" type="Boolean" default="false" />
+    <aura:attribute name="welcomepage" type="Boolean" default="false" />
+    <aura:attribute name="careDoctors" type="Boolean" default="false" />
+    <aura:attribute name="showDoctors" type="Boolean" default="false" />
+    <aura:attribute name="showSubspeciality" type="Boolean" default="false" />
+    <aura:attribute name="selectedaccId" type="String" />
+    <aura:attribute name="careIds" type="String" />
+    <aura:attribute name="doctorsIds" type="String" />
+    <aura:attribute name="getDocId" type="String" />
+    <aura:attribute name="getSelectedcontactIds" type="String" />
+    <aura:attribute name="subspecialityId" type="String" />
+    <aura:attribute name="AccountIds" type="String" />
+    <aura:attribute name="accounts" type="Account[]"/>
+    <aura:attribute name="urls" type="String" />
+    <aura:attribute name="AccountPopUp" type="Boolean" default="false"/>
+    <aura:attribute name="mySpinner" type="boolean" default="false"/>
+    <aura:attribute name="emptyDoctor" type="boolean" default="false"/>
+    <aura:attribute name="AvailableTimeSlots" type="List" />
+    <aura:attribute name="territoryId" type="String" />
+    <aura:attribute name="resourceId" type="String" />
+    <aura:attribute name="getcontactsIds" type="String" />
+    <aura:attribute name="getHospitalIds" type="String" />
+    <aura:attribute name="getcontactId" type="String" />
+    <aura:attribute name="fectchUser" type="boolean" default="false"/>
+    <aura:attribute name="guestUser" type="boolean" default="false"/>
+    <aura:attribute name="LeadList" type="Lead" 
+        default="{'sobjectType':'Lead',
+                    'Name':'',
+                    'LastName':'',
+                    'Address':'',
+                    'Email':'',
+                    'Phone':'',
+                    'Company':''}"/>
+    <aura:attribute name="LeadListToDisplay" type="Lead[]"/>
+    <lightning:flow aura:id="OwnerChangeFlow" />
+    <aura:attribute name="FlowPopup" type="boolean" default="false"/>
+    <aura:attribute name="selectedLookUpRecord" type="sObject" default="{}"/>
+    <aura:attribute name="objContact" type="contact" default="{'sobjectType':'contact'}"/>
+    <aura:attribute name="viewdoctordetails" type="boolean" default="false"/>
+    <aura:attribute name="indexVar" type="String" />
+    <aura:attribute name="hidepreviousbutton" type="boolean" default="false"/>
+    <!--Call Id-->
+    <aura:attribute name="selectedRecord" type="sObject" default="{}" description="Use,for store SELECTED sObject Record"/>
+    <aura:attribute name="selectedRecIds"  type="String"/>
+    <aura:attribute name="myRecordId"  type="String"/>
+    <aura:handler name="oSelectedRecordEventPass" event="c:DoctorDashboard" action="{!c.handleComponentEventPass}"/>
+    <!--spinner-->
+    <aura:handler event="aura:waiting" action="{!c.showSpinner}"/>
+    <aura:handler event="aura:doneWaiting" action="{!c.hideSpinner}"/>
+    <aura:attribute name="showmyspinner" type="Boolean" default="false" />
+    <aura:attribute name="providerFound" type="boolean" default="false"/>
+    <!--showsub-->
+    <aura:attribute name="showsub" type="boolean" default="false"/>
+    <aura:attribute name="showSpecialityForDoctors" type="boolean" default="false"/>
+    <aura:attribute name="NoDoctorFound" type="boolean" default="false"/>
+    <aura:attribute name="SelectSpecialtyPage" type="boolean" default="false"/>
+    <!--pagination Doctors-->
+    
+    <aura:attribute name="filteredData" type="List" />
+    <aura:attribute name="pageSize" type="Integer" default="2" />
+    <aura:attribute name="pageSizeOptions" type="Integer[]" default="2,4,6" />
+    <aura:attribute name="currentPageNumber" type="Integer" default="1" />
+    <aura:attribute name="totalPages" type="Integer" default="1" />
+    <aura:attribute name="showPginationbutton" type="Boolean" default="false" />
+    <aura:attribute name="ismodalClicked" type="Boolean" default="false" />
+    <aura:attribute name="showverifybotton" type="Boolean" default="false" />
+    <aura:attribute name="showconfirmbotton" type="Boolean" default="false" />
+    <aura:attribute name="isverify" type="Boolean" default="false" />
+    <aura:attribute name="isconfirm" type="Boolean" default="false" />
+    
+    <!--pagination for PatientRecord-->
+    <aura:attribute name="pageSizess" type="Integer" default="5" />
+    <aura:attribute name="pageSizeOptionsss" type="Integer[]" default="2,4,6" />
+    <aura:attribute name="PresentPageNumber" type="Integer" default="1" />
+    <aura:attribute name="PagesTotal" type="Integer" default="1" />
+    <aura:attribute name="checkValue" type="String" default="true"/>
+    <aura:attribute name="getPatientRecordsInPagination" type="List" />
+    
+    <!--pagination hospital-->
+    <aura:attribute name="filterHopspital" type="List" />
+    <aura:attribute name="careHopspital" type="List" />
+    <aura:attribute name="PaginateHospitals" type="List" />
+    <aura:attribute name="pageSizes" type="Integer" default="2" />
+    <aura:attribute name="pageSizeOptionss" type="Integer[]" default="2,4,6" />
+    <aura:attribute name="currentPageNumbers" type="Integer" default="1" />
+    <aura:attribute name="totalPage" type="Integer" default="1" />
+    <aura:attribute name="showHospitals" type="Boolean" default="true" />
+    
+    <aura:attribute name="countdoctor" type="Integer" />
+    <aura:attribute name="showcount" type="Boolean" default="false" />
+    <aura:attribute name="MyAppointment" type="Boolean" default="false" />
+    <aura:attribute name="showHome" type="Boolean" default="true" />
+    <aura:attribute name="showHospitalss" type="Boolean" default="false" />
+    <aura:attribute name="showHospitalssforCare" type="Boolean" default="false" />
+    <aura:attribute name="TimeList" type="String"/>
+    <aura:attribute name="source" type="String"/>
+    <aura:attribute name="today" type="Date" default=""/>
+    
+    
+    <!--BookAnAppointments-->
+    <aura:attribute name="selectedAccountLookUpRecord" type="String" />
+    <aura:attribute name="selectedPersonAccountLookUpRecord" type="String" />
+    <aura:attribute name="selectedContactLookUpRecord" type="String" />
+    <aura:attribute name="selectedCareSpecialtyLookUpRecord" type="String" />
+    <aura:attribute name="showBookAppointment" type="Boolean" default="true" />
+    <aura:attribute name="objectAPIName" type="String"  />
+    <aura:attribute name="doctorsName" type="List"  />
+    <!--aura:attribute name="specialitys" type="List"  /-->
+    
+    <!--upadatedRecentOne-->
+    
+    <aura:attribute name="showSurveyPage" type="boolean" default="false"/>
+    <!--Avaailability of doctor-->
+    <aura:attribute name="PageHeading" type="String" default="Available Time Slots" />
+    <aura:attribute name="mydata" type="List"/>
+    <aura:attribute name="accdata" type="List"/>
+    <aura:attribute name="showPopUp" type="boolean" default="false"/>
+    <aura:attribute name="selectSpecialty" type="boolean" default="false"/>
+    <aura:attribute name="ServeySubjectId" type="String" />
+    
+    <!--MyAppointmentsButton-->
+    <aura:attribute name="MyAppointments" type="boolean" default="false"/>
+    <aura:attribute name="LoginButton" type="boolean" default="true"/>
+    <aura:attribute name="showPeronAccountAppointment" type="boolean" default="false"/>
+    <!--aura:handler name="patientInit" value="{!this }" action="{! c.patientInit }" /-->
+    <aura:attribute name="allData" type="Object" />
+    
+    <aura:attribute name="tableData" type="List" />
+    <aura:attribute name="columns" type="Object[]" />
+    <aura:attribute name="getAddress" type="String" />
+    <aura:attribute name="getName" type="String" />
+    <aura:attribute name="Phone" type="String" />
+    <aura:attribute name="Email" type="String" />
+    <aura:attribute name="Gender" type="String" />
+    <aura:attribute name="Maritalstatus" type="String" />
+    <aura:attribute name="Birthdate" type="String" />
+    
+    <aura:attribute name="allergiesdropdown" type="Boolean" default="false" />
+    <aura:attribute name="medicationdropdown" type="Boolean" default="false" />
+    <aura:attribute name="medicalproceduredropdown" type="Boolean" default="false" />
+    <aura:attribute name="immunizationdropdown" type="Boolean" default="false" />
+    <aura:attribute name="careplandropdown" type="Boolean" default="false" />
+    <aura:attribute name="latestencounterdropdown" type="Boolean" default="false" />
+    <aura:attribute name="healthconditiondropdown" type="Boolean" default="false" />
+    
+    
+    <aura:attribute name="serviceappointments" type="Boolean" default="false" />
+    <aura:attribute name="paststatus" type="String" />
+    
+    <aura:attribute name="filteredDatas" type="List" />
+    <aura:attribute name="AppStatus" type="String" />
+    <aura:attribute name="DateTime" type="DateTime"/>
+    <aura:attribute name="ButtonShow" type="boolean" default="false"/>
+    <aura:attribute name="showCancelBox" type="boolean" default="false"/>
+    <aura:attribute name="selectedLeads" type="List"/>
+    <aura:attribute name="isShowLogin" type="boolean" default="false"/>
+    <aura:attribute name="isNextModalsForLogin" type="boolean" default="false"/>
+    <aura:attribute name="isNextModalForSignUp" type="boolean" default="false"/>
+    <aura:attribute name="guestUserForLoginOrSignUp" type="boolean" default="false"/>
+    <aura:attribute name="showNoAppointment" type="boolean" default="false"/>
+    <aura:attribute name="getLeadId" type="String" />
+    <aura:attribute name="showcareback" type="boolean" default="false"/>
+    <!--iframe Attributes-->
+    <aura:attribute name="iframeUrl" type="String" />
+    <aura:attribute name="width" type="String" default="100%;"/>
+    <aura:attribute name="height" type="String" default="500px;"/>
+    <aura:attribute name="iframepopup" type="boolean" default="false"/>
+    <aura:attribute name="RadioSelector" type="String"/>
+    <aura:attribute name="showZoompopup" type="boolean" default="false"/>
+    
+    <aura:attribute name="hideOtpButton" type="boolean" default="false"/>
+    <aura:attribute name="hideNumberButton" type="boolean" default="false"/>
+    <aura:attribute name="hideOtpButtonLogin" type="boolean" default="false"/>
+    <aura:attribute name="hideNumberButtonLogin" type="boolean" default="false"/>
+    <!--Language Selecting Attribute-->
+    <aura:attribute name="userName" type="String"/>
+    <aura:attribute name="showLanguageSection" type="Boolean" default="false" />
+    <aura:attribute name="defaultLanguage" type="String"/>
+    <aura:attribute name="availableLanguage" type="List"/>
+    <aura:attribute name="selectedLanguage" type="String"/>
+    <aura:attribute name="languageSelector" type="boolean" default="true"/>
+    
+    <aura:attribute name="healthcondition" type="object[]"/>
+    <aura:attribute name="allergy" type="List"/>
+    
+    <aura:attribute name="treatment" type="object[]"/>
+    <aura:attribute name="treatments" type="List"/>
+    
+    <aura:attribute name="medication" type="object[]"/>
+    <aura:attribute name="medications" type="List"/>
+    
+    <aura:attribute name="latestencounterss" type="object[]"/>
+    <aura:attribute name="latestencounterssdata" type="List"/>
+    
+    <aura:attribute name="immunization" type="object[]"/>
+    <aura:attribute name="immunizations" type="List"/>
+    
+    <aura:attribute name="medicalprocedure" type="object[]"/>
+    <aura:attribute name="medicalprocedures" type="List"/>
+    
+    <aura:attribute name="carepans" type="object[]"/>
+    <aura:attribute name="careplans" type="List"/>
+    <aura:attribute name="patientdata" type="Account"/>
+    <aura:attribute name="callEinsteenChild" type="Boolean" default="false" />
+
+    <aura:method name="navigatefromlead" action="{!c.navigatedoctorpage}" access="PUBLIC"></aura:method>
+    <div aura:id="appointmentpage"></div>
+    <!-- <aura:method name="navigatetoDoctorsPage" action="{!c.navigatedoctorsrecordpage}" access="PUBLIC"></aura:method> -->
+
+    <aura:handler name="RecordEventPass" event="c:LeadFormToDoctorAppointment" action="{!c.getLeadFormRecords}"/>
+    <aura:attribute name="messageTemp" type="String" />
+    <aura:attribute name="attachmentId" type="String" />
+    
+    
+    <aura:if isTrue="{!v.LeadFormComponent}">
+        <c:LeadForm />
+        <p>{!v.messageTemp}</p>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.callEinsteenChild}">
+        <c:EinsteinSearhChildcmp/>
+    
+    </aura:if>
+    <aura:if isTrue="{!v.showBookAppointment}">
+                <!--div class="slds-float_right  btn">
+                <lightning:overlayLibrary aura:id="overlayLib"/>
+                <div style="display:flex;margin-right:60px;margin-top:10px;">
+                    
+                    <td>
+                        <lightning:icon size="small" alternativeText="Show menu" iconName="utility:user" class="colorIcon" />
+                    </td>
+                    <td>
+                        
+                        <lightning:buttonMenu  onselect="{!c.handleClick}"  variant="container" class="colorIcon" tooltip="Login Here" menuAlignment="center">
+                            <aura:if isTrue="{!v.MyAppointments}">
+                                <lightning:menuItem value="MyProfile" label="{!$Label.c.MY_PROFILE}"/>
+
+                                <lightning:menuItem value="Einsteinsearch" label="Einstein Search" />
+
+                                <aura:set attribute="else">
+                                    
+                                    <lightning:menuItem value="Login/SignUp" label="{!$Label.c.Login_SignUp}" />
+                                        
+                                    <lightning:menuItem value="Einsteinsearch" label="Einstein Search" />
+                                
+                                    
+                                    
+                                </aura:set>
+                            </aura:if>
+                            <lightning:menuItem value="ChangeLanguage" label="{!$Label.c.Change_Language}" />
+                            
+                            
+                        </lightning:buttonMenu>
+                        
+                    </td>
+                    
+                </div>
+            </div>
+            
+            <aura:if isTrue="{!v.showLanguageSection}">
+                
+                <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_large" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1">
+                    <div class="slds-modal__container" style="width:35%;min-width:35%;">
+                        <header class="slds-modal__header">
+                            <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick="{!c.CloseLanguageData}">
+                                <span class="slds-assistive-text">Close</span>
+                            </button>
+                            <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">{!$Label.c.Change_Language}</h2>
+                        </header>
+                        
+                        <div class="slds-modal__content slds-p-around_x-large" id="modal-content-id-1">
+                            <div>
+                                <lightning:input aura:id="DefaultLanguage" class="slds-m-bottom_small" label="{!$Label.c.default_language}" disabled="true" value="{!v.defaultLanguage}"/>
+                                
+                                <lightning:select name="Language" label="{!$Label.c.select_language}" aura:id="Language" value="{!v.selectedLanguage}" onchange="{!c.changeLanguage}">
+                                    <option>None</option>
+                                    <option>English</option>
+                                    <option>中国人</option>
+                                    
+                                </lightning:select>
+                                
+                            </div>
+                        </div>
+                        <footer class="slds-modal__footer">
+                            <button class="slds-button slds-button_neutral" onclick="{!c.CloseLanguageData}">{!$Label.c.Cancel
+                                }</button>
+                            <button class="slds-button slds-button_brand" onclick="{!c.UpdateLanguageData}">{!$Label.c.Submit}</button>
+                        </footer>
+                    </div>
+                </section>
+                
+            </aura:if-->
+          
+            <div class="bookAppointment slds-align_absolute-center">
+                
+                <img src="{!$Resource.DoctorApp}" style="height:100%;width:100%;"/>
+      
+                
+            </div>
+           <lightning:card  class="lightning"> 
+            <div style="background-color: rgb(173, 216, 230); margin-top = 100px ">
+
+            
+            <lightning:layout class="search">
+                <lightning:layoutItem flexibility="auto" padding="horizontal-medium">
+                    <div class="custom-box ">
+                        <c:LookUpFieldsParent objectAPIName="CareSpecialty" IconName="standard:unified_health_score" aura:id="selectedDoctors" selectedRecord="{!v.selectedCareSpecialtyLookUpRecord}" label="{!$Label.c.Search_Care_Speciality}"/>
+                    </div>
+                </lightning:layoutItem>
+                <lightning:layoutItem  flexibility="auto" padding="horizontal-medium">
+                    <div class="custom-box">
+                        <c:LookUpFieldsParent objectAPIName="contact" IconName="custom:custom94" aura:id="selectedDoctors"  selectedRecord="{!v.selectedContactLookUpRecord}" label="{!$Label.c.Search_Doctor}"/>
+                    </div>
+                </lightning:layoutItem>
+                <lightning:layoutItem  flexibility="auto" padding="horizontal-medium">
+                    <div class="custom-box">
+                        <c:LookUpFieldsParent objectAPIName="Account" isPatient="false" IconName="standard:address" aura:id="selectedDoctors" selectedRecord="{!v.selectedAccountLookUpRecord}" label="{!$Label.c.Search_Hospital}"  />
+                    </div>
+                </lightning:layoutItem>
+            </lightning:layout>
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            <center>
+                <lightning:button label="{!$Label.c.search}" class="concern" iconName="utility:search" iconPosition="left" onclick="{!c.getDataForAppointment}" />
+            </center>
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+              
+            <lightning:layout class="layout" horizontalAlign="space">
+                
+                 
+              <lightning:layoutItem  class="layoutitem"  >
+                  
+                   <div class="headerimageandtext">
+                <p class= "title"><b> {!$Label.c.Book_Doctor_Appointment_Online}</b></p>
+                    <div class="slds-grid slds-p-top_low imageandtext">
+                        <img src="{!$Resource.FirstImageBDA}" />
+                        <p >    {!$Label.c.Meet_The_Doctors}
+                            <br/>
+                            {!$Label.c.Meet_The_Doctors_part_2}
+                        </p>
+                    </div>
+                    </div>
+                   
+                    <div class="headerimageandtext">
+                    <p class= "title"><b> {!$Label.c.DOCTOR_NEAR_ME}</b></p>
+                    <div class="slds-grid slds-p-top_low imageandtext">
+                        <img src="{!$Resource.DocNearMe}"/>
+                        <p > {!$Label.c.Doc_Near_Me}
+                            <br/> 
+                            {!$Label.c.Doc_Near_Me_part_1}<br/>
+                            {!$Label.c.Doc_Near_Me_part_2}
+                        </p>
+                    </div>
+                    </div>
+                </lightning:layoutItem>
+               <lightning:layoutItem   class="layoutitem">
+                   <div class="headerimageandtext">
+                    <p class= "title"><b> {!$Label.c.Booking_Confirmed}</b></p>
+                    <div class="slds-grid slds-p-top_low imageandtext">
+                        <img src="{!$Resource.BOOK_CONFIRMED_APPOINTMENT}" />
+                        <p> {!$Label.c.BOOK_CONFIRMED_APPOINTMENT}<br/>
+                            {!$Label.c.BOOK_CONFIRMED_APPOINTMENT_PART_1}
+                            <br/>
+                            {!$Label.c.BOOK_CONFIRMED_APPOINTMENT_PART_2}
+                        </p>
+                    </div>
+                   </div>
+                    
+                    
+                    <div class="headerimageandtext">
+                    <p class= "title"><b> {!$Label.c.Title_Know_Your_Doctor}</b></p>
+                    
+                    <div class="slds-grid slds-p-top_low imageandtext">
+                        <img src="{!$Resource.KnowYourDoctor}"/>
+                        
+                        <p> {!$Label.c.Know_Your_Doctor}
+                            <br/>
+                            {!$Label.c.Know_Your_Doctor_part_1}
+                            <br/>
+                            {!$Label.c.Know_Your_Doctor_part_2}
+                        </p>
+                    </div>
+                        </div>
+                </lightning:layoutItem> 
+            </lightning:layout>
+                    </div>
+
+             
+      </lightning:card>
+    </aura:if>
+    
+    
+    <aura:if isTrue="{!v.welcomepage}">
+        <!--div class="slds-box"-->
+        <div>
+            <center>
+                <!--div class="Header_backgroundss"-->
+                <div class="removeheader">
+                    <center>
+                        <h1>
+                            <b>
+                                {!$Label.c.Available_Facility}
+                            </b>
+                        </h1>
+                    </center>
+                </div>
+                <!--/div-->
+                <br></br>
+                <div class="slds-border_bottom"></div>
+            </center>
+            
+            <br></br>
+            <div class="slds-grid slds-wrap cssstyledesign">
+                <aura:iteration items="{!v.filterHopspital}" var="process" >
+                    <div class="Cssdesigntwo" >
+                        <lightning:card class="hospitalcss" >
+                            <aura:if isTrue="{!process.Account.Image_URL__c}">
+                                <div class="ProcessImage slds-align_absolute-center ">
+                                    <img src="{!process.Account.Image_URL__c}"></img>
+                                </div>
+                                <aura:set attribute="else">
+                                    <div class="DummyImage slds-align_absolute-center">
+                                        <img src="{!$Resource.NoimageAvailable}"/>
+                                    </div>
+                                </aura:set>
+                            </aura:if>
+                            <br></br><br></br>
+                            <div class="slds-border_bottom"></div>
+                            <b>&nbsp;&nbsp;{!$Label.c.Hospital_Name} : {!process.Account.Name}</b>
+                            <br></br>
+                            <b>&nbsp;&nbsp;{!$Label.c.Phone_Number} : {!process.Account.Phone}</b>
+                            <br></br>
+                            <b>&nbsp;&nbsp;{!$Label.c.Website} : {!process.Account.Website}</b>
+                            <br></br>
+                            <b>&nbsp;&nbsp;{!$Label.c.Address} : {!process.Account.BillingAddress.city},{!process.Account.BillingAddress.state},{!process.Account.BillingAddress.postalCode},<br></br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{!process.Account.BillingAddress.country}</b>
+                            <br></br>
+                            <br></br>
+                            <div class="slds-border_bottom"></div>
+                            <br></br>
+                            <lightning:button aura:id="accId" value="{!process.Account.Id}" variant="brand" label="{!$Label.c.Select_Hospital}" title="Brand action" onclick="{! c.getDoctrsByHospitals}" class="slds-align_absolute-center cssbutton" />
+                            <lightning:spinner aura:id="mySpinner" class="slds-hide" variant="brand" size="medium"/>
+                        </lightning:card>
+                    </div>
+                </aura:iteration>
+            </div>
+            
+            &nbsp;
+            &nbsp;
+            <br></br>
+            <br></br>
+            <br></br>
+            <center>
+                <footer class="Header_backgroundfooterforhospitalsearch">
+                    <center>
+                        <lightning:button label="{!$Label.c.Home}" variant="brand-outline"   iconName="utility:chevronleft"  iconPosition="left" onclick="{!c.BackToWelcomePage}" class="homecss" />
+                    </center>
+                </footer>
+            </center>
+        </div>
+        <!--/div-->
+    </aura:if>
+    <br/>
+    <!-- <div aura:id="doctprsRecordPage"> -->
+    <aura:if isTrue="{!v.showrecords}" >
+        <aura:if isTrue="{!v.showmyspinner}">
+            <div class="outerBox spinner">
+                <lightning:spinner aura:id="mySpinner" variant="brand" size="medium" class='slds=hide'/>
+            </div>
+        </aura:if>
+        <div class="slds-box " style="height:auto;width:100%;">
+            <!--lightning:card-->
+                <aura:if isTrue="{!v.CheckForSpecilaity}">
+                    <!--div class="Header_background"-->
+                    <div class="removemsgheader">
+                        <center>
+                            <h1>
+                                <b>
+                                    {!v.CareSpecilityforHeading}&nbsp;{!$Label.c.Doctor_at}&nbsp;{!v.HospitalforHeading}
+                                </b>
+                            </h1>
+                        </center>
+                    </div>
+                    <!--/div-->
+                    <aura:set attribute="else">
+                        <!--div class="Header_background"-->
+                        <div class="removemsgheader">
+                            <center>
+                                <h1>
+                                    <b>
+                                        {!$Label.c.Specialities_at}&nbsp;{!v.HospitalforHeading}
+                                    </b>
+                                </h1>
+                            </center>
+                        </div>
+                        <!--/div-->
+                    </aura:set>
+                </aura:if>
+            <!--/lightning:card-->
+            <div class="slds-m-around--xx-medium" >
+                <lightning:layout>
+                    <div class= "speciality"  style="width:20%">
+                        <lightning:layoutItem>
+                            <lightning:verticalNavigation
+                                                          selectedItem="{!v.careIds}"
+                                                          onselect="{!c.handleOnSelect}">
+                                <div class="slds-box specialitys">
+                                    <lightning:verticalNavigationSection label="{!$Label.c.Select_Speciality}">
+                                        <aura:iteration items="{!v.CareList}" var="getrecords" >
+                                            <lightning:verticalNavigationItem label="{!getrecords.Specialty.Name}" name="{!getrecords.Specialty.Id}" />
+                                        </aura:iteration>
+                                    </lightning:verticalNavigationSection>
+                                </div>
+                            </lightning:verticalNavigation>
+                            <!--aura:if isTrue="{!v.showsub}">
+                                <aura:if isTrue="{!v.showSubspeciality}">
+                                    <lightning:verticalNavigation
+                                                                  selectedItem="{!v.subspecialityId}"
+                                                                  onselect="{!c.handleOnSubSelect}">
+                                        <div class="subspeciality slds-box">
+                                            <lightning:verticalNavigationSection label="Select SubSpeciality">
+                                                <aura:iteration items="{!v.SubCareList}" var="getSubrecords" >
+                                                    <lightning:verticalNavigationItem label="{!getSubrecords.CareTaxonomy.Name}" name="{!getSubrecords.CareTaxonomy.Id}" />
+                                                </aura:iteration>
+                                            </lightning:verticalNavigationSection>
+                                        </div>
+                                    </lightning:verticalNavigation>
+                                </aura:if>
+                            </aura:if-->
+                        </lightning:layoutItem>
+                    </div>
+                    <lightning:layoutItem padding="around-medium">
+                        <aura:if isTrue="{!v.showcount}">
+                            <div class="slds-box slds-size_9-of-5 availableprovider" >
+                                <div class="slds-float_right availableprovider"></div>
+                                <b>{!$Label.c.Available_Providers}</b> : <b>{!v.countdoctor}</b>
+                            </div>
+                        </aura:if>
+                        <div class="slds-border_left" ></div>
+                        <div class="slds-p-around_medium" >
+                            <div class="slds-grid slds-wrap">
+                                <aura:if isTrue="{!v.providerFound}">
+                                    <aura:iteration items="{!v.selectedaccId}" var="Ids" indexVar="items">
+                                        
+                                        <div class="slds-size_7-of-13 slds-p-left_xx-small slds-p-horizontal_x-large" style="width:100%;">
+                                            
+                                            <lightning:card >
+                                                <div class="healthcloudcss" style="width:100%;" >
+                                                    <lightning:button variant="brand" label="{!$Label.c.Book_An_Appointement}" title="Brand action" onclick="{! c.BookAppointment }" value="{!Ids.Practitioner.Id}" class="slds-float_right BUTTONFORCSS" />
+                                                    
+                                                    <!-- <lightning:button variant="brand" label="Book An Appointment" title="Brand action" onclick="{! c.BookAppointment }" value="{!Ids.Practitioner.Id}" class="slds-float_right" /> -->
+                                                    
+                                                    <div class="slds-grid slds-wrap" >
+                                                        <table>
+                                                            <tr>
+                                                                <td>
+                                                                    <div class="imagesetups">
+                                                                        <img src="{!Ids.Practitioner.Image_URL__c}"/>
+                                                                    </div>
+                                                                </td>
+                                                                
+                                                                <td>
+                                                                    <div class="health" style="font-size: 25px;">
+                                                                        <h1><b>{!Ids.Practitioner.Name}</b></h1></div>
+                                                                    
+                                                                     <div class="fontfamilyfordetails" style="font-size: 17px; margin-left: 6px;">
+                                                                        <h1>{!$Label.c.Speciality}                : &nbsp;{!Ids.Specialty.Name}</h1>
+                                                                        <h1>{!$Label.c.Hospital}                  : &nbsp;{!Ids.Account.Name}</h1>
+                                                                        <h1>{!$Label.c.Appointment_Type}          :&nbsp;{!Ids.Practitioner.Available_Appointment_Type__c }</h1>
+                                                                        <h1>{!$Label.c.Address}                   : &nbsp;{!Ids.Account.BillingCity },{!Ids.Account.BillingState},</h1>
+                                                                        <h1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{!Ids.Account.BillingCountry },&nbsp;{!Ids.Account.BillingPostalCode }</h1>                                                                   
+                                                                       
+                                                                    </div> 
+                                                                    
+                                                                </td>
+                                                                
+                                                                <!-- <td >
+    <div class="bookanappt" style="margin: bottom 30px;">
+
+        <lightning:button variant="brand" label="{!$Label.c.Book_An_Appointement}" title="Brand action" onclick="{! c.BookAppointment }" value="{!Ids.Practitioner.Id}" class="slds-float_right" />
+
+    </div>
+</td> -->
+                                                                
+                                                            </tr>
+                                                        </table>
+                                                        
+                                                        <aura:if isTrue="{!v.showDoctors}">
+                                                            <div class="slds-col">
+                                                                <div class="slds-grid slds-gutters">
+                                                                    <div class="align">
+                                                                        <!-- <div class="health" style="font-size: 25px;">
+                                                                        <h1><b>{!Ids.Practitioner.Name}</b></h1></div>
+                                                                    <div class="health" style="font-size: 15px;">
+                                                                        <h1>Speciality                : &nbsp;{!Ids.Specialty.Name}</h1>
+                                                                        <h1>Hospital                  : &nbsp;{!Ids.Account.Name}</h1>
+                                                                        <h1>Address                   : &nbsp;{!Ids.Account.BillingCity }</h1>
+                                                                        <h1>State                     :&nbsp;{!Ids.Account.BillingState }</h1>
+                                                                        <h1>Zip/PostalCode            :&nbsp;{!Ids.Account.BillingPostalCode }</h1>
+                                                                        <h1>Country                   :&nbsp;{!Ids.Account.BillingCountry }</h1>
+                                                                        <h1>Appointment Type          :&nbsp;{!Ids.Practitioner.Available_Appointment_Type__c }</h1>
+                                                                        
+                                                                    </div> -->
+                                                                        
+                                                                        
+                                                                        
+                                                                        
+                                                                        
+                                                                        <br/>
+                                                                        <!--lightning:overlayLibrary aura:id="overlayLib"/>
+                                                    <div class="popover1" value="{!Ids.Practitioner.Id}" onmouseover="{!c.handleShowPopover}">Available TimeSlot.</div>
+                                                    <br/-->
+                                                                        <div classs="profilecss">
+                                                                            <lightning:button variant="base" label="{!$Label.c.View_Profile}"
+                                                                                              title="{!$Label.c.Click_Here_To_See_Doctor_Details}" onclick="{!c.onDetail}" value="{!Ids.Practitioner.Id}" class="viewbutton"   />&nbsp;&nbsp;
+                                                                            <lightning:button variant="base" label="{!$Label.c.Docter_Avai}"
+                                                                                              title="{!$Label.c.Click_Here_To_See_Doctors_Availabilty}" onclick="{!c.handleShowPopover}" value="{!Ids.Practitioner.Id}" class="slds-border_left doctoravailability" />
+                                                                        </div>
+                                                                        
+                                                                        <aura:if isTrue="{!AND(v.viewdoctordetails,Ids.Practitioner.Id==v.indexVar)}" > 
+                                                                            <div class="health" style="font-size: 15px;">
+                                                                                
+                                                                                <lightning:tabset>
+                                                                                    <lightning:tab label="{!$Label.c.overview}">
+                                                                                     
+                                                                                            <p><lightning:formattedText value="{!Ids.Practitioner.Overview__c}" /></p>
+                                                                                      
+                                                                                    </lightning:tab>
+                                                                                    
+                                                                                    <lightning:tab label="{!$Label.c.Awards_and_Regonition}">
+                                                                                       
+                                                                                            <p><lightning:formattedText value="{!Ids.Practitioner.Awards_and_Regonitions__c}" /></p>
+                                                                                      
+                                                                                    </lightning:tab>
+                                                                                    <lightning:tab label="{!$Label.c.Expertise}">
+                                                                                        
+                                                                                            <p><lightning:formattedText value="{!Ids.Practitioner.Area_of_Expertise__c}" /></p>
+                                                                                        
+                                                                                    </lightning:tab>
+                                                                                </lightning:tabset>
+                                                                                
+                                                                            </div>
+                                                                        </aura:if>
+                                                                        <br/>
+                                                                    </div>  
+                                                                </div>
+                                                            </div> 
+                                                            
+                                                        </aura:if> 
+                                                    </div>
+                                                </div>
+                                            </lightning:card>
+                                        </div>
+                                        <br/>
+                                        <p></p>
+                                    </aura:iteration>
+                                    <aura:set attribute="else">
+                                        <aura:if isTrue="{!v.NoDoctorFound}">
+                                            <div class="notfound">
+                                                <img src="{!$Resource.SalesforceImage}"></img>
+                                                <b><h6>....{!$Label.c.Sorry_No_Doctor_Found_In_This_Hospital}.{!$Label.c.THANK_YOU}....</h6></b>
+                                            </div>
+                                        </aura:if>
+                                        <aura:if isTrue="{!v.SelectSpecialtyPage}">
+                                            <div class="notfound">
+                                                <img src="{!$Resource.SalesforceImage}"></img>
+                                                <b><h6>....{!$Label.c.PLEASE_SELECT_A_SPECIALITY_TO_FETCH_A_DOCTOR}.{!$Label.c.THANK_YOU}....</h6></b>
+                                                <br/>
+                                                <br/>
+                                                <div class="backbuttoncss">                              
+                                                    <lightning:button label="{!$Label.c.Back}"  title="{!$Label.c.Click_To_go_Hospital}" iconName="utility:back" iconPosition="left" onclick="{! c.BackToHospital}" />
+                                                </div>
+                                            </div>
+                                        </aura:if>
+                                        
+                                        
+                                    </aura:set>
+                                    <aura:if isTrue="{!v.selectSpecialty}">
+                                        <div class="notfound">
+                                            <b><h6>....{!$Label.c.PLEASE_SELECT_A_SPECIALITY}....</h6></b>
+                                        </div>
+                                    </aura:if>
+                                </aura:if>
+                            </div> 
+                        </div>
+                        
+                        <aura:if isTrue="{!v.showPginationbutton}">
+                            
+                            <div class="pagination">
+                                
+                                <aura:if isTrue="{!v.showHome}">
+                                    
+                                    <lightning:button label="{!$Label.c.Home}"   iconName="utility:agent_home" title="{!$Label.c.click_to_go_HomePage}" onclick="{! c.home}"/>
+                                </aura:if>
+                                <aura:if isTrue="{!v.showHospitalss}">
+                                    <lightning:button label="{!$Label.c.Back}"  title="{!$Label.c.Click_To_go_Hospital}" iconName="utility:back" iconPosition="left" onclick="{! c.BackToHospital}"/>
+                                </aura:if>
+                                <aura:if isTrue="{!v.showHospitalssforCare}">
+                                    <lightning:button label="{!$Label.c.Back}"  title="{!$Label.c.Click_To_go_Hospital}" iconName="utility:back" iconPosition="left" onclick="{! c.showHospitalssforCare}"/>
+                                    
+                                </aura:if>
+                                
+                                <aura:if isTrue="{!v.hideprvsbtn}">
+                                    
+                                    <lightning:button
+                                                      label="{!$Label.c.Previous}"
+                                                      iconName="utility:chevronleft"
+                                                      iconPosition="left"
+                                                      onclick="{! c.onPrev }"
+                                                      disabled="{! v.currentPageNumber == 1}"
+                                                       />
+                                        
+                                </aura:if>         
+                                
+                                <span class="slds-var-p-horizontal_x-small">
+                                    {!$Label.c.Page} {! (v.currentPageNumber) } {!$Label.c.of} {! (v.totalPages) }
+                                </span>
+                                
+                                <lightning:button
+                                                  label="{!$Label.c.Next}"
+                                                  iconName="utility:chevronright"
+                                                  iconPosition="right"
+                                                  onclick="{! c.onNext }"
+                                                  disabled="{! v.currentPageNumber == v.totalPages }"
+                                                  />
+                                
+                                <!-- disabled="{! v.currentPageNumber == v.totalPages }" -->
+                            </div>
+                        </aura:if>  
+                    </lightning:layoutItem>
+                    
+                </lightning:layout>
+                <!--lightning:button label="Back" onclick="{!c.BackToWelcomePage}" iconName="utility:back" iconPosition="left"  variant="brand"></lightning:button--> 
+            </div>
+        </div>
+    </aura:if>
+<!-- </div> -->
+     <aura:if isTrue="{!v.showLeadForminChildComponet}">
+    <c:LeadForm aura:id="leadform" careSpcId="{!v.careSpcId}" showrecords="{!v.showrecords}" showBookAppointment="{!v.showBookAppointment}"  callcomponentmessage="{!v.callcomponentmessage}"/>
+</aura:if>
+    <aura:if isTrue="{!v.guestUser}">
+        <center>
+            <div  class="slds-size_8-of-12" >
+                <lightning:card>
+                    
+                    <div>
+                        <div class="Header_backgroundforform">
+                            <center>
+                                <h1>
+                                    <b>
+                                        {!$Label.c.you_dont_have_account}
+                                    </b>
+                                </h1>
+                            </center>
+                        </div>
+                    </div>
+                    
+                    <center>
+                        <div class="slds-p-around_medium">
+                            <lightning:layout>
+                                <lightning:layoutItem size="6" padding="around-small">
+                                    <lightning:inputName aura:id="Lead"
+                                                         label="Name"
+                                                         firstName="{!v.newLead.FirstName}"
+                                                         lastName="{!v.newLead.LastName}"
+                                                         salutation="{!v.newLead.Title}"
+                                                         options="{!v.salutationOptions}"
+                                                         required="true" pattern="[a-zA-z]*"/>
+                                    <!--lightning:input aura:id="Lead" label="FirstName" type="text" pattern="[a-zA-Z]*" value="{!v.newLead.FirstName}" /-->
+                                    <!--lightning:input aura:id="Lead" label="LastName" type="text" pattern="[a-zA-Z]*" value="{!v.newLead.LastName}" /-->
+                                    <lightning:input aura:id="Lead" label="{!$Label.c.Email}" type="email" value="{!v.newLead.Email}" required="true"/>
+                                    <lightning:input aura:id="Lead" label="{!$Label.c.Phone}" type="phone"  pattern="[0-9]*" value="{!v.newLead.Phone}" required="true" maxlength="10" minlength="10"/>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6" padding="around-small">
+                                    <lightning:inputAddress  aura:id="Lead"
+                                                            addressLabel="{!$Label.c.Address}"
+                                                            streetLabel="{!$Label.c.Street}"
+                                                            cityLabel="{!$Label.c.City}"
+                                                            countryLabel="{!$Label.c.Country}"
+                                                            provinceLabel="{!$Label.c.State}"
+                                                            postalCodeLabel="{!$Label.c.PostalCode}"
+                                                            street="{!v.newLead.Street}"
+                                                            city="{!v.newLead.City}"
+                                                            country="{!v.newLead.Country}"
+                                                            province="{!v.newLead.State}"
+                                                            postalCode="{!v.newLead.PostalCode}"
+                                                            required="true"
+                                                            />
+                                </lightning:layoutItem>
+                            </lightning:layout>
+                            <br/>
+                            
+                            <center>
+                                <footer class="Header_backgroundforformonethree">
+                                    
+                                    <lightning:button label="{!$Label.c.Cancel
+                                                             }" onclick="{!c.handleCancelforSecondLeadPage}"   variant="brand-outline"/>
+                                    
+                                    <lightning:button label="{!$Label.c.Create}" onclick="{!c.handleCreateContact}" variant="brand-outline" />
+                                    
+                                </footer>
+                            </center>
+                            
+                        </div>
+                    </center>
+                </lightning:card>
+            </div>
+        </center>
+    </aura:if>
+    
+    
+    <aura:if isTrue="{!v.FlowPopup}">
+        <aura:if isTrue="{!v.showmyspinner}">
+            <div class="outerBox spinner">
+                <lightning:spinner aura:id="mySpinner" variant="brand" size="medium" class='slds=hide' />
+            </div>
+        </aura:if>
+        
+        <lightning:card>
+            <div class="slds-m-around_xx-large">
+                <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container FlowWidthSet">
+                        <header class="slds-modal__header">
+                            <button class="slds-button slds-button--icon-inverse slds-modal__close" onclick="{!c.hideExampleModalForFlows}">
+                                
+                                <lightning:icon iconName="utility:close" size="medium" alternative-text="Close" class="colorIcon"/>
+                                
+                                <span class="slds-assistive-text">Close</span>
+                            </button>
+                        </header>
+                        <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                            <div class="c-container">
+                                <!--lightning:button label="Back" onclick="{!c.handleOnBack}" variant="brand" class="marginbottom"/-->
+                                
+                                <lightning:flow aura:id="flowData"/>
+                                
+                                <!--iframe width="800" height="600" style="border: 1px solid" src="https://tech-kasetti-healthcloud.my.site.com/ltng/survey/runtimeApp.app?invitationId=0Ki4x0000011E0w&amp;surveyName=dental_care_survey&amp;UUID=c1a7639f-bb6a-4258-98dc-83896d54333a" /-->
+                                
+                            </div>
+                        </div>
+                        
+                        <!--footer class="slds-modal__footer">
+                        <button class="slds-button slds-button_neutral" onclick="{!c.hideModalBoxForFlows}">Cancel</button>
+                    </footer-->
+                        
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </div>
+            
+        </lightning:card>
+        
+    </aura:if>
+    
+    <aura:if isTrue="{!v.careDoctors}">
+        <!--div class="slds-box" -->
+        <div>
+            <center>
+                
+                    <!--div class="Header_background"-->
+                    <div class="removeheader">
+                        <center>
+                            <h1>
+                                <b>
+                                    {!$Label.c.Available_Facility}
+                                </b>
+                            </h1>
+                        </center>
+                    </div>
+                
+                <!--/div-->
+              
+            </center>
+            <br/>
+            <div class="slds-grid slds-wrap designwelcome">
+                <aura:iteration items="{!v.careHopspital}" var="process" >
+                    <div class="Secondcontainer slds-align_absolute-center designwelcomeone">
+                        <lightning:card class="Secondhospitalcss">
+                            <aura:if isTrue="{!process.Account.Image_URL__c}">
+                                <div class="ProcessImage slds-align_absolute-center ">
+                                    <img src="{!process.Account.Image_URL__c}"></img>
+                                </div>
+                                <aura:set attribute="else">
+                                    <div class="DummyImage slds-align_absolute-center">
+                                        <img src="{!$Resource.NoimageAvailable}"/>
+                                    </div>
+                                </aura:set>
+                            </aura:if>
+                            <br></br><br></br>
+                            <div class="slds-border_bottom"></div>
+                            <b>&nbsp;&nbsp;{!$Label.c.Hospital_Name} : {!process.Account.Name}</b>
+                            <br></br>
+                            <b>&nbsp;&nbsp;{!$Label.c.Phone_Number} : {!process.Account.Phone}</b>
+                            <br></br>
+                            <b>&nbsp;&nbsp;{!$Label.c.Website} : {!process.Account.Website}</b>
+                            <br></br>
+                            
+                            <b>&nbsp;&nbsp;{!$Label.c.Address} : {!process.Account.BillingAddress.city},{!process.Account.BillingAddress.state},{!process.Account.BillingAddress.postalCode}</b>
+                            <br></br>
+                            <br></br>
+                          
+                            <div class="slds-border_bottom"></div>
+                            <br></br>
+                            <lightning:button aura:id="accId" value="{!process.Account.Id}" variant="brand" label="{!$Label.c.Select_Hospital}" title="Brand action" onclick="{! c.getDoctrsByCareIdAndHospitals}" class="slds-align_absolute-center" />
+                            <lightning:spinner aura:id="mySpinner" class="slds-hide" variant="brand" size="medium"/>
+                        </lightning:card>
+                    </div>
+                </aura:iteration>
+                
+                
+                
+                <aura:if isTrue="{!v.showHospitals}">
+                </aura:if>
+            </div>
+            
+            
+            
+            <center>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                
+                
+                <footer class="slds-modal__footer footercolornew">
+                    
+                    <div class="slds-align_absolute-center buttonleftnew "  style="height: 38px;">
+                        <aura:if isTrue="{!v.homebuttonhide}">
+                            <lightning:button label="{!$Label.c.Home}" variant="brand-outline" class="homebutton"  iconName="utility:chevronleft"  iconPosition="left" onclick="{!c.BackToWelcomePage}" />
+                        </aura:if>
+                        
+                        <aura:if isTrue="{!v.hidepreviousbtn}">
+                            <lightning:button
+                                              class="previousbutton"
+                                              label="{!$Label.c.Previous}"
+                                              iconName="utility:chevronleft"
+                                              variant="brand-outline"
+                                              iconPosition="left"
+                                              onclick="{! c.onPrevious }"
+                                              disabled="{! v.currentPageNumbers == 1 }" />
+                        </aura:if>
+                        
+                        
+                        <span class="slds-var-p-horizontal_x-small currentpages">
+                            {!$Label.c.Page} {! (v.currentPageNumbers) } {!$Label.c.of} {! (v.totalPage) }
+                        </span>
+                        
+                        <aura:if isTrue="{!v.shownextbtn}">
+                            <lightning:button
+                                              
+                                              class="nextbutton"
+                                              label="{!$Label.c.Next}"
+                                              iconName="utility:chevronright"
+                                              variant="brand-outline"
+                                              iconPosition="right"
+                                              onclick="{!c.onNextpage}"
+                                              disabled="{! v.currentPageNumbers == v.totalPage }"/>
+                            
+                        </aura:if>
+                    </div>
+                    
+                    
+                </footer>
+            </center>
+        <!--/div-->
+    </div>
+    </aura:if>
+   
+    <aura:if isTrue="{!v.isShowModal}">
+        <div class="slds-m-around_xx-large">
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <!-- modal header start -->
+                    <header class="slds-modal__header headingcolor">
+                        <button class="slds-button slds-button--icon-inverse slds-modal__close" onclick="{!c.hideExampleModal}">
+                            <lightning:icon iconName="utility:close" size="medium" variant="brand" class="colorIcon"/>
+                            <span class="slds-assistive-text">Close</span>
+                        </button>
+                        <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">{!$Label.c.User_Verification}</h2>
+                    </header>
+                    <!-- modal body start -->
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                        <div class="c-container">
+                            <aura:if isTrue="{!v.isNextModals}">
+                                <lightning:layout>
+                                    <lightning:layoutitem size="8" padding="around-small">
+                                        <lightning:input type="String" aura:id="inputValue" label="{!$Label.c.Enter_Your_Email_WhatsApp_Phone_Number}" required="true"></lightning:input>
+                                    </lightning:layoutitem>
+                                    <lightning:layoutitem size="8"><!-- skip to next row -->
+                                    </lightning:layoutitem>
+                                </lightning:layout>
+                            </aura:if>
+                            <aura:if isTrue="{!v.isNextModal}">
+                                <lightning:layout>
+                                    <lightning:layoutitem size="4" padding="around-small">
+                                        <lightning:input type="text" label="{!$Label.c.Enter_Your_OTP}" aura:id="confirmotp" class="verify" maxlength="6" required="true"> </lightning:input>
+                                    </lightning:layoutitem>
+                                    <lightning:layoutitem size="4"><!-- skip to next row -->
+                                    </lightning:layoutitem>
+                                </lightning:layout>
+                                <br/>
+                                
+                            </aura:if>
+                            
+                            
+                        </div>
+                    </div>
+                    
+                    <!-- modal footer start-->
+                    <footer class="slds-modal__footer footercolor">
+                        <aura:if isTrue="{!v.hideNumberButton}">
+                            <button class="slds-button slds-button_neutral" onclick="{!c.hideModalBox}">{!$Label.c.Cancel
+                                }</button>
+                        </aura:if>
+                        <aura:if isTrue="{!v.hideOtpButton}">
+                            <button class="slds-button slds-button_neutral" onclick="{!c.hideOtpModel}">{!$Label.c.Cancel
+                                }</button>
+                        </aura:if>                        <aura:if isTrue="{!v.isconfirm}">
+                        <button class="slds-button slds-button_neutral" disabled="{!v.buttondisable}"  onclick="{!c.OpenModalBox}">{!$Label.c.confirm}</button>
+                        </aura:if>
+                        <aura:if isTrue="{!v.isverify}">
+                            <lightning:button label="{!$Label.c.Enter_Your_OTP}" title="Verify OTP" onclick="{!c.verifyOTP}" class="slds-var-m-left_x-small"></lightning:button>
+                        </aura:if>
+                    </footer>
+                    
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </div>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.showPopUp}">
+        <div class="slds-m-around_xx-large">
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <!-- modal header start -->
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button--icon-inverse slds-modal__close" onclick="{!c.hideTimeModal}">
+                            <lightning:icon iconName="utility:close" size="medium" variant="brand" class="colorIcon"/>
+                            <span class="slds-assistive-text">Close</span>
+                        </button>
+                        <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">{!$Label.c.Available_Time_slot}</h2>
+                    </header>
+                    <!-- modal body start -->
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                        <div class="c-container">
+                            <table class="slds-table slds-table--bordered slds-table--striped slds-table--cell-buffer slds-table--fixed-layout">
+                                <thead>
+                                    <tr class="slds-text-heading--label">
+                                        <th scope="col"><div class="slds-truncate" title="Vehicle Name">{!$Label.c.DayOfWeek}</div></th>
+                                        <th scope="col"><div class="slds-truncate" title="Service Date">{!$Label.c.StartTime}</div></th>
+                                        <th scope="col"><div class="slds-truncate" title="Service Date">{!$Label.c.EndTime}</div></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <aura:iteration items="{!v.mydata}" var="row" indexVar="index">
+                                        <tr>
+                                            <th scope="row"><div class="slds-truncate" >
+                                                <a onclick="{!c.showPopup}" value="{!row}" data-index="{!index}">{!row.DayOfWeek}</a>
+                                                </div></th>
+                                            <td><div class="slds-truncate" title="{!row.Phone}">{!row.StartTime}</div></td>
+                                            <td><div class="slds-truncate" title="{!row.Phone}">{!row.EndTime}</div></td>
+                                        </tr>
+                                    </aura:iteration>
+                                    
+                                </tbody>
+                                <lightning:button variant="brand" label="{!$Label.c.Closebutton}" title="{!$Label.c.Closebutton}" onclick="{! c.handlClose }" class="moveclose" />
+                            </table>
+                        </div>
+                    </div>
+                    
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </div>
+    </aura:if>
+    <aura:if isTrue="{!v.ShowMyAppointment}">
+        <c:DoctorAppointmentDashboard />
+    </aura:if>
+    
+   
+    
+    <aura:if isTrue="{!v.showPeronAccountAppointment}">
+        
+        <lightning:card>
+            
+            <div class="Header_background" >
+                
+                <center>
+                    <h1>
+                        <b>
+                            {!$Label.c.MY_PROFILE}
+                            
+                        </b>
+                        <lightning:button label="{!$Label.c.Home}"  class="slds-float_right" iconName="utility:agent_home" title="click to go HomePage" onclick="{! c.BackToWelcomePage}"/>
+                        
+                        
+                    </h1>
+                </center>
+            </div></lightning:card>
+        
+        
+      
+        
+        <div class="major-grid" style="height:auto;">
+            <div class="top-left slds-theme_default">
+                <lightning:Card>
+                    <div class="slds-box slds-theme_shade">
+                        
+                        
+                        <div class="slds-grid slds-wrap">
+                            <div class="slds-col slds-size_1-of-1 slds-large-size_4-of-12">
+                                <img src="{!$Resource.maskusageimg1}" style="height:150px;"/>
+                                
+                            </div>
+                            
+                            <div class="slds-col slds-size_1-of-1 slds-large-size_4-of-12">
+                                <h5><b> {!$Label.c.Name} : &nbsp;</b>
+                                    
+                                    {!v.patientdata.Name}</h5>
+                                <br/>
+                                
+                                <h5> <b> {!$Label.c.Date_of_Birth} : &nbsp;</b>
+                                    {!v.patientdata.PersonBirthdate}</h5>
+                                <br/>
+                                
+                                <h5><b> {!$Label.c.Phone} : &nbsp;</b>
+                                    
+                                    {!v.patientdata.Phone}</h5>
+                                
+                                <br/>
+                                <h5> <b>{!$Label.c.Email} : &nbsp;</b>
+                                    {!v.patientdata.PersonEmail}</h5>
+                                
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-large-size_4-of-12">
+                                
+                                
+                                <h5><b>{!$Label.c.Gender} : &nbsp;</b>
+                                    
+                                    
+                                    {!v.patientdata.HealthCloudGA__Gender__pc}</h5>
+                                <br/>
+                                <h5><b>Maritial Status : &nbsp;</b>
+                                    {!v.patientdata.PersonMaritalStatus}  &nbsp;</h5>
+                                  <br/>
+
+                                <h5><b>{!$Label.c.Address} : &nbsp;</b>
+                                    
+                                    {!v.patientdata.PersonMailingStreet}&nbsp;,
+                                    
+                                    {!v.patientdata.PersonMailingCity }&nbsp;,
+                                    {!v.patientdata.PersonMailingState}&nbsp;,
+                                    {!v.patientdata.PersonMailingCountry }&nbsp;-
+                                    {!v.patientdata.PersonMailingPostalCode}
+
+                                </h5></div></div></div>
+                </lightning:Card>
+                
+                <br/>
+                
+                <br/>
+                <lightning:card>
+                    <div class="slds-box slds-theme_shade">
+                        
+                        <b> <div class="slds-text-heading_medium">{!$Label.c.Appointments}</div></b></div>
+                    
+                    <lightning:tabset variant="scoped">
+                        
+                        
+                        <lightning:tab onactive="{! c.handleSelected }" label="{!$Label.c.Upcoming}" id="select">
+                            <lightning:spinner aura:id="mySpinner" class="slds-hide" variant="brand" size="medium"/>
+                            
+                            <aura:if isTrue="{!v.serviceappointments}">
+                                
+                                <lightning:datatable
+                                                     aura:id="table"
+                                                     columns="{! v.columns }"
+                                                     data="{!v.tableData}"
+                                                     hideCheckboxColumn="false"
+                                                     keyField="Id"
+                                                     showRowNumberColumn="true"
+                                                     onrowselection="{! c.updateSelectedText}"
+                                                     onrowaction="{! c.handleAction }"/>
+                                
+                                <aura:set attribute="else">
+                                    <center>{!$Label.c.There_are_no_Appointments_yet}.</center>
+                                </aura:set>
+                            </aura:if>
+                        </lightning:tab>
+                        
+                        
+                        <lightning:tab onactive="{! c.handlCompleted }" label="{!$Label.c.Past}" id="completedcancelled">
+                            
+                            <lightning:spinner aura:id="mySpinner" class="slds-hide" variant="brand" size="medium"/>
+                            <aura:if isTrue="{!v.serviceappointments}">
+                                
+                                <lightning:datatable
+                                                     aura:id="table"
+                                                     columns="{! v.columns }"
+                                                     data="{!v.tableData}"
+                                                     hideCheckboxColumn="false"
+                                                     keyField="Id"
+                                                     showRowNumberColumn="true"
+                                                     onrowselection="{! c.updateSelectedText}"
+                                                     onrowaction="{! c.handleAction }"/>
+                                
+                                <aura:set attribute="else">
+                                    <center>{!$Label.c.There_are_no_Appointments_yet}.</center>
+                                </aura:set>
+                            </aura:if>
+                        </lightning:tab>
+                        
+                    </lightning:tabset>
+                    
+                    <br/>
+                    <br/>
+                    
+                    
+                    <div class="slds-align_absolute-center">
+                       
+                        <lightning:button
+                                          label="{!$Label.c.Previous}"
+                                          iconName="utility:chevronleft"
+                                          iconPosition="left"
+                                          onclick="{! c.onPreviousParent}"
+                                          disabled="{! v.PresentPageNumber == 1 }" />
+                        <span class="slds-var-p-horizontal_x-small">
+                            {!$Label.c.Page} {! (v.PresentPageNumber) }  {!$Label.c.of} {! (v.PagesTotal) }
+                        </span>
+                        <lightning:button
+                                          label="{!$Label.c.Next}"
+                                          iconName="utility:chevronright"
+                                          iconPosition="right"
+                                          onclick="{! c.onNextParent }"
+                                          disabled="{! v.PresentPageNumber == v.PagesTotal}" />
+                        
+                    </div>
+                    
+                </lightning:card>
+            </div>
+            
+            
+            
+            
+            <div class="top-right slds-theme_default">
+                
+                <div class="slds-box slds-theme_shade">
+                    <b> <div class="slds-text-heading_medium" > <img src="{!$Resource.PatientCard}"/>
+                        {!$Label.c.Patient_Card}</div></b></div>
+                
+                <div class="slds-box slds-theme_shade">
+                    
+                    
+                    
+                    
+                    <div class="slds-section slds-is-close animate" aura:id="lunchSection">
+                        <aura:if isTrue="{!v.showspinnerontoggeletouch}">
+
+                        <lightning:spinner aura:id="mySpinnerinaura" variant="brand" size="small" />
+                        </aura:if>
+                        <!-- <lightning:spinner aura:id="mySpinner" variant="brand" size="medium" class='slds=hide' /> -->
+                        <h3 class="slds-section__title">
+                            
+                            <button aria-controls="lunchItemList" class="slds-button slds-section__title-action" onclick="{!c.toggleSection}" data-auraId="lunchSection">
+                                
+                                <lightning:icon iconName="utility:switch"
+                                                size="x-small"
+                                                class="slds-section__title-action-icon slds-button__icon_left"
+                                                alternativeText="button icon"
+                                                />
+                                
+                                
+                                <span class="slds-truncate" title="lunch item">{!$Label.c.Allergies}</span>
+                                
+                                
+                            </button>
+                        </h3>
+                        
+                        
+                        <div class="slds-section__content" id="lunchItemList">
+                            <aura:if isTrue="{!v.allergiesdropdown}">
+                                
+                                <lightning:datatable
+                                                     aura:id="table"
+                                                     columns="{! v.healthcondition }"
+                                                     data="{!v.allergy}"
+                                                     hideCheckboxColumn="true"
+                                                     keyField="Id"
+                                                     showRowNumberColumn="true"
+                                                     onrowselection="{! c.updateSelectedText}"
+                                                     onrowaction="{! c.handleAction }"/>
+                                <aura:set attribute="else">
+                                    <center>{!$Label.c.There_are_no_records_for_this_section}.</center>
+                                </aura:set>
+                            </aura:if>
+                            
+                            
+                        </div>
+                        
+                        
+                        
+                        
+                    </div>
+                    
+                    
+                    
+                    <div class="slds-section slds-is-close animate" aura:id="DinnerSection">
+                        <h3 class="slds-section__title">
+                            <button aria-controls="DinnerId" class="slds-button slds-section__title-action" onclick="{!c.toggleSection}" data-auraId="DinnerSection">
+                                <lightning:icon iconName="utility:switch"
+                                                alternativeText="button icon"
+                                                size="x-small"
+                                                class="slds-section__title-action-icon slds-button__icon_left"/>
+                                <span class="slds-truncate" title="Dinner Item">{!$Label.c.Health_Conditions}</span>
+                            </button>
+                        </h3>
+                        
+                        <div class="slds-section__content" id="DinnerItemId">
+                            <aura:if isTrue="{!v.healthconditiondropdown}">
+                                <lightning:datatable
+                                                     aura:id="table"
+                                                     columns="{! v.treatment }"
+                                                     data="{!v.treatments}"
+                                                     hideCheckboxColumn="true"
+                                                     keyField="Id"
+                                                     showRowNumberColumn="true"
+                                                     onrowselection="{! c.updateSelectedText}"
+                                                     onrowaction="{! c.handleAction }"/>
+                                <aura:set attribute="else">
+                                    <center>{!$Label.c.There_are_no_records_for_this_section}.</center>
+                                </aura:set>
+                            </aura:if>
+                        </div>
+                        
+                    </div>
+                    <div class="slds-section slds-is-close animate" aura:id="medicationSection">
+                        <h3 class="slds-section__title">
+                            <button aria-controls="medicationId" class="slds-button slds-section__title-action" onclick="{!c.toggleSection}" data-auraId="medicationSection">
+                                <lightning:icon iconName="utility:switch"
+                                                alternativeText="button icon"
+                                                size="x-small"
+                                                class="slds-section__title-action-icon slds-button__icon_left"/>
+                                <span class="slds-truncate" title="Dinner Item">{!$Label.c.Medications}</span>
+                            </button>
+                        </h3>
+                        
+                        <div class="slds-section__content" id="medicationItemId">
+                            <aura:if isTrue="{!v.medicationdropdown}">
+                                <lightning:datatable
+                                                     aura:id="table"
+                                                     columns="{! v.medication }"
+                                                     data="{!v.medications}"
+                                                     hideCheckboxColumn="true"
+                                                     keyField="Id"
+                                                     showRowNumberColumn="true"
+                                                     onrowselection="{! c.updateSelectedText}"
+                                                     onrowaction="{! c.handleAction }"/>
+                                <aura:set attribute="else">
+                                    <center>{!$Label.c.There_are_no_records_for_this_section}.</center>
+                                </aura:set>
+                            </aura:if>
+                            
+                        </div>
+                        
+                    </div>
+                    <div class="slds-section slds-is-close animate" aura:id="latestencountersSection">
+                        <!--section header-->
+                        <h3 class="slds-section__title">
+                            <button aria-controls="latestencountersSectionId" class="slds-button slds-section__title-action" onclick="{!c.toggleSection}" data-auraId="latestencountersSection">
+                                <lightning:icon iconName="utility:switch"
+                                                alternativeText="button icon"
+                                                size="x-small"
+                                                class="slds-section__title-action-icon slds-button__icon_left"/>
+                                <span class="slds-truncate" title="Dinner Item">{!$Label.c.Latest_Encounters}</span>
+                            </button>
+                        </h3>
+                        <!--section body-->
+                        
+                        <div class="slds-section__content" id="latestencountersSectionItemId">
+                            <aura:if isTrue="{!v.latestencounterdropdown}">
+                                <lightning:datatable
+                                                     aura:id="table"
+                                                     columns="{! v.latestencounterss}"
+                                                     data="{!v.latestencounterssdata}"
+                                                     hideCheckboxColumn="true"
+                                                     keyField="Id"
+                                                     showRowNumberColumn="true"
+                                                     onrowselection="{! c.updateSelectedText}"
+                                                     onrowaction="{! c.handleAction }"/>
+                                <aura:set attribute="else">
+                                    <center>{!$Label.c.There_are_no_records_for_this_section}.</center>
+                                </aura:set>
+                            </aura:if>
+                            
+                        </div>
+                        
+                    </div>
+                    <div class="slds-section slds-is-close animate" aura:id="Immunization">
+                        <!--section header-->
+                        <h3 class="slds-section__title">
+                            <button aria-controls="immunizationId" class="slds-button slds-section__title-action" onclick="{!c.toggleSection}" data-auraId="Immunization">
+                                <lightning:icon iconName="utility:switch"
+                                                alternativeText="button icon"
+                                                size="x-small"
+                                                class="slds-section__title-action-icon slds-button__icon_left"/>
+                                <span class="slds-truncate" title="Dinner Item">{!$Label.c.Immunization}</span>
+                            </button>
+                        </h3>
+                        <!--section body-->
+                        
+                        <div class="slds-section__content" id="immunizationId">
+                            <aura:if isTrue="{!v.immunizationdropdown}">
+                                <lightning:datatable
+                                                     aura:id="table"
+                                                     columns="{! v.immunization}"
+                                                     data="{!v.immunizations}"
+                                                     hideCheckboxColumn="true"
+                                                     keyField="Id"
+                                                     showRowNumberColumn="true"
+                                                     onrowselection="{! c.updateSelectedText}"
+                                                     onrowaction="{! c.handleAction }"/>
+                                <aura:set attribute="else">
+                                    <center>{!$Label.c.There_are_no_records_for_this_section}.</center>
+                                </aura:set>
+                            </aura:if>
+                            
+                        </div>
+                        
+                    </div>
+                    <div class="slds-section slds-is-close animate" aura:id="medicalproceduresection">
+                        <!--section header-->
+                        <h3 class="slds-section__title">
+                            <button aria-controls="medicalproceduresectionId" class="slds-button slds-section__title-action" onclick="{!c.toggleSection}" data-auraId="medicalproceduresection">
+                                <lightning:icon iconName="utility:switch"
+                                                alternativeText="button icon"
+                                                size="x-small"
+                                                class="slds-section__title-action-icon slds-button__icon_left"/>
+                                <span class="slds-truncate" title="Dinner Item">{!$Label.c.Medical_Procedure}</span>
+                            </button>
+                        </h3>
+                        <!--section body-->
+                        
+                        <div class="slds-section__content" id="medicalproceduresectionItemId">
+                            <aura:if isTrue="{!v.medicalproceduredropdown}">
+                                <lightning:datatable
+                                                     aura:id="table"
+                                                     columns="{! v.medicalprocedure}"
+                                                     data="{!v.medicalprocedures}"
+                                                     hideCheckboxColumn="true"
+                                                     keyField="Id"
+                                                     showRowNumberColumn="true"
+                                                     onrowselection="{! c.updateSelectedText}"
+                                                     onrowaction="{! c.handleAction }"/>
+                                <aura:set attribute="else">
+                                    <center>{!$Label.c.There_are_no_records_for_this_section}.</center>
+                                </aura:set>
+                            </aura:if>
+                            
+                        </div>
+                        
+                    </div>
+                    <div class="slds-section slds-is-close animate" aura:id="careplanSection">
+                        <!--section header-->
+                        <h3 class="slds-section__title">
+                            <button aria-controls="careplanId" class="slds-button slds-section__title-action" onclick="{!c.toggleSection}" data-auraId="careplanSection">
+                                <lightning:icon iconName="utility:switch"
+                                                alternativeText="button icon"
+                                                size="x-small"
+                                                class="slds-section__title-action-icon slds-button__icon_left"/>
+                                <span class="slds-truncate" title="Dinner Item">{!$Label.c.Care_Plan}</span>
+                            </button>
+                        </h3>
+                        <!--section body-->
+                        
+                        <div class="slds-section__content"   id="careplanItemId">
+                            <aura:if isTrue="{!v.careplandropdown}">
+                                
+                                <lightning:datatable
+                                                     aura:id="table"
+                                                     columns="{! v.carepans }"
+                                                     data="{!v.careplans}"
+                                                     hideCheckboxColumn="true"
+                                                     keyField="Id"
+                                                     showRowNumberColumn="true"
+                                                     onrowselection="{! c.updateSelectedText}"
+                                                     onrowaction="{! c.handleAction }"/>
+                                <aura:set attribute="else">
+                                    <center>{!$Label.c.There_are_no_records_for_this_section}.</center>
+                                </aura:set>
+                            </aura:if>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                
+                <br/>
+                <br/>
+                <!-- <div class="project" style="height:auto;" >
+    <div class="slds-box slds-theme_shade">
+
+<lightning:card>
+
+                    <b> <div class="slds-text-heading_medium">Notes</div></b>
+
+
+
+
+                    <p>Emphasize the fast need for treatment prioritize your long-term oral health</p>
+           <br/>
+           <lightning:fileUpload label="Attach receipt"
+           name="fileUploader"
+           multiple="true"
+           accept="{!v.filetype}"
+           recordId="{!v.recordId}"
+           class="slds-align_absolute-center"
+           onuploadfinished="{!c.handleUploadFinished}" />
+           <br/>
+           <br/>
+           <br/>
+           <br/>
+           <br/>
+           <br/>
+           <br/>
+           <br/>
+           <br/>
+           <br/>
+           <br/>
+           <br/>
+           </lightning:card></div></div> -->
+                <!--
+           <div class="slds-align_absolute-center">
+            <lightning:button variant="brand" label="Back" title="Brand action" onclick="{!c.BackToWelcomePagePatient}" />
+
+                      <lightning:button
+                                        label="Previous"
+                                        iconName="utility:chevronleft"
+                                        iconPosition="left"
+                                        onclick="{! c.onPreviousParent}"
+                                        disabled="{! v.PresentPageNumber == 1 }" />
+                      <span class="slds-var-p-horizontal_x-small">
+                          Page {! (v.PresentPageNumber) } of {! (v.PagesTotal) }
+                      </span>
+                      <lightning:button
+                                        label="Next"
+                                        iconName="utility:chevronright"
+                                        iconPosition="right"
+                                        onclick="{! c.onNextParent }"
+                                        disabled="{! v.PresentPageNumber == v.PagesTotal}" />
+
+      </div> -->
+            </div>
+            
+        </div>
+        
+        
+        
+        
+        <!-- <div class="bottom-left slds-theme_default"> -->
+        <!-- <b> <div class="slds-text-heading_medium">Appointments</div></b>
+
+                        <lightning:tabset variant="scoped">
+                                    <lightning:tab onactive="{! c.handleSelected }" label="Scheduled Appointments" id="select">
+
+                                        <lightning:datatable
+                                                             aura:id="table"
+                                                             columns="{! v.columns }"
+                                                             data="{!v.tableData}"
+                                                             hideCheckboxColumn="false"
+                                                             keyField="Id"
+                                                             showRowNumberColumn="true"
+                                                             onrowselection="{! c.updateSelectedText}"
+                                                            onrowaction="{! c.handleAction }"/>
+
+                                    </lightning:tab>
+
+                                    <lightning:tab onactive="{! c.handlecancel }" label="Canceled Appointments" id="cancel">
+                                        <lightning:datatable
+                                                             aura:id="table"
+                                                             columns="{! v.columns }"
+                                                             data="{!v.tableData}"
+                                                             hideCheckboxColumn="false"
+                                                             keyField="Id"
+                                                             showRowNumberColumn="true"
+                                                             onrowselection="{! c.updateSelectedText}"
+                                                             onrowaction="{! c.handleAction }"/>
+                                    </lightning:tab>
+                     <lightning:tab onactive="{! c.handlCompleted }" label="Completed Appointments" id="completed">
+
+                                        <lightning:datatable
+                                                             aura:id="table"
+                                                             columns="{! v.columns }"
+                                                             data="{!v.tableData}"
+                                                             hideCheckboxColumn="false"
+                                                             keyField="Id"
+                                                             showRowNumberColumn="true"
+                                                             onrowselection="{! c.updateSelectedText}"
+                                                             onrowaction="{! c.handleAction }"/>
+
+
+                                    </lightning:tab>
+
+                                </lightning:tabset>
+
+
+ -->
+        
+        
+        <!-- </div> -->
+        
+        
+        <!-- <div class="bottom-right slds-theme_default"> -->
+        
+        <!-- <b> <div class="slds-text-heading_medium">Notes</div></b>
+
+
+
+
+                            <p>Emphasize the fast need for treatment prioritize your long-term oral health</p>
+                   <br/>
+                   <lightning:fileUpload label="Attach receipt"
+                   name="fileUploader"
+                   multiple="true"
+                   accept="{!v.filetype}"
+                   recordId="{!v.recordId}"
+                   onuploadfinished="{!c.handleUploadFinished}" /> -->
+        
+        <!-- </div> -->
+        
+        
+        
+        <!-- <aura:if isTrue="{!v.showNoAppointment}">
+   <div class="headingForNoAppointment slds-align_absolute-center">
+                <h6><b> ..... Sorry You Dont Have Any Appointment Yet .....</b></h6>
+              </div>
+    </aura:if> -->
+        <br/>
+        <!-- <div class="slds-align_absolute-center">
+              <lightning:button variant="brand" label="Back" title="Brand action" onclick="{!c.BackToWelcomePagePatient}" />
+
+                        <lightning:button
+                                          label="Previous"
+                                          iconName="utility:chevronleft"
+                                          iconPosition="left"
+                                          onclick="{! c.onPreviousParent}"
+                                          disabled="{! v.PresentPageNumber == 1 }" />
+                        <span class="slds-var-p-horizontal_x-small">
+                            Page {! (v.PresentPageNumber) } of {! (v.PagesTotal) }
+                        </span>
+                        <lightning:button
+                                          label="Next"
+                                          iconName="utility:chevronright"
+                                          iconPosition="right"
+                                          onclick="{! c.onNextParent }"
+                                          disabled="{! v.PresentPageNumber == v.PagesTotal}" />
+
+        </div>
+    </div>
+     -->
+    </aura:if>
+    
+    
+    <!--Login/SignUp-->
+    <aura:if isTrue="{!v.isShowLogin}">
+        <div class="slds-m-around_xx-large">
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <!-- modal header start -->
+                    <header class="slds-modal__header headingcolor">
+                        <button class="slds-button slds-button--icon-inverse slds-modal__close" onclick="{!c.hideExampleModalForLogin}">
+                            <lightning:icon iconName="utility:close" size="medium" variant="brand" class="colorIcon"/>
+                            <span class="slds-assistive-text">Close</span>
+                        </button>
+                        <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">{!$Label.c.User_Verification}</h2>
+                    </header>
+                    <!-- modal body start -->
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                        <div class="c-container">
+                            <aura:if isTrue="{!v.isNextModalsForLogin}">
+                                <lightning:layout>
+                                    <lightning:layoutitem size="8" padding="around-small">
+                                        <lightning:input type="String" aura:id="inputValue" label="{!$Label.c.Enter_Your_Email_WhatsApp_Phone_Number}" required="true"></lightning:input>
+                                    </lightning:layoutitem>
+                                    <lightning:layoutitem size="8"><!-- skip to next row -->
+                                    </lightning:layoutitem>
+                                </lightning:layout>
+                            </aura:if>
+                            <aura:if isTrue="{!v.isNextModalForSignUp}">
+                                <lightning:layout>
+                                    <lightning:layoutitem size="4" padding="around-small">
+                                        <lightning:input type="text" label="{!$Label.c.Enter_Your_OTP}" aura:id="confirmotp" class="verify" maxlength="6" required="true"> </lightning:input>
+                                    </lightning:layoutitem>
+                                    <lightning:layoutitem size="4"><!-- skip to next row -->
+                                    </lightning:layoutitem>
+                                </lightning:layout>
+                                <br/>
+                            </aura:if>
+                        </div>
+                    </div>
+                    
+                    <!-- modal footer start-->
+                    <footer class="slds-modal__footer footercolor">
+                        <aura:if isTrue="{!v.hideNumberButtonLogin}">
+                            <button class="slds-button slds-button_neutral" onclick="{!c.hideModalBoxForLogin}">{!$Label.c.Cancel
+                                }</button>
+                        </aura:if>
+                        <aura:if isTrue="{!v.hideOtpButtonLogin}">
+                            <button class="slds-button slds-button_neutral" onclick="{!c.hideOtpModelLogin}">{!$Label.c.Cancel
+                                }</button>
+                        </aura:if>
+                        <aura:if isTrue="{!v.showconfirmbotton}">
+                            <button class="slds-button slds-button_neutral" disabled="{!v.buttondisable}"  onclick="{!c.OpenModalBoxForLogin}">{!$Label.c.confirm}</button>
+                        </aura:if>
+                        <aura:if isTrue="{!v.showverifybotton}">
+                            <lightning:button  label="{!$Label.c.Enter_Your_OTP}" title="Verify OTP" onclick="{!c.verifyOTPForLogin}" class="slds-var-m-left_x-small"></lightning:button>
+                        </aura:if>
+                    </footer>
+                    
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </div>
+    </aura:if>
+    <aura:if isTrue="{!v.guestUserForLoginOrSignUp}">
+        <center>
+            <div  class="slds-size_8-of-12" >
+                <lightning:card>
+                    
+                    <div>
+                        <div class="Header_backgroundforform">
+                            <center>
+                                <h1>
+                                    <b>
+                                        {!$Label.c.You_Don_t_have_an_Account_You_Need_To_SignUp_Please_Fill_the_Following_Data_To}
+                                    </b>
+                                </h1>
+                            </center>
+                        </div>
+                    </div>
+                    
+                    <center>
+                        <div class="slds-p-around_medium">
+                            <lightning:layout>
+                                <lightning:layoutItem size="6" padding="around-small">
+                                    <lightning:inputName aura:id="Lead"
+                                                         label="{!$Label.c.Name}"
+                                                         firstName="{!$Label.c.First_Name}"
+                                                         lastName="{!$Label.c.Last_Name}"
+                                                         salutation="{!v.newLead.Title}"
+                                                         options="{!v.salutationOptions}"
+                                                         required="true" pattern="[a-zA-z]*"/>
+                                    <!--lightning:input aura:id="Lead" label="FirstName" type="text" pattern="[a-zA-Z]*" value="{!v.newLead.FirstName}" /-->
+                                    <!--lightning:input aura:id="Lead" label="LastName" type="text" pattern="[a-zA-Z]*" value="{!v.newLead.LastName}" /-->
+                                    <lightning:input aura:id="Lead" label="{!$Label.c.Email}" type="email" value="{!v.newLead.Email}" required="true"/>
+                                    <lightning:input aura:id="Lead" label="{!$Label.c.Phone}" type="phone"  pattern="[0-9]*" value="{!v.newLead.Phone}" required="true" maxlength="10" minlength="10"/>
+                                </lightning:layoutItem>
+                                <lightning:layoutItem size="6" padding="around-small">
+                                    <lightning:inputAddress  aura:id="Lead"
+                                                            addressLabel="{!$Label.c.Address}"
+                                                            streetLabel="{!$Label.c.Email}"
+                                                            cityLabel="{!$Label.c.City}"
+                                                            countryLabel="Country"
+                                                            provinceLabel="State/Province"
+                                                            postalCodeLabel="{!$Label.c.PostalCode}"
+                                                            street="{!v.newLead.Street}"
+                                                            city="{!v.newLead.City}"
+                                                            country="{!v.newLead.Country}"
+                                                            province="{!v.newLead.State}"
+                                                            postalCode="{!v.newLead.PostalCode}"
+                                                            required="true"
+                                                            />
+                                </lightning:layoutItem>
+                            </lightning:layout>
+                            <br/>
+                            
+                            <center>
+                                <footer class="Header_backgroundforformonetwothree">
+                                    
+                                    <lightning:button label="{!$Label.c.Cancel
+                                                             }" onclick="{!c.handleCancelFirstLead}" variant="brand-outline" />
+                                    
+                                    
+                                    <lightning:button label="{!$Label.c.Create}" onclick="{!c.handleCreateContactForLoginOrSignUp}" variant="brand-outline" />
+                                </footer>
+                            </center>
+                        </div>
+                    </center>
+                </lightning:card>
+            </div>
+        </center>
+    </aura:if>
+    <aura:if isTrue="{!v.iframepopup}">
+        <aura:if isTrue="{!v.showmyspinner}">
+            <div class="outerBox spinner">
+                <lightning:spinner aura:id="mySpinner" variant="brand" size="medium" class='slds=hide' />
+            </div>
+        </aura:if>
+        
+        <lightning:card>
+            <div class="slds-m-around_xx-large">
+                <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container FlowWidthSet">
+                       <header class="slds-modal__header">
+                            <button class="slds-button slds-button-icon-inverse slds-modal__close" onclick="{!c.hideExampleModalForFlow}">
+                                
+                                <lightning:icon iconName="utility:close" size="medium" alternative-text="Close" class="colorIcon"/>
+                                
+                                <span class="slds-assistive-text">Close</span>
+                            </button>
+                        </header>
+                         <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                            <div class="c-container">
+                               <iframe src="https://generative-ai-patient-triage-1eba4a129000.herokuapp.com"
+                                        width="{!v.width}"
+                                        height="{!v.height}"
+                                        />
+                                
+                                       
+                            </div>
+                        </div>
+                        <!--c:contractAmendEnglish></c:contractAmendEnglish-->
+                        
+                        <footer class="slds-modal__footer">
+                            <button class="slds-button slds-button_neutral" onclick="{!c.hideModalBoxForFlow}">{!$Label.c.Cancel
+                                }</button>
+                            <button class="slds-button slds-button_neutral" onclick="{!c.hideModalBoxForservey}">{!$Label.c.Next}</button>
+                        </footer>
+                        
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </div>
+            
+        </lightning:card>
+        
+    </aura:if>
+    
+    
+    <aura:if isTrue="{!v.showZoompopup}">
+        <div class="slds-m-around_xx-large">
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <!-- modal header start -->
+                    <header class="slds-modal__header headingcolor">
+                        <button class="slds-button slds-button--icon-inverse slds-modal__close" onclick="{!c.hideExampleModalForZoom}">
+                            
+                            <lightning:icon iconName="utility:close" size="medium" alternative-text="Close" class="colorIcon"/>
+                            
+                            <span class="slds-assistive-text">Close</span>
+                        </button>
+                        <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">{!$Label.c.Please_Select_Appointment_Type}</h2>
+                    </header>
+                    <!-- modal body start -->
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                        <div class="c-container">
+                            <center>
+                                <fieldset class="slds-form-element">
+                                    <legend class="slds-form-element__legend slds-form-element__label"></legend>
+                                    <div class="slds-form-element__control">
+                                        <div class="slds-visual-picker slds-visual-picker_small">
+                                            <input type="radio" text="1" id="visual-picker-93" aura:id = "nameRadioAuraId"  value="ZoomMeeting" name="example-unique-name-36"  onclick="{!c.handleRadioClick}"/>
+                                            <label for="visual-picker-93">
+                                                <span class="slds-visual-picker__figure slds-visual-picker__icon slds-align_absolute-center">
+                                                    <span class="slds-is-selected">
+                                                        <span class="slds-icon_container">
+                                                            <img src="{!$Resource.ZoomMeetingIcon}"/>
+                                                        </span>
+                                                    </span>
+                                                    <span class="slds-is-not-selected">
+                                                        <span class="slds-icon_container">
+                                                            <img src="{!$Resource.ZoomMeetingIcon}"/>
+                                                        </span>
+                                                    </span>
+                                                </span>
+                                                <span class="slds-visual-picker__body">
+                                                    <span class="slds-text-title">{!$Label.c.Video}</span>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="slds-visual-picker slds-visual-picker_small">
+                                            <input type="radio" id="visual-picker-94" value="DirectHospital" name="example-unique-name-36" onclick="{!c.handleRadioClick}"/>
+                                            <label for="visual-picker-94">
+                                                <span class="slds-visual-picker__figure slds-visual-picker__icon slds-align_absolute-center">
+                                                    <span class="slds-is-selected">
+                                                        <span class="slds-icon_container">
+                                                            <img src="{!$Resource.Healthcloudimg1}"/>
+                                                        </span>
+                                                    </span>
+                                                    <span class="slds-is-not-selected">
+                                                        <span class="slds-icon_container">
+                                                            <img src="{!$Resource.Healthcloudimg1}" />
+                                                        </span>
+                                                    </span>
+                                                </span>
+                                                <span class="slds-visual-picker__body">
+                                                    <span class="slds-text-title">{!$Label.c.Visit_Hospital}</span>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </center>
+                        </div>
+                    </div>
+                    
+                    <!-- modal footer start-->
+                    <footer class="slds-modal__footer footercolor footercolor">
+                        <lightning:button  label="{!$Label.c.Previous}" title="Previous" onclick="{!c.PreviousActiontoFlow}" class="slds-var-m-left_x-small"></lightning:button>
+                        <lightning:button  label="{!$Label.c.Next}" title="Next" onclick="{!c.NextActiontoFlow}" class="slds-var-m-left_x-small"></lightning:button>
+                    </footer>
+                    
+                </div>
+                
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </div>
+        
+        
+        
+    </aura:if>
+</aura:component>

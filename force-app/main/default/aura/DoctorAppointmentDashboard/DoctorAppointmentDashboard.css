@@ -1,0 +1,13 @@
+.THIS .sizeBox{
+    width:400px;
+}
+
+.THIS .fontsize{
+    background-color:#2f7786;
+    font-family:Arial;
+    font-size: 30px;
+    color:white;
+}
+.THIS .buttonLeft{
+    margin-left:700px;
+}

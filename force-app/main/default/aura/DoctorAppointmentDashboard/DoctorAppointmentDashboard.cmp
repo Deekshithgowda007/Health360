@@ -1,0 +1,199 @@
+<aura:component controller="DoctorAppointmentDashboardApex" implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction,lightning:availableForFlowScreens" access="global">
+    <aura:attribute name="selectedLookUpRecord" type="sObject" default="{}"/>
+    <aura:attribute name="objContact" type="contact" default="{'sobjectType':'contact'}"/>
+    <aura:attribute name="allData" type="Object" />
+    <aura:attribute name="filteredData" type="List" />
+    <aura:attribute name="tableData" type="List" />
+    <aura:attribute name="columns" type="Object[]" />
+    <aura:attribute name="pageSize" type="Integer" default="2" />
+    <aura:attribute name="pageSizeOptions" type="Integer[]" default="2,4,6" />
+    <aura:attribute name="currentPageNumber" type="Integer" default="1" />
+    <aura:attribute name="totalPages" type="Integer" default="1" />
+    <aura:attribute name="searchPhrase" type="String" />
+    <aura:attribute name="AppStatus" type="String" />
+    <aura:attribute name="isLoading" type="Boolean" default="false" />
+    <aura:attribute name="ShowTimeField" type="Boolean" default="false" />
+    <aura:attribute name="Homepopup" type="Boolean" default="true"/>
+    <aura:attribute name="FlowPopup" type="Boolean" default="false" />
+    <aura:attribute name="isLoadingBack" type="Boolean" default="false" />
+    <aura:attribute name="checkValue" type="String" default="true"/>
+    <aura:handler name="init" value="{!this }" action="{! c.doInit }" />
+    <aura:handler name="oSelectedRecordEventPass" event="c:DoctorDashboard" action="{!c.handleComponentEventPass}"/>
+    <aura:attribute name="contactId" type="String" />
+    <aura:attribute name="AppointmentId" type="Map" />
+    <aura:attribute name="AppointmentStatus" type="Map" />
+    <aura:attribute name="showmyspinner" type="Boolean" default="false" />
+    <aura:attribute name="ButtonShow" type="boolean" default="false"/>
+    <aura:attribute name="showCancelBox" type="boolean" default="false"/>
+    <aura:attribute name="ShowToast" type="boolean" default="true"/>
+    <aura:attribute name="ShowTable" type="boolean" default="false"/>
+    <aura:attribute name="showNoAppointment" type="boolean" default="false"/>
+    <aura:attribute name="showtabledata" type="boolean" default="false"/>
+    <aura:attribute name="selectedLeads" type="List"/>
+    <aura:attribute name="DateTime" type="DateTime"/>
+    
+    <aura:if isTrue="{!v.Homepopup}">
+        <lightning:card>
+            
+            <aura:if isTrue="{!v.showmyspinner}">
+                <div class="outerBox spinner">
+                    <lightning:spinner aura:id="mySpinner" variant="brand" size="medium" class='slds=hide'/>
+                </div>
+            </aura:if>
+            <div class="slds-align_absolute-center fontsize">
+                <h1><b>{!$Label.c.Practitioner_Appointment_DashBoard}</b></h1>
+            </div>
+            <div class="slds-m-around_large">
+                <div class="slds-align_absolute-center sizeBox">
+                    <c:LookUpFieldsParent objectAPIName="contact" IconName="standard:contact" aura:id="selectedDoctors" selectedRecord="{!v.selectedLookUpRecord}" label="{!$Label.c.Search_Practitioner}"/>
+                </div>
+                <br/> 
+            </div>
+            <lightning:card>                               
+                <aura:if isTrue="{!v.ShowToast}">
+                    <div class="slds-align_absolute-center" > 
+                        <h5><b>Please Select A Practitioner To See the Appointment DashBoard</b></h5>
+                    </div>
+                </aura:if>
+                <aura:if isTrue="{!v.ShowTable}">
+                    <div class="slds-grid slds-p-top_low">
+                        <aura:if isTrue="{!v.ShowTimeField}">
+                            <div class="slds-size_3-of-10 slds-p-left_xx-small slds-p-horizontal_x-large " >
+                                <lightning:select
+                                                  label="{!$Label.c.Number_of_records_on_page}"
+                                                  value="{!v.pageSize }"
+                                                  onchange="{!c.onPageSizeChange }">
+                                    <aura:iteration items="{!v.pageSizeOptions}" var="opt">
+                                        <option text="{!opt }"></option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            <div class="slds-size_3-of-10 slds-p-left_xx-small slds-p-horizontal_x-large " >
+                                <lightning:input type="date" name="input1" label="{!$Label.c.Enter_a_date}" aura:id="DateChange" onchange="{!c.onPageDateChange}"/>
+                            </div>
+                        </aura:if>
+                        <aura:if isTrue="{!v.ButtonShow}">
+                            <div class="buttonLeft">
+                                <lightning:button variant="brand" label="Cancel Appointment" title="Brand action" onclick="{!c.handleConfirmDialog }" class="slds-m-bottom_large"/>
+                            </div>
+                        </aura:if>
+                    </div>    
+                    <br/>
+                    <lightning:tabset variant="scoped">
+                        <lightning:tab onactive="{! c.handleActive }" label="{!$Label.c.Scheduled_Appointments}" id="badge">
+                            <aura:if isTrue="{!v.showtabledata}">
+                            <lightning:datatable
+                                                 aura:id="table"
+                                                 columns="{! v.columns }"
+                                                 data="{!v.allData}"
+                                                 hideCheckboxColumn="false"
+                                                 keyField="Id" 
+                                                 showRowNumberColumn="true"
+                                                 onrowselection="{! c.updateSelectedText}"
+                                                 onrowaction="{! c.handleAction }"/>
+                             <aura:set attribute="else">
+                                  <center>
+                                      ...NO SCHEDULED APPOINTMENTS FOUND...
+                                 </center>
+                                     </aura:set>
+                            </aura:if>
+                            
+                        </lightning:tab>
+                        
+                        <lightning:tab onactive="{! c.handlecancel }" label="{!$Label.c.Canceled_Appointments}" id="cancel">
+                              <aura:if isTrue="{!v.showtabledata}">
+                            <lightning:datatable
+                                                 aura:id="table"
+                                                 columns="{! v.columns }"
+                                                 data="{!v.allData}"
+                                                 hideCheckboxColumn="false"
+                                                 keyField="Id" 
+                                                 showRowNumberColumn="true"
+                                                 onrowselection="{! c.updateSelectedText}"
+                                                 onrowaction="{! c.handleAction }"/>
+                                  <aura:set attribute="else">
+                                  <center>
+                                      ...NO CANCELED APPOINTMENTS FOUND...
+                                 </center>
+                                     </aura:set>
+                            </aura:if>
+                        </lightning:tab>
+                        
+                        <lightning:tab onactive="{! c.handlecompleted }" label="{!$Label.c.Completed_Appointments}" id="complete">
+                              <aura:if isTrue="{!v.showtabledata}">
+                            <lightning:datatable
+                                                 aura:id="table"
+                                                 columns="{! v.columns }"
+                                                 data="{!v.allData}"
+                                                 hideCheckboxColumn="false"
+                                                 keyField="Id" 
+                                                 showRowNumberColumn="true"
+                                                 onrowselection="{! c.updateSelectedText}"
+                                                 onrowaction="{! c.handleAction }"/>
+                            <aura:set attribute="else">
+                                  <center>
+                                      ...NO COMPLETED APPOINTMENTS FOUND...
+                                 </center>
+                                     </aura:set>
+                            </aura:if>
+                        </lightning:tab>
+                    </lightning:tabset>
+                    <br/>
+                    <div class="slds-align_absolute-center">
+                        <lightning:button
+                                          label="Previous"
+                                          iconName="utility:chevronleft"
+                                          iconPosition="left"
+                                          onclick="{! c.onPrev }"
+                                          variant="brand-outline"
+                                          disabled="{! v.currentPageNumber == 1 }" />
+                        <span class="slds-var-p-horizontal_x-small">
+                            Page {! (v.currentPageNumber) } of {! (v.totalPages) }
+                        </span>
+                        <lightning:button
+                                          label="Next"
+                                          iconName="utility:chevronright"
+                                          iconPosition="right"
+                                          onclick="{! c.onNext }"
+                                          variant="brand-outline"
+                                          disabled="{! v.currentPageNumber == v.totalPages }" />
+                    </div>
+                </aura:if>
+            </lightning:card>
+        </lightning:card>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.FlowPopup}">
+        <lightning:card>
+            <center>
+                <lightning:flow aura:id="flowData"/>
+            </center>
+        </lightning:card>
+    </aura:if>
+    
+    <aura:if isTrue="{!v.showCancelBox}">
+        <div role="dialog" class="slds-modal slds-fade-in-open ">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h1 class="slds-text-heading--medium">Confirmation to Cancel Appointment?</h1>
+                </header>
+                <div class="slds-modal__content slds-p-around--medium">
+                    <center><b>Are You Sure Want To Cancel The Appointments</b></center>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning:button name='No' label='No' onclick='{!c.handleConfirmDialogCancel}'/>
+                    <lightning:button variant="brand" name='Yes,Sure' label='Yes,Sure' onclick='{!c.handleClickCancel}'/>
+                </footer>
+            </div>
+        </div>
+        <div class="slds-backdrop slds-backdrop--open"></div> 
+    </aura:if>
+    
+    <aura:if isTrue="{!v.showNoAppointment}">
+                <div class="headingForNoAppointment slds-align_absolute-center">
+                <h6><b> ..... Sorry You Dont Have Any Appointment Yet .....</b></h6>
+              </div>
+                                                 
+    </aura:if>
+    
+</aura:component>

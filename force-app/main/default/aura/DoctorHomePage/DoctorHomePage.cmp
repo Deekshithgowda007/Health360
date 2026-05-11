@@ -1,0 +1,30 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" >
+    <div class="carousel-wrapper">
+        <lightning:carousel>
+            <lightning:carouselImage header="Health 360"
+                                    src="{!$Resource.Health360logo2}"  
+                                    style="height:auto; width:100%;"         
+                                    description="A perfect healthcare management system called the Health360 - eMedical System is the perfect digital partner for all-scale healthcare professionals like doctors, nurses, pharmacists, etc to enhance their workflow">
+            </lightning:carouselImage>
+        
+            <lightning:carouselImage header="Book An Appointment"
+                                    src="{!$Resource.HumanKidneyimg}"
+                                    href="https://tech-kasetti-healthcloud.my.site.com/patientportal/s/book-an-appointment"
+                                    description="A doctor appointment booking system is an online system that allows patients to easily book their appointment at a particular clinic related to their health issue. Such as Dental, Injury, etc."
+                                    alternativeText="This is a card">
+            </lightning:carouselImage>
+            
+            <lightning:carouselImage header="Einstein GPT"
+                                    src="{!$Resource.UrologicDiseasesimg}"
+                                    description="Salesforce Einstein GPT is an innovative natural language processing (NLP) tool that is introduced with the motive of helping businesses significantly improve customer relationship management."
+                                    alternativeText="This is a card">
+            </lightning:carouselImage>
+            
+            <lightning:carouselImage header="Patient Profile"
+                                    src="{!$Resource.Orthopaedicimg}"
+                                    description="The Clinical Profile is the left-hand panel that appears in every patient's chart. It is home to important patient details including their allergies, immunizations, medical procedures, health conditions, care plan."
+                                    alternativeText="This is a card">
+            </lightning:carouselImage>
+        </lightning:carousel>
+    </div>
+</aura:component>

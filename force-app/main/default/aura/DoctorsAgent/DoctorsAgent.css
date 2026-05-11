@@ -1,0 +1,35 @@
+.THIS .fontsize{
+    background-color:#2f7786;
+    font-family:Arial;
+    font-size: 30px;
+    color:white;
+}
+  /* .THIS.text {
+   background-color: #435e75;
+     
+    width: 100%;
+}   */
+.THIS .footercolornew{
+    background-color:#DEB887;
+    max-width: 1300px ;
+    max-height: 50px ;
+ }
+ .THIS .slds-theme_backgroundColor-lightblue {
+    background-color: #435e75;
+}
+.THIS.exampleHolder{
+    position: relative;
+    display: inline-block;
+    margin-left: 15px;
+    width: 55px;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+.THIS.spinner-padding {
+  padding-top: 5%;
+}
+.THIS .removeheader{
+    font-family:Arial;
+    font-size: 30px;
+    color:black;
+}

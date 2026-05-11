@@ -1,0 +1,508 @@
+.THIS.slds-box {
+    border: 6px solid White;
+    height:auto;
+}
+.THIS .slds-border_bottom{
+    border-color: black;
+}
+
+.THIS .container{
+    height: 250px;
+    width: 25%;
+    padding:5px;
+    margin-left:40%;
+    background-color:rgba(169, 169, 169, 0.840);
+    
+    
+}
+.THIS .heading{
+    color:Red;
+    font-size: 18px;
+}
+.THIS .Secondcontainer{
+    height: 250px;
+    width: 50%;
+    padding:5px;
+    
+}
+
+
+
+
+.THIS .imagesetup{
+    height:250px;
+    width:250px;
+}
+.THIS .imagesetups{
+    height:100px;
+    width:100px;
+}
+.THIS .appo{
+    background-color:rgb(255, 254, 240);
+    padding: 25px;
+    
+}
+.THIS .container2{
+    height: 250px;
+    width: 20%;
+    padding:20px;
+    
+}
+.THIS .add{
+    margin-top:30px;
+    
+}
+.THIS .image{
+    width:180px;
+    height:200px;
+    
+}
+.THIS.textbox{
+    width:50px;
+    
+}
+.THIS .align{
+    margin-left:25px;
+    
+    
+}
+.THIS .Header_backgrounds{
+    font-family:Arial;
+    font-size: 20px;
+    color:white;
+
+    
+}
+
+
+.THIS .ProcessImage{
+    width:100px;
+    height:50px;
+}
+.THIS .DummyImage{
+    width:100px;
+    height:50px;
+}
+.THIS .pagination{
+    margin-top:2%;
+}
+.THIS .notfound{
+    margin-left:200px;
+    margin-top:50px;
+}
+.THIS .pagination{
+    margin-left:355px;
+}
+
+
+.THIS .appos{
+    background-color: rgba(0, 255, 255, 0.699);
+    padding: 25px;
+}
+.THIS .speciality{
+    background-color:rgba(169, 169, 169, 0.840);
+    
+    
+}
+.THIS .card{
+    background-color:rgba(169, 169, 169, 0.842);
+    
+    
+    
+}
+.THIS .cardSize{
+    margin-left:300px;
+    margin-right:300px;
+    
+}
+.THIS .subspeciality{
+    background-color:rgba(167, 169, 169, 0.840);
+    
+    
+}
+.THIS .rightmove{
+    margin-left:50px;
+    margin-bottom:20px;
+    
+}
+.THIS .backButton{
+    margin-left:180px;
+}
+
+.THIS .buttonleft{
+    margin-left:120px;
+}
+
+.THIS .buttonleftnew{
+    margin-right:10px;
+}
+
+.THIS .homebutton{
+    margin-bottom: 23px;
+}
+
+.THIS .previousbutton{
+    margin-bottom: 23px;
+}
+
+.THIS .nextbutton{
+    margin-bottom: 23px;
+}
+
+.THIS .currentpages{
+    margin-bottom: 23px;
+}
+
+.THIS .opm{
+    margin-bottom: 100px;
+    margin-right: 130px;
+}
+.THIS .opm2{
+    margin-bottom: 100px;
+    margin-right: 200px;
+}
+
+.THIS .owwopm1{
+    margin-bottom: 100px;
+    margin-right: 130px;
+}
+.THIS .owwopm2{
+    margin-bottom: 100px;
+    margin-right: 200px;
+}
+
+
+.THIS .moveButton{
+    margin-bottom:200px;
+}
+
+.THIS{
+    background-color: white;
+}
+.THIS .concern {
+    color: #ffffff;
+    background-color:#2f7786; 
+}
+
+.THIS .Header_background{
+    background-color:#2f7786;
+    font-family:Arial;
+    font-size: 30px;
+    color:white;
+    text-align: right;
+    padding-left:180px;
+}
+
+.THIS .Header_backgroundssss{
+    background-color:#808080;
+    font-family:Arial;
+    font-size: 20px;
+    max-width: 20.5cm;
+    color:gray;
+}
+
+
+.THIS .Header_backgroundforform{
+    background-color:#2f7786;
+    font-family:Arial;
+    font-size: 20px;
+    color:white;
+    
+}
+
+.THIS .headingforfooter{
+    background-color:#2f7786;
+    font-family:Arial;
+    font-size: 20px;
+    color:white;
+    
+}
+
+.THIS .Header_backgroundssss{
+    background-color:#808080;
+    font-family:Arial;
+    font-size: 20px;
+    max-width: 25.5cm;
+    color:gray;
+}
+
+.THIS .btn1{
+    
+    margin-right: 25px;
+    
+} 
+.THIS .btn2{
+    
+    margin-right: 20px;
+    
+} 
+
+.THIS .Header_backgroundfornewuser{
+    background-color:#808080;
+    font-family:Arial;
+    font-size: 20px;
+    max-width: 750px;
+    color:gray;
+}
+
+.THIS .Header_backgroundfornew{
+    background-color:#808080;
+    font-family:Arial;
+    font-size: 20px;
+    max-width: 750px;
+    color:gray;
+}
+
+
+.THIS .rightsidemove{
+    margin-left:300px;
+    
+    
+}
+
+
+.THIS .bookAppointment{
+    background-color: rgba(129, 207, 224);
+    
+}
+.THIS .hospitalcss{
+    
+    background-color: rgba(210, 210, 210);
+    width :55%;
+    margin-left: 430px;
+}
+
+.THIS .Secondhospitalcss{
+    width :60%;
+    background-color: rgba(210, 210, 210);      
+}
+.THIS .designwelcome{
+    background-color: rgba(240, 240, 240);
+    margin-top: -20px;
+    margin-bottom: -80px;
+}
+
+.THIS .designwelcomeone{
+    background-color: rgba(240, 240, 240);
+    margin-top: 60px;
+    margin-bottom: 60px;
+}
+.THIS .cssstyledesign{
+    background-color: rgba(240, 240, 240);
+    margin-top: -40px;
+    margin-bottom: -60px;
+}
+.THIS .Cssdesigntwo{
+    background-color: rgba(240, 240, 240);
+    margin-top: 70px;
+    margin-bottom: 70px;
+}
+
+
+
+.THIS.exampleHolder{
+    position: relative;
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+}
+.THIS .header-column {
+    padding: 0 2rem;
+}
+
+.THIS .field-title {
+    font-size: .75rem;
+    line-height: 1.25;
+    color: #54698d;
+    margin-bottom: .25rem;
+}
+.THIS .moveclose{
+    margin-left:270%;
+}
+.THIS .moveAvailability{
+    margin-left:10%;
+    
+}
+.THIS .moveAppointmet{
+    margin-left:700px; 
+}
+
+.THIS .moveloginButton{
+    
+    margin-left:90%;
+}
+.THIS .buttonLeftside{
+    margin-left:700px;
+}
+.THIS .moveUp{
+    margin-right :400px;
+}
+.THIS .headingForNoAppointment{
+    color:Black;
+    font-size: 18px;
+}
+.THIS .styleKar{
+    width :30%;
+    border: 1px solid black;
+}
+.THIS .marginbottom{
+    margin-left:15px;
+}
+
+.THIS .FlowWidthSet{
+    max-width: 90rem !important;
+    width:90% !important;
+    
+}
+.THIS .colorIcon svg {
+    fill : White;
+}
+.THIS .colorIconss svg {
+    fill :aquamari;
+}
+.THIS .headingcolor{
+    background-color:#2f7786;
+    color:white;
+}
+.THIS .footercolor{
+    background-color:#DEB887;
+    
+}
+.THIS .serveyWidthSet{
+    max-width: 90rem !important;
+    width:90% !important;
+    
+}
+.THIS .btn {
+    color: #ffffff;
+    background-color:#2f7786; 
+}
+.THIS .alignlogin{
+    margin-top:7px;
+}
+.THIS .Header_backgroundss{
+    background-color:#2f7786;
+    font-family:Arial;
+    font-size: 30px;
+    color:white;
+}
+.THIS .era{
+    
+    font-family:Arial;
+    font-size: 30px;
+    color:grey;
+}
+
+.THIS.major-grid {
+    display: grid;
+    height: 80vh;
+    margin-right: 10px;
+    grid-template-rows: 100% 40%;
+    grid-template-columns: 70% 30%;
+    grid-gap: 10px;
+}
+
+.THIS.top-left {
+    display: grid;
+    height: 100%;
+    grid-template-rows: 4% 10% 39% 49%;
+    grid-template-columns: 100%;
+}
+
+.THIS .Header_backgroundfooterforhospitalsearch{
+    background-color:#DEB887;
+    max-width: 2000px ;
+    max-height: 40px;
+}
+/* .THIS .imageset{
+max-height: 100px;
+max-width: 800px;
+}
+.THIS .imageset1{
+max-height: 200px;
+max-width: 800px;
+
+} */
+.THIS .treeimage{
+    background-color:#e7f5fe;
+    max-width: 1300px ;
+    max-height: 60px ;
+    
+}
+.THIS .footercolornew{
+    background-color:#DEB887;
+    max-width: 1300px ;
+    max-height: 40px ;
+}
+.THIS .Header_backgroundforformonethree {
+    background-color:#DEB887;
+    max-width: 2000px ;
+    max-height: 40px;
+}
+.THIS .Header_backgroundforformonetwothree{
+    background-color:#DEB887;
+    max-width: 2000px ;
+    max-height: 40px;
+}
+.THIS .Header_backgroundfooterforhospitalsearch{
+    background-color:#DEB887;
+    max-width: 2000px ;
+    max-height: 40px;
+}
+.THIS .footercolornew{
+    background-color:#DEB887;
+    max-width: 1300px ;
+    max-height: 40px ;
+    
+}
+.THIS .slds-truncate{
+    font-color:blue;
+}
+.THIS .slds-float_right{    
+    font-size: 15px;
+}
+.THIS .slds-float_left{
+    font-size: 20px;
+}
+
+.THIS .backtohospitalpage{
+    margin-top: 300px;
+    
+}
+/* .THIS .doctordetailscss{
+margin-bottom: -30px;
+margin-left: 30px;
+}
+.THIS .appointmentcss{
+margin-bottom: 30px;
+}
+.THIS .imagecss{
+margin-bottom: 30px;
+margin-top: 20px;
+} */
+.THIS .profilecss{
+    margin-right: 100px;
+} 
+.THIS .specialitycss{
+    margin-right: 100px;
+}
+.THIS .backbuttoncss{
+    
+    margin-left: 180px;
+}
+
+.THIS .specialitys{
+    background-color:rgba(169, 169, 169, 0.840);
+    font-size: 1rem;
+    
+}
+.THIS .BUTTONFORCSS{
+    margin-top: 30px;
+    margin-right: 8px;
+ }
+ .THIS .health{
+    margin-bottom: 3px;
+}
+.THIS .healthsssfix{
+  width: 70%;
+}

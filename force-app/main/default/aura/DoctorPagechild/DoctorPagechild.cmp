@@ -1,0 +1,233 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global"  controller="DoctorAppointmentController" >
+
+   <!--Header Attributes-->   
+        <aura:attribute name="CheckForSpecilaity" type="boolean" default="true"/>
+    <aura:attribute name="showrecords" type="Boolean" default="false" />
+    <aura:attribute name="welcomepage" type="Boolean" default="false" />
+    <aura:attribute name="showBookAppointment" type="Boolean" default="true" />
+
+   <aura:attribute name="CareSpecilityforHeading" type="String" />
+   <aura:attribute name="HospitalforHeading" type="String" />
+    <!--Care-->
+   <aura:attribute name="careIds" type="String" />
+   <aura:attribute name="CareList" type="HealthcareProviderSpecialty[]" />
+    <!--Subcare-->
+    <aura:attribute name="showsub" type="boolean" default="false"/>
+    <aura:attribute name="showSpecialityForDoctors" type="boolean" default="true"/>
+    <aura:attribute name="SubCareList" type="SObject[]" />
+    <!--countdoctor-->
+    <aura:attribute name="countdoctor" type="Integer" />
+    <!--Doctor Iteration-->
+    <aura:attribute name="doctorsIterate" type="String" />
+    <aura:attribute name="viewdoctordetails" type="boolean" default="false"/>
+    <aura:attribute name="NoDoctorFound" type="boolean" default="true"/>
+    <aura:attribute name="SelectSpecialtyPage" type="boolean" default="true"/>
+    <aura:attribute name="selectSpecialty" type="boolean" default="false"/>
+    <!--BackHomeButtons-->
+    <aura:attribute name="showHospitalss" type="Boolean" default="true" />
+    <aura:attribute name="showHospitalssforCare" type="Boolean" default="false" />
+    <aura:attribute name="showcareback" type="boolean" default="false"/>
+    <!--Pagination-->
+    <aura:attribute name="showPginationbutton" type="Boolean" default="false" />
+    <aura:attribute name="hideprvsbtn" type="boolean" default="false"/>
+      <!--pagination Doctors-->
+    <aura:attribute name="filteredData" type="List" />
+    <aura:attribute name="pageSize" type="Integer" default="2" />
+    <aura:attribute name="pageSizeOptions" type="Integer[]" default="2,4,6" />
+    <aura:attribute name="currentPageNumber" type="Integer" default="1" />
+    <aura:attribute name="totalPages" type="Integer" default="1" />
+   <!--LookUpIds-->
+    <aura:attribute name="selectedAccountLookUpRecord" type="String" />
+    <aura:attribute name="selectedContactLookUpRecord" type="String" />
+    <aura:attribute name="selectedCareSpecialtyLookUpRecord" type="String" />    
+         <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+  
+   
+    <aura:attribute name="ismodalClicked" type="Boolean" default="false" />
+    <aura:attribute name="showverifybotton" type="Boolean" default="false" />
+    <aura:attribute name="showconfirmbotton" type="Boolean" default="false" />
+    <aura:attribute name="isverify" type="Boolean" default="false" />
+    <aura:attribute name="isconfirm" type="Boolean" default="false" />
+    
+    <div class="slds-box " style="height:520px;width:100%;">
+        
+       {!v.selectedAccountLookUpRecord}
+         <aura:if isTrue="{!v.CheckForSpecilaity}">
+        <lightning:card>
+            <div class="Header_background">
+                <center>
+                    <h1>
+                        <b>
+                            {!v.CareSpecilityforHeading} Doctor at {!v.HospitalforHeading}
+                        </b>
+                    </h1>
+                </center>
+            </div>
+            
+        </lightning:card>
+        </aura:if>
+        <div class="slds-m-around--xx-medium " >
+            <lightning:layout>
+                <div class= "speciality"  style="width:26%">
+                    <lightning:layoutItem>
+                        <lightning:verticalNavigation
+                                                      selectedItem="{!v.careIds}"
+                                                      onselect="{!c.handleOnSelect}">
+                            <div class="slds-box speciality">
+                                <lightning:verticalNavigationSection label="Select Speciality">
+                                    <aura:iteration items="{!v.CareList}" var="getrecords" >
+                                        <lightning:verticalNavigationItem label="{!getrecords.Specialty.Name}" name="{!getrecords.Specialty.Id}" />
+                                    </aura:iteration>
+                                </lightning:verticalNavigationSection>
+                            </div>
+                        </lightning:verticalNavigation>
+                        
+                    </lightning:layoutItem>
+                </div>
+                <lightning:layoutItem padding="around-medium">
+                    
+                    <div class="slds-box slds-size_9-of-5" >
+                        <div class="slds-float_right"></div>
+                        <b>Available Providers</b> : <b>{!v.countdoctor}</b>
+                    </div>
+                    
+                    <div class="slds-border_left" ></div>
+                    <div class="slds-p-around_medium" >
+                        <div class="slds-grid slds-wrap">
+                            <aura:iteration items="{!v.doctorsIterate}" var="Ids" indexVar="items">
+                                
+                                <div class="slds-size_7-of-13 slds-p-left_xx-small slds-p-horizontal_x-large" style="width:105%;">
+                                    <lightning:card>
+                                        
+                                        
+   <lightning:button variant="brand" label="Book An Appointment" title="Brand action" onclick="{! c.BookAppointment }" value="{!Ids.Practitioner.Id}" class="slds-float_right" />
+                                        
+    <div class="slds-grid slds-wrap" >
+     <div class="imagesetups">
+     <img src="{!Ids.Practitioner.Image_URL__c}"/>
+      </div>
+      <div class="slds-col">
+       <div class="slds-grid slds-gutters">
+       <div class="align">
+        <div class="health" style="font-size: 25px;">
+        <h1><b>{!Ids.Practitioner.Name}</b></h1></div>
+      <div class="health" style="font-size: 15px;">
+       <h1>Speciality                : &nbsp;{!Ids.Specialty.Name}</h1>
+       <h1>Hospital                  : &nbsp;{!Ids.Account.Name}</h1>
+       <h1>Address                   : &nbsp;{!Ids.Account.BillingCity }</h1>
+       <h1>State                     :&nbsp;{!Ids.Account.BillingState }</h1>
+       <h1>Zip/PostalCode            :&nbsp;{!Ids.Account.BillingPostalCode }</h1>
+       <h1>Country                   :&nbsp;{!Ids.Account.BillingCountry }</h1>
+       <h1>Appointment Type          :&nbsp;{!Ids.Practitioner.Available_Appointment_Type__c }</h1>
+         </div>
+          <br/>
+          <lightning:button variant="base" label="View Profile" title="Click Here To See Doctor Details" onclick="{!c.onDetail}" value="{!Ids.Practitioner.Id}"   />&nbsp;&nbsp;
+        <lightning:button variant="base" label="Doctor Availability" title="Click Here To See Doctors Availabilty" onclick="{!c.handleShowPopover}" value="{!Ids.Practitioner.Id}" class="slds-border_left" />
+     <aura:if isTrue="{!AND(v.viewdoctordetails,Ids.Practitioner.Id==v.indexVar)}" > 
+      <div class="health" style="font-size: 15px;">
+                                                                
+       <lightning:tabset>
+       <lightning:tab label="overview">
+       <div style="width:90%">
+       <p><lightning:formattedText value="{!Ids.Practitioner.Overview__c}" /></p>
+        </div>
+        </lightning:tab>
+                                                                    
+        <lightning:tab label="Awards and Regonition">
+        <div style="width:90%">
+        <p><lightning:formattedText value="{!Ids.Practitioner.Awards_and_Regonitions__c}" /></p>
+         </div>
+         </lightning:tab>
+         <lightning:tab label="Expertise">
+          <div style="width:90%">
+          <p><lightning:formattedText value="{!Ids.Practitioner.Area_of_Expertise__c}" /></p>
+           </div>
+           </lightning:tab>
+           </lightning:tabset>
+                                                                
+           </div>
+            </aura:if>
+              <br/>
+               </div>  
+              </div>
+              </div> 
+               </div>
+            </lightning:card>
+                   </div>
+                  <br/>
+                <p></p>             
+                            </aura:iteration>
+                            <aura:set attribute="else">
+                                <aura:if isTrue="{!v.NoDoctorFound}">
+                                    <div class="notfound">
+                                        <img src="{!$Resource.SalesforceImage}"></img>
+                                        <b><h6>....Sorry No Doctor Found In This Hospital. THANK YOU....</h6></b>
+                                    </div>
+                                </aura:if>
+                                <aura:if isTrue="{!v.SelectSpecialtyPage}">
+                                    <div class="notfound">
+                                        <img src="{!$Resource.SalesforceImage}"></img>
+                                        <b><h6>....PLEASE SELECT A SPECIALITY TO FETCH A DOCTOR. THANK YOU....</h6></b>
+                                    </div>
+                                </aura:if>
+                                <aura:if isTrue="{!v.showcareback}">
+                                    <div class="backtohospitalpage">                              
+                                        <lightning:button label="Back"  title="Click To go Hospital" iconName="utility:back" iconPosition="left" onclick="{! c.BackToHospital}"/>
+                                    </div>
+                                </aura:if>
+                                
+                            </aura:set>
+                            <aura:if isTrue="{!v.selectSpecialty}">
+                                <div class="notfound">
+                                    <b><h6>....PLEASE SELECT A SPECIALITY....</h6></b>
+                                </div>
+                            </aura:if>
+                        </div> 
+                    </div>
+                    
+                    <aura:if isTrue="{!v.showPginationbutton}">
+                        
+                        <div class="pagination">
+                            
+                            <aura:if isTrue="{!v.showHome}">
+                                
+                                <lightning:button label="Home"   iconName="utility:agent_home" title="click to go HomePage" onclick="{! c.home}"/>
+                            </aura:if>
+                            <aura:if isTrue="{!v.showHospitalss}">
+                                <lightning:button label="Back"  title="Click To go Hospital" iconName="utility:back" iconPosition="left" onclick="{! c.BackToHospital}"/>
+                            </aura:if>
+                            <aura:if isTrue="{!v.showHospitalssforCare}">
+                                <lightning:button label="Back"  title="Click To go Hospital" iconName="utility:back" iconPosition="left" onclick="{! c.showHospitalssforCare}"/>
+                                
+                            </aura:if>
+                            
+                            <aura:if isTrue="{!v.hideprvsbtn}">
+                                
+                                <lightning:button
+                                                  label="Previous"
+                                                  iconName="utility:chevronleft"
+                                                  iconPosition="left"
+                                                  onclick="{! c.onPrev }"
+                                                  disabled="{! v.currentPageNumber == 1}" />
+                            </aura:if>         
+                            
+                            <span class="slds-var-p-horizontal_x-small">
+                                Page {! (v.currentPageNumber) } of {! (v.totalPages) }
+                            </span>
+                            
+                            <lightning:button
+                                              label="Next"
+                                              iconName="utility:chevronright"
+                                              iconPosition="right"
+                                              onclick="{! c.onNext }"
+                                              disabled="{! v.currentPageNumber == v.totalPages }" />
+                            
+                        </div>
+                    </aura:if>  
+                </lightning:layoutItem>
+                
+            </lightning:layout>
+        </div>
+    </div>
+
+</aura:component>

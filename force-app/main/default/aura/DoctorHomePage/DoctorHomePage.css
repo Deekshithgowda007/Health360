@@ -1,0 +1,32 @@
+/* CSS for the carousel component */
+.THIS.carousel-wrapper {
+    width: 100%;
+    max-width: 800px; /* Adjust as needed */
+    margin: auto;
+}
+
+/* Style for text overlay */
+.THIS.carousel-image-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Adjust opacity as needed */
+    color: #fff; /* Text color */
+    padding: 10px;
+    box-sizing: border-box;
+    transition: opacity 0.3s ease;
+}
+
+/* Style for header */
+.THIS.carousel-image-overlay h3 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 20px;
+}
+
+/* Style for description */
+.THIS.carousel-image-overlay p {
+    margin: 0;
+    font-size: 14px;
+}

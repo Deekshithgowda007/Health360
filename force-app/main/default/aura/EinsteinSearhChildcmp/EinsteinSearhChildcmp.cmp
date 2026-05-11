@@ -1,0 +1,80 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" Controller="EinsteinSearch" >
+    
+    <aura:attribute name="fetchArticlevalues" type="boolean" default="false"/>
+    <aura:attribute name="EinsteinsearchTab" type="boolean" default="true"/>
+   <!-- <aura:attribute name="callingdoctorappointment" type="boolean" default="false"/>!-->
+    <aura:attribute name="Displayimage" type="boolean" default="true"/>
+    
+    <aura:attribute name="Knowledgearticle" type="String"/>
+    <aura:attribute name="Articlevalues" type="Object[]"/>
+    <!-- <aura:if isTrue="{!v.callingdoctorappointment}">
+        <c:DoctorAppointment/>
+    </aura:if> !-->
+    <aura:if isTrue="{!v.EinsteinsearchTab}">
+        
+        <lightning:card class="slds-box slds-theme_shade" >
+                
+                <div style="height:auto;">
+                    <div class="Header_background" >
+                        
+                        <center>
+                            <h1>
+                                <b>
+                                    
+                                 Einstein Search
+                                    
+                                </b>
+                                
+                            </h1>
+                        </center>
+                    </div>
+                    
+                     <center>
+                    <div class="slds-clearfix"  style="width:50%;">
+                        
+                       
+                        <lightning:input value="{!v.Knowledgearticle}"  class="slds-align_absolute-center" placeholder="🔍Search..."></lightning:input></div>
+                    </center>
+                         &nbsp;
+                                        &nbsp;
+
+                         <div class="slds-clearfix" >
+                        <lightning:button  label="Search" variant="brand" iconName="utility:search" class="slds-align_absolute-center" title="Close action" onclick="{! c.searchClickbutton }"/>
+
+                          </div>
+                   
+                    <br/>
+                       <!-- <lightning:button  variant="brand"  label="Search"  title="Close action" onclick="{! c.searchClickbutton }"/>!-->
+                      <!--  <lightning:button variant="brand" label="Back" title="Back" onclick="{!c.Backclickbutton}" class="slds-var-m-left_x-small"></lightning:button>!-->
+                    <br/>
+                    <br/>
+                    <br/>
+                    
+                    <footer class="slds-card_footer">
+                        <aura:if isTrue="{!v.fetchArticlevalues}">
+                            <aura:iteration items="{!v.Articlevalues}" var="row" indexVar="rowIndex">
+                                <h4><b><u>{!row.headingPart}</u></b></h4>
+                                <br/>
+                                <p class="slds-var-p-horizontal_small" style="text-align: left">
+                                    <lightning:formattedRichText value="{!row.content}"/>
+                                    <lightning:formattedRichText value="{!row.headingPart}"/>
+                                    
+                                </p>
+                                <p slot="footer"></p>
+                                
+                            </aura:iteration>
+                        </aura:if>  
+                    </footer>
+                    <aura:if isTrue="{!v.Displayimage}">
+                        
+                        <center>
+                            <img src="{!$Resource.SalesforceImage}" style="width:700px;"/>
+                        </center>
+                    </aura:if>
+                </div>
+                
+        </lightning:card>
+        
+    </aura:if>
+    
+</aura:component>

@@ -1,0 +1,26 @@
+<template>
+    <template if:false={checkValue}>
+    <lightning-card>
+        <lightning-datatable data={recordsToDisplay} 
+                    hide-checkbox-column=true   
+                    show-row-number-column=true
+                    columns={columns} 
+                    key-field="Id"  
+                    onrowaction={handleRowAction}>
+           </lightning-datatable>
+        </br>
+        <div class="slds-align_absolute-center">
+            <lightning-button disabled={bDisableFirst} icon-name="utility:chevronleft" label="Previous" alternative-text="Previous" onclick={previousPage}></lightning-button>
+            <lightning-button disabled={bDisableLast} icon-name="utility:chevronright" label="Next" alternative-text="Next" onclick={nextPage} class="slds-p-horizontal_x-small" icon-position="right"></lightning-button>
+        </div>
+        </lightning-card>
+    </template>
+        <template if:true = {checkValue}>
+            <center style="font-size: 20px;">
+                Patient Doesn't have any Appointment
+            </center>
+        </template>
+        <template if:false={loaded}>
+            <lightning-spinner alternative-text="Loading"></lightning-spinner>
+        </template>
+</template>

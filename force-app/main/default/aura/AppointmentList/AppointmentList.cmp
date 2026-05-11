@@ -1,0 +1,68 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId" access="global" controller="AppointmentDataForTable">
+    <aura:attribute name="allData" type="Object" />
+    <aura:attribute name="filteredData" type="List" />
+    <aura:attribute name="tableData" type="List" />
+    <aura:attribute name="columns" type="Object[]" />
+    <aura:attribute name="pageSize" type="Integer" default="2" />
+    <aura:attribute name="pageSizeOptions" type="Integer[]" default="2,4,6" />
+    <aura:attribute name="currentPageNumber" type="Integer" default="1" />
+    <aura:attribute name="totalPages" type="Integer" default="1" />
+    <aura:attribute name="searchPhrase" type="String" />
+    <aura:attribute name="isLoading" type="Boolean" default="false" />
+    <aura:attribute name="checkValue" type="String" default="true"/>
+    <aura:handler name="init" value="{!this }" action="{! c.doInit }" />
+    
+    <aura:if isTrue="{! v.isLoading }">
+        <lightning:spinner alternativeText="Loading" />
+    </aura:if>
+    <aura:if isTrue="{!v.checkValue == 'true'}">
+        <lightning:card>
+            <div class="slds-p-around_small slds-grid slds-grid_align-spread slds-grid_vertical-align-start">
+                <div>
+                    <lightning:select
+                                      label="Number of records on page:"
+                                      value="{!v.pageSize }"
+                                      onchange="{!c.onPageSizeChange }">
+                        <aura:iteration items="{!v.pageSizeOptions}" var="opt">
+                            <option text="{!opt }"></option>
+                        </aura:iteration>
+                    </lightning:select>
+                </div>
+            </div>
+            <lightning:datatable
+                                 aura:id="table"
+                                 columns="{! v.columns }"
+                                 data="{! v.tableData }"
+                                 hideCheckboxColumn="true"
+                                 keyField="Id" 
+                                 showRowNumberColumn="true"/>
+            <br></br>
+            <div class="slds-align_absolute-center">
+
+                <lightning:button
+                                  label="Previous"
+                                  iconName="utility:chevronleft"
+                                  iconPosition="left"
+                                  onclick="{! c.onPrev }"
+                                  disabled="{! v.currentPageNumber == 1 }" />
+                <span class="slds-var-p-horizontal_x-small">
+                    Page {! (v.currentPageNumber) } of {! (v.totalPages) }
+                </span>
+
+                <lightning:button
+                                  label="Next"
+                                  iconName="utility:chevronright"
+                                  iconPosition="right"
+                                  onclick="{! c.onNext }"
+                                  disabled="{! v.currentPageNumber == v.totalPages }" />
+            </div>
+        </lightning:card>
+        <aura:set attribute="else">
+            <center>
+                <h1>
+                    <B>Appointment not found for this Patient</B>
+                </h1>
+            </center>
+        </aura:set>
+    </aura:if>
+</aura:component>

@@ -1,0 +1,13 @@
+<aura:event type="COMPONENT" description="by this event we are pass the selected sObject(lookup list record) in the parent component">
+    <aura:attribute name="selelectedrecordByEvent" type="sObject"/>
+      <aura:attribute name="objectAPIName" type="String" />
+    <aura:attribute name="selelectednullrecord" type="String" />
+        <aura:attribute name="getleadId" type="String" />
+     <aura:attribute name="calledComponent" type="String" />
+      <aura:attribute name="iframeUrl" type="String" />
+      <aura:attribute name="ServeySubjectId" type="String" />
+       <aura:attribute name="LeadId" type="String" />
+    
+    
+    
+</aura:event>

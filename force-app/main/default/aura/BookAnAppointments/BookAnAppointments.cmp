@@ -1,0 +1,50 @@
+<aura:component controller="BookAnAppointmentController" implements="force:appHostable,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" >
+    <aura:attribute name="selectedAccountLookUpRecord" type="String" />
+  <aura:attribute name="selectedContactLookUpRecord" type="String" />
+ <aura:attribute name="selectedCareSpecialtyLookUpRecord" type="String" />
+    
+    <div class="slds-box">
+        <div class="Header_background">
+            <center>
+                <h1>
+                    <b>
+                        Book an Appointment
+                    </b>
+                </h1>
+            </center>
+        </div>
+        &nbsp;
+        &nbsp;
+        
+        
+        <img src="{!$Resource.Book_Appointment_Image}" style="height:250px;width:100%;"/>
+        &nbsp;
+        &nbsp;
+        <lightning:layout>
+            <lightning:layoutItem flexibility="auto" padding="horizontal-medium">
+                
+                <div class="custom-box">
+                    <c:LookUpFieldsParent objectAPIName="CareSpecialty" IconName="standard:unified_health_score" aura:id="selectedDoctors" selectedRecord="{!v.selectedCareSpecialtyLookUpRecord}" label="Search Care Speciality"/>
+                </div>
+            </lightning:layoutItem>
+            
+            <lightning:layoutItem  flexibility="auto" padding="horizontal-medium">
+                <div class="custom-box">
+                    <c:LookUpFieldsParent objectAPIName="contact" IconName="custom:custom94" aura:id="selectedDoctors" selectedRecord="{!v.selectedContactLookUpRecord}" label="Search Doctor"/>
+                </div>
+            </lightning:layoutItem>
+            
+            <lightning:layoutItem  flexibility="auto" padding="horizontal-medium">
+                <div class="custom-box">
+                    <c:LookUpFieldsParent objectAPIName="Account" isPatient="false" IconName="standard:address" aura:id="selectedDoctors" selectedRecord="{!v.selectedAccountLookUpRecord}" label="Search Hospital"/>
+                </div>
+            </lightning:layoutItem>
+        </lightning:layout>
+        &nbsp;
+        &nbsp;
+        <center>
+            <lightning:button label="search" class="concern" iconName="utility:search" iconPosition="left" />        
+        </center>
+    </div>
+    
+</aura:component>
