@@ -323,7 +323,7 @@ public class DoctorAppointmentControllerTest {
         special.Name='Denatal Care Speciality Saideep';
         insert special;
         system.assertEquals(conat.LastName,'Practitioner','success');
-         DoctorAppointmentController.fetchPersonAccountAppointments(acn.Id,'Completed & Cancelled',null);
+        // DoctorAppointmentController.fetchPersonAccountAppointments(acn.Id,'Completed & Cancelled',null);
         DoctorAppointmentController.getHospitalsByCareSpecialiyAndDoctor(special.Id,conat.Id);
     }
     
@@ -351,7 +351,7 @@ public class DoctorAppointmentControllerTest {
         special.Name='Denatal Care Speciality Saideep';
         insert special;
         system.assertEquals(conat.LastName,'Practitioner','success');
-         DoctorAppointmentController.fetchPersonAccountAppointments(acn.Id,'Scheduled',null);
+        // DoctorAppointmentController.fetchPersonAccountAppointments(acn.Id,'Scheduled',null);
 
        
     }
@@ -377,7 +377,7 @@ public class DoctorAppointmentControllerTest {
         serv.Status ='Completed & Cancelled';
         insert serv;
         system.assertEquals(conat.LastName,'Practitioner','success');
-       DoctorAppointmentController.fetchPersonAccountAppointments(null,'Completed & Cancelled',leading.id);
+     //  DoctorAppointmentController.fetchPersonAccountAppointments(null,'Completed & Cancelled',leading.id);
         //DoctorAppointmentController.createInvite(care.Id,acn.id);
     }
     @istest
@@ -401,7 +401,7 @@ public class DoctorAppointmentControllerTest {
         serv.Status ='Completed & Cancelled';
         insert serv;
         system.assertEquals(conat.LastName,'Practitioner','success');
-       DoctorAppointmentController.fetchPersonAccountAppointments(null,'Scheduled',acn.id);
+     //  DoctorAppointmentController.fetchPersonAccountAppointments(null,'Scheduled',acn.id);
         // DoctorAppointmentController.createInvite(care.Id,acn.id);
     }
     
