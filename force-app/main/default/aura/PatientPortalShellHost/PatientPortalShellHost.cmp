@@ -1,0 +1,18 @@
+<aura:component
+    access="global"
+    implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,forceCommunity:availableForAllPageTypes,lightning:isUrlAddressable"
+>
+    <aura:attribute name="portalTitle" type="String" default="Patient Appointment Portal" />
+    <aura:attribute name="portalSubtitle" type="String" default="Sign in, choose a specialty, pick a nearby branch, and book with the right doctor." />
+    <aura:attribute name="singleHospitalMode" type="Boolean" default="true" />
+    <aura:attribute name="defaultHospitalId" type="String" default="" />
+    <aura:attribute name="defaultHospitalName" type="String" default="" />
+
+    <c:patientPortalShell
+        portalTitle="{!v.portalTitle}"
+        portalSubtitle="{!v.portalSubtitle}"
+        singleHospitalMode="{!v.singleHospitalMode}"
+        defaultHospitalId="{!v.defaultHospitalId}"
+        defaultHospitalName="{!v.defaultHospitalName}"
+    />
+</aura:component>

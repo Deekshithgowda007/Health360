@@ -32,6 +32,7 @@
          component.set("v.setUserId",getuserId.AccountId);//getuserId.AccountId'0014x00001SkvDNAAZ'
      });
     $A.enqueueAction(action);  
+    helper.loadPortalLocations(component, null);
         
     },
 
@@ -1152,7 +1153,11 @@
         
      
         var getResponceid=component.get("v.getSurveyresponceId");
-        let contactId   =  event.getSource().get("v.value");
+        var rawValue = event.getSource().get("v.value");
+        var valueParts = rawValue ? rawValue.split('|') : [];
+        var selectedAccountId = valueParts.length > 1 ? valueParts[0] : component.get("v.AccId");
+        let contactId   =  valueParts.length > 1 ? valueParts[1] : rawValue;
+        component.set("v.AccId", selectedAccountId);
         component.set("v.contactId",contactId);
         var SpecialityId;
         var AppointmentType;
@@ -1422,60 +1427,19 @@
             if(objectAPIName == 'CareSpecialty'){
                 var getcareId =component.get('v.selectedCareSpecialtyLookUpRecord');
                 component.set('v.careIds',getcareId.Id);
+                component.set('v.selectedLocationId','');
+                component.set('v.AccId',null);
+                component.set('v.getDocId',null);
+                helper.loadPortalLocations(component, getcareId.Id);
                 
             }
             else if(objectAPIName =='contact'){
                 var getcontactId =component.get('v.selectedContactLookUpRecord');
                 component.set('v.doctorsIds',getcontactId.Id);
+                component.set('v.getDocId',getcontactId.Id);
                 component.set('v.selectedaccId',getcontactId.Id); 
-                
-                var spinner = component.find("mySpinner");
-                $A.util.removeClass(spinner, "slds-hide");
-                
-                var action = component.get("c.fetchAccts");
-                action.setParams({
-                    'conId':getcontactId.Id
-                });
-                action.setCallback(this, function(response){
-                    var state = response.getState();
-                    
-                    if (state === "SUCCESS") {
-                        var res = response.getReturnValue();
-                        if(res != null){
-                            var spinner = component.find("mySpinner");
-                            $A.util.addClass(spinner, "slds-hide");
-                            var ids=[];
-                            
-                            //  component.set('v.filterHopspital',res);
-                            component.set('v.AccId',res[0].AccountId);
-                            helper.prepareHospital(component,res);
-                            component.set("v.showrecords",false );
-                            component.set("v.isLoading",false);
-                            component.set("v.showHospitals",true);
-                        }
-                        else{
-                            var toastEvent = $A.get("e.force:showToast");
-                            toastEvent.setParams({
-                                title :$A.get("$Label.c.Info"),
-                                message:$A.get("$Label.c.Please_Select_A_Doctor"),
-                                duration:' 5000',
-                                key: 'info_alt',
-                                type: 'info',
-                                mode: 'dismissible'
-                            });
-                            toastEvent.fire();
-                        } 
-                    }
-                    
-                });
-                $A.enqueueAction(action);
-                
             }
                 else if(objectAPIName == 'Account'){
-                    var getAccountId =component.get('v.selectedAccountLookUpRecord');
-                    component.set('v.AccId',getAccountId.Id);
-                    component.set('v.selectedParentId',getAccountId.Id);
-                    
                 }
             
             component.set('v.selectedRecIds',selectedAccountGetFromEvent.Id);
@@ -1501,187 +1465,51 @@
     getDataForAppointment:function(component, event, helper){
         var getcareId =component.get('v.selectedCareSpecialtyLookUpRecord');
         var getcontactId =component.get('v.selectedContactLookUpRecord');
-        var getAccountId =component.get('v.selectedAccountLookUpRecord');
-        var getHospital=component.get('v.filterHopspital');
+        var selectedLocationId =component.get('v.selectedLocationId');
         
-        if(getAccountId == null && getcareId !=null && getcontactId ==null){
-            alert(1);
-             console.log('getAccountId>> ' +JSON.stringify(getAccountId));
-            console.log('getcareId>> ' +JSON.stringify(getcareId));
-            console.log('getcontactId>> ' +JSON.stringify(getcontactId));
-            component.set("v.careIds",getcareId.Id);
-            
-            component.set("v.showSpecialityForDoctors",false);
-            component.set("v.showHospitals",true);
-            helper.getHospitalsByCareSpeciality(component,event,helper);
-        }
-        
-        
-        
-        if(getAccountId != null && getcareId !=null && getcontactId ==null){
-            alert(2);
-             console.log('getAccountId>> ' +JSON.stringify(getAccountId));
-            console.log('getcareId>> ' +JSON.stringify(getcareId));
-            console.log('getcontactId>> ' +JSON.stringify(getcontactId));
-            helper.getDoctors(component, event, helper,"Acc&care");
-            component.set('v.welcomepage',false);
-            
-            //component.set('v.showBookAppointment',false);
-            //  component.set('v.showDoctors',false);
-            
-            
-        }
-        if(getcontactId != null && getAccountId != null && getcareId !=null){
-            alert(3);
-             console.log('getAccountId>> ' +JSON.stringify(getAccountId));
-            console.log('getcareId>> ' +JSON.stringify(getcareId));
-            console.log('getcontactId>> ' +JSON.stringify(getcontactId));
-            // component.set('v.showrecords',false);
-            
-            component.set("v.getDocId",getcontactId.Id);
-            helper.getDoctors(component, event, helper,"handleAllSearch");
-            component.set('v.welcomepage',false);
-            //  component.set('v.showBookAppointment',false);
-            
-            
-        }
-        
-        if( getcareId !=null && getcontactId != null && getAccountId == null){
-            alert(4);
-             console.log('getAccountId>> ' +JSON.stringify(getAccountId));
-            console.log('getcareId>> ' +JSON.stringify(getcareId));
-            console.log('getcontactId>> ' +JSON.stringify(getcontactId));
-            component.set("v.careIds",getcareId.Id);
-            component.set("v.getDocId",getcontactId.Id);
-            component.set('v.welcomepage',false);
-            //component.set('v.showBookAppointment',false);
-            component.set('v.showrecords',false);
-            helper.getHospitalsByCareSpecialiyAndDoctor(component, event, helper);
-        }
-        if( getcareId ==null && getcontactId == null && getAccountId == null){
-            alert(5);
-            console.log('getAccountId>> ' +JSON.stringify(getAccountId));
-            console.log('getcareId>> ' +JSON.stringify(getcareId));
-            console.log('getcontactId>> ' +JSON.stringify(getcontactId));
+        component.set("v.careIds", getcareId ? getcareId.Id : null);
+        component.set("v.getDocId", getcontactId ? getcontactId.Id : null);
+        component.set("v.AccId", null);
+
+        if(getcareId == null && getcontactId == null && !selectedLocationId){
             var toastEvent = $A.get("e.force:showToast");
             toastEvent.setParams({
                 title :$A.get("$Label.c.Info"),
-                message:$A.get("$Label.c.Please_Select_Speciality_Doctor_Or_Hospital"),
+                message:'Please choose a care specialty, doctor, or location to continue.',
                 duration:'5000',
                 key: 'info_alt',
                 type: 'info',
                 mode: 'pester'
             });
             toastEvent.fire();
+            return;
         }
-        if( getcareId ==null && getcontactId == null && getAccountId != null){
-            alert(6);
-             console.log('getAccountId>> ' +JSON.stringify(getAccountId));
-            console.log('getcareId>> ' +JSON.stringify(getcareId));
-            console.log('getcontactId>> ' +JSON.stringify(getcontactId));
-            helper.fetchHospitalByHospitals(component, event, helper);
+
+        if(selectedLocationId && getcareId == null && getcontactId == null){
+            helper.getPortalBranches(component, event, helper);
+            return;
         }
-        //doctor
-        if(getcontactId !=null && getAccountId == null && getcareId==null ){
-            alert(7);
-            console.log('getAccountId>> ' +JSON.stringify(getAccountId));
-            console.log('getcareId>> ' +JSON.stringify(getcareId));
-            console.log('getcontactId>> ' +JSON.stringify(getcontactId));
-            // component.set("v.getDocId",getcontactId.Id);
-            helper.getHospital(component, event, helper);
-            component.set('v.welcomepage',true);
-            // component.set('v.showBookAppointment',false);
-        }
+
+        helper.getPortalDoctors(component, event, helper, getcontactId != null);
         
-        //doctor and hospital
-        else if(getcontactId != null && getAccountId != null && getcareId==null){
-            alert(8);
-            console.log('getAccountId>> ' +getAccountId);
-            console.log('getcareId>> ' +getcareId);
-            console.log('getcontactId>> ' +getcontactId);
-            var getSelectedDocIds =component.get("v.doctorsIds");
-            var getHospitalId=component.get('v.selectedParentId');
-            var getcontactId =component.get('v.selectedaccId');
-            
-            var action = component.get("c.fetchSpecialityHospiatalByDoctor");
-            action.setParams({
-                "doctId":getSelectedDocIds,
-                "hospId":getHospitalId
-                
-            });
-            action.setCallback(this, function(response){
-                var state = response.getState();
-                var error=response.getError();
-                if (state === "SUCCESS") {
-                    var show = response.getReturnValue(); 
-                    if(getSelectedDocIds == show.PractitionerId && getHospitalId ==show.Practitioner.AccountId){
-                        component.set('v.CareSpecilityforHeading',show.Specialty.Name);
-                        component.set('v.HospitalforHeading',show.Account.Name);
-                        component.set('v.CheckForSpecilaity',true);
-                        component.set('v.filteredData',show);
-                        component.set('v.CareList',show);
-                        component.set('v.showrecords',true);
-                        component.set('v.welcomepage',false);
-                        component.set('v.providerFound',true);
-                        component.set("v.showDoctors",true);
-                        component.set('v.showBookAppointment',false);
-                        component.set("v.showPginationbutton",true);
-                        component.set("v.showHome",true);
-                        component.set("v.showHospitalss",false);
-                        component.set("v.showHospitalssforCare",false);
-                        helper.preparePagination(component,component.get("v.filteredData"));
-                        
-                    }
-                    
-                }
-                else if(state === "ERROR"){
-                    var getdoNulll =  component.get("v.doNull");
-                    if(getdoNulll == null){
-                        var toastEvent = $A.get("e.force:showToast");
-                        toastEvent.setParams({
-                            title :$A.get("$Label.c.Info"),
-                            message:$A.get("$Label.c.Please_Select_Speciality_Doctor_Or_Hospital"),
-                            duration:' 5000',
-                            key: 'info_alt',
-                            type: 'info',
-                            mode: 'pester'
-                        });
-                        toastEvent.fire();
-                    }
-                    else{
-                        
-                        
-                        component.set('v.welcomepage',false);
-                        component.set('v.showrecords',false);
-                        component.set('v.showBookAppointment',true);
-                        var toastEvent = $A.get("e.force:showToast");
-                        toastEvent.setParams({
-                            title :$A.get("$Label.c.Info"),
-                            message:$A.get("$Label.c.We_couldnt_find_anything_that_matches_your_search_criteria_Refine_your_search_a"),
-                            duration:' 5000',
-                            key: 'info_alt',
-                            type: 'info',
-                            mode: 'dismissible'
-                        });
-                        toastEvent.fire();
-                        //$A.get('e.force:refreshView').fire();
-                        // helper.getExactHospitalByMissMatchHospitals(component, event, helper);
-                    }
-                }
-            });
-            $A.enqueueAction(action);
-            
-            
-        }
-        
+    },
+    handleLocationChange : function(component, event, helper) {
+        component.set("v.selectedLocationId", event.getSource().get("v.value"));
+        component.set("v.AccId", null);
     },
     
     onDetail :function(component, event, helper) {
         var btnValue = event.getSource().get("v.value");
+        var valueParts = btnValue ? btnValue.split('|') : [];
+        var accountId = valueParts.length > 1 ? valueParts[0] : null;
+        var doctorId = valueParts.length > 1 ? valueParts[1] : btnValue;
+        if(accountId){
+            component.set("v.AccId", accountId);
+        }
         var showHideVar = component.get("v.viewdoctordetails");
         if(showHideVar == false) {
             component.set("v.viewdoctordetails", true);
-            component.set("v.indexVar",btnValue);
+            component.set("v.indexVar",doctorId);
         }
         else {
             component.set("v.viewdoctordetails", false);
@@ -1691,72 +1519,14 @@
         
     },
     getDoctrsByHospitals :function(component,event,helper){
-        var getcareId =component.get('v.selectedCareSpecialtyLookUpRecord');
-        var getcontactId =component.get('v.selectedContactLookUpRecord');
-        var getAccountId =component.get('v.selectedAccountLookUpRecord');
-        if( getcareId !=null && getcontactId != null && getAccountId == null){
-            component.set("v.showHospitalssforCare",false);
-            component.set("v.showPginationbutton",true);
-            component.set("v.showHospitalss",true);
-            component.set("v.showHome",false);
-            component.set('v.welcomepage',false);
-            component.set('v.showrecords',true);
-            component.set("v.careIds",getcareId.Id);
-            helper.getDoctors(component,event,helper,"Doc&&Care");
-        }
-        
-        else if(getcareId ==null && getcontactId != null && getAccountId == null){
-            component.set("v.showHospitalssforCare",false);
-            component.set("v.showPginationbutton",true);
-            component.set("v.showHospitalss",true);
-            component.set("v.showHome",false);
-            // component.set('v.welcomepage',false);
-            // component.set('v.showrecords',true);
-            helper.getspecialityWithDoctors(component,event,helper);
-            
-        }
-            else if(getcareId ==null && getcontactId == null && getAccountId != null){
-                let contactId   =  event.getSource().get("v.value");
-                component.set("v.AccId",contactId);
-                helper.getRequiredSpecialityHospiatals(component,event,helper);
-                //  component.set('v.welcomepage',false);
-                // component.set('v.showrecords',true);
-                component.set('v.showBookAppointment',false);
-                component.set("v.careDoctors",false);
-            }
-                else if(getcareId !=null && getcontactId == null && getAccountId != null){
-                    let contactId   =  event.getSource().get("v.value");
-                    component.set("v.AccId",contactId);
-                    helper.getRequiredSpecialityHospiatals(component,event,helper);
-                    component.set('v.welcomepage',false);
-                    component.set('v.showrecords',true);
-                    component.set('v.showBookAppointment',false);
-                    component.set("v.careDoctors",false);
-                }
-                    else if(getcareId ==null && getcontactId != null && getAccountId != null){
-                        component.set("v.showHospitalssforCare",false);
-                        component.set("v.showPginationbutton",true);
-                        component.set("v.showHospitalss",true);
-                        component.set("v.showHome",false);
-                        component.set('v.welcomepage',false);
-                        component.set('v.showrecords',true);
-                        helper.getSpecialityHospiatalByMismatchDoctorsAndHospitals(component,event,helper);
-                        
-                    }
+        component.set("v.AccId", event.getSource().get("v.value"));
+        helper.getPortalDoctors(component,event,helper,component.get("v.getDocId") != null);
         
     },
     
     getDoctrsByCareIdAndHospitals : function(component,event,helper) {
-        component.set("v.showPginationbutton",true);
-        component.set("v.showHospitalss",true);
-        component.set("v.showHome",false );
-        let contactId   =  event.getSource().get("v.value");
-        component.set("v.AccId",contactId);
-        helper.getDoctorsByDoctors(component, event, helper,"Acc&care");
-        component.set('v.welcomepage',false);
-        // component.set('v.showrecords',true);
-        //component.set('v.showBookAppointment',false);
-        //component.set("v.careDoctors",false);
+        component.set("v.AccId", event.getSource().get("v.value"));
+        helper.getPortalDoctors(component, event, helper, component.get("v.getDocId") != null);
     },
     home:  function(component,event,helper) {  
         component.set("v.showBookAppointment",true);
@@ -1800,8 +1570,11 @@
     },
     handleShowPopover : function(component, event, helper) {
         component.set("v.showPopUp",true);
-        var accId =component.get('v.AccId');
-        var contactId = event.getSource().get("v.value");
+        var rawValue = event.getSource().get("v.value");
+        var valueParts = rawValue ? rawValue.split('|') : [];
+        var accId = valueParts.length > 1 ? valueParts[0] : component.get('v.AccId');
+        var contactId = valueParts.length > 1 ? valueParts[1] : rawValue;
+        component.set("v.AccId", accId);
         var action =component.get("c.getTimeSlots");
         action.setParams({
             'accntId':accId,

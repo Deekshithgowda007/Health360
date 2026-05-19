@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Priority_Doctor__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Marks a doctor as featured or priority in the patient portal.</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Use this flag to feature priority doctors in portal search results.</inlineHelpText>
+    <label>Priority Doctor</label>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

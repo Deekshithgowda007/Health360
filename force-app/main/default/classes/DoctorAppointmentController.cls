@@ -7,7 +7,7 @@ public without sharing class DoctorAppointmentController {
       ){
             
           if(conId != null){
-            accList = [ SELECT Id,Name,AccountId,Account.Name,Account.ShippingCity,Account.ShippingCountry,Account.IsPersonAccount,Account.Image_URL__c,Overview__c,Awards_and_Regonitions__c,Available_Appointment_Type__c,Area_of_Expertise__c  from Contact Where Id=:conId  ];
+            accList = [ SELECT Id,Name,AccountId,Account.Name,Account.ShippingCity,Account.ShippingCountry,Account.IsPersonAccount,Account.Image_URL__c,Overview__c,Awards_and_Regonitions__c,Available_Appointment_Type__c,Area_of_Expertise__c,Doctor_Rating__c,Years_of_Experience__c,Review_Count__c,Priority_Doctor__c  from Contact Where Id=:conId  ];
             
         }  
        
@@ -27,11 +27,11 @@ public without sharing class DoctorAppointmentController {
         Schema.SObjectType.HealthcareProviderSpecialty.fields.Id.isAccessible()
       ){
           if(accId != null && csId !=null && docId == null){
-                getId = [ SELECT Name,Practitioner.Name , Practitioner.Id,Practitioner.Available_Appointment_Type__c,Practitioner.Image_URL__c,Specialty.Name,Account.Name,Practitioner.AccountId,PractitionerId, Practitioner.Area_of_Expertise__c,Practitioner.Awards_and_Regonitions__c,Practitioner.Overview__c,Account.Phone,Account.Website,Account.BillingCity,Account.BillingState,Account.BillingPostalCode,Account.BillingCountry,SpecialtyId  FROM HealthcareProviderSpecialty WHERE SpecialtyId =:csId AND Practitioner.AccountId=:accId ];/*( AND Practitioner.AccountId =:getHospitalName)*/
+                getId = [ SELECT Name,Practitioner.Name , Practitioner.Id,Practitioner.Available_Appointment_Type__c,Practitioner.Image_URL__c,Specialty.Name,Account.Name,Practitioner.AccountId,PractitionerId, Practitioner.Area_of_Expertise__c,Practitioner.Awards_and_Regonitions__c,Practitioner.Overview__c,Practitioner.Doctor_Rating__c,Practitioner.Years_of_Experience__c,Practitioner.Review_Count__c,Practitioner.Priority_Doctor__c,Account.Phone,Account.Website,Account.BillingCity,Account.BillingState,Account.BillingPostalCode,Account.BillingCountry,SpecialtyId  FROM HealthcareProviderSpecialty WHERE SpecialtyId =:csId AND Practitioner.AccountId=:accId ];/*( AND Practitioner.AccountId =:getHospitalName)*/
             }
             else if(accId != null && csId !=null && docId != null)
              {
-                getId = [ SELECT Name,Practitioner.Name , Practitioner.Id,Practitioner.Available_Appointment_Type__c,Practitioner.Image_URL__c,Specialty.Name,Account.Name,Practitioner.AccountId,PractitionerId, Practitioner.Area_of_Expertise__c,Practitioner.Awards_and_Regonitions__c,Practitioner.Overview__c,Account.BillingCity,Account.BillingState,Account.BillingPostalCode,Account.BillingCountry,SpecialtyId  FROM HealthcareProviderSpecialty WHERE SpecialtyId =:csId AND Practitioner.AccountId=:accId AND PractitionerId=:docId ];  
+                getId = [ SELECT Name,Practitioner.Name , Practitioner.Id,Practitioner.Available_Appointment_Type__c,Practitioner.Image_URL__c,Specialty.Name,Account.Name,Practitioner.AccountId,PractitionerId, Practitioner.Area_of_Expertise__c,Practitioner.Awards_and_Regonitions__c,Practitioner.Overview__c,Practitioner.Doctor_Rating__c,Practitioner.Years_of_Experience__c,Practitioner.Review_Count__c,Practitioner.Priority_Doctor__c,Account.BillingCity,Account.BillingState,Account.BillingPostalCode,Account.BillingCountry,SpecialtyId  FROM HealthcareProviderSpecialty WHERE SpecialtyId =:csId AND Practitioner.AccountId=:accId AND PractitionerId=:docId ];  
             }
           //  getSpecialityName = [ SELECT Name FROM careSpecialty where Id =:csId  ];
             wrapList.practitioners =getId;
@@ -90,7 +90,7 @@ public without sharing class DoctorAppointmentController {
     public static HealthcareProviderSpecialty fetchSpecialityHospiatalByDoctor(String doctId,String hospId) {
         HealthcareProviderSpecialty getAccountId=new HealthcareProviderSpecialty();
       if(doctId !=null && hospId!=null){
-            getAccountId = [SELECT  Practitioner.Name ,Practitioner.Image_URL__c,Specialty.Name,Account.Name,Practitioner.AccountId,PractitionerId,SpecialtyId,Practitioner.Available_Appointment_Type__c  FROM HealthcareProviderSpecialty WHERE PractitionerId=:doctId AND AccountId=:hospId  ];
+            getAccountId = [SELECT  Practitioner.Name ,Practitioner.Image_URL__c,Specialty.Name,Account.Name,Practitioner.AccountId,PractitionerId,SpecialtyId,Practitioner.Available_Appointment_Type__c,Practitioner.Doctor_Rating__c,Practitioner.Years_of_Experience__c,Practitioner.Review_Count__c,Practitioner.Priority_Doctor__c  FROM HealthcareProviderSpecialty WHERE PractitionerId=:doctId AND AccountId=:hospId  ];
       }
         return getAccountId;
     }
@@ -99,7 +99,7 @@ public without sharing class DoctorAppointmentController {
     public static List<HealthcareProviderSpecialty> getSpecialityHospiatalByDoctors(String doctId,String hospId) {
         List<HealthcareProviderSpecialty> getAccountId=new List<HealthcareProviderSpecialty>();
         if(doctId != null && hospId != null){
-            getAccountId = [SELECT  Practitioner.Name ,Practitioner.Image_URL__c,Specialty.Name,Account.Name,Practitioner.AccountId,PractitionerId,Practitioner.Overview__c,Practitioner.Awards_and_Regonitions__c,Practitioner.Area_of_Expertise__c,Practitioner.Available_Appointment_Type__c,Account.BillingCity,Account.BillingState,Account.BillingPostalCode,Account.BillingCountry  FROM HealthcareProviderSpecialty WHERE PractitionerId=:doctId AND AccountId=:hospId  ];
+            getAccountId = [SELECT  Practitioner.Name ,Practitioner.Image_URL__c,Specialty.Name,Account.Name,Practitioner.AccountId,PractitionerId,Practitioner.Overview__c,Practitioner.Awards_and_Regonitions__c,Practitioner.Area_of_Expertise__c,Practitioner.Available_Appointment_Type__c,Practitioner.Doctor_Rating__c,Practitioner.Years_of_Experience__c,Practitioner.Review_Count__c,Practitioner.Priority_Doctor__c,Account.BillingCity,Account.BillingState,Account.BillingPostalCode,Account.BillingCountry  FROM HealthcareProviderSpecialty WHERE PractitionerId=:doctId AND AccountId=:hospId  ];
         }
         return getAccountId;
     }
@@ -358,11 +358,113 @@ System.debug('Exception :'+ e);
         }
         return getId;
     }
+
+    @AuraEnabled
+    public static List<LocationOption> getPortalLocations(String hospitalName, String careId) {
+        List<HealthcareProviderSpecialty> mappings = getPortalProviderMappings(hospitalName, careId, null);
+        Map<String, LocationOption> uniqueLocations = new Map<String, LocationOption>();
+
+        for (HealthcareProviderSpecialty mapping : mappings) {
+            String locationKey = buildPortalLocationKey(mapping.Account.BillingCity, mapping.Account.BillingState, mapping.Account.Name);
+            if (!uniqueLocations.containsKey(locationKey)) {
+                LocationOption location = new LocationOption();
+                location.locationKey = locationKey;
+                location.accountId = mapping.AccountId;
+                location.accountName = mapping.Account.Name;
+                location.city = mapping.Account.BillingCity;
+                location.state = mapping.Account.BillingState;
+                location.displayLabel = buildPortalLocationLabel(mapping.Account.BillingCity, mapping.Account.BillingState, mapping.Account.Name);
+                uniqueLocations.put(locationKey, location);
+            }
+        }
+
+        return uniqueLocations.values();
+    }
+
+    @AuraEnabled
+    public static List<HealthcareProviderSpecialty> getPortalBranches(String hospitalName, String careId, String locationKey, String doctorId) {
+        List<HealthcareProviderSpecialty> mappings = getPortalProviderMappings(hospitalName, careId, doctorId);
+        Map<Id, HealthcareProviderSpecialty> uniqueBranches = new Map<Id, HealthcareProviderSpecialty>();
+
+        for (HealthcareProviderSpecialty mapping : mappings) {
+            if (!matchesPortalLocation(locationKey, mapping.Account.BillingCity, mapping.Account.BillingState, mapping.Account.Name)) {
+                continue;
+            }
+            if (!uniqueBranches.containsKey(mapping.AccountId)) {
+                uniqueBranches.put(mapping.AccountId, mapping);
+            }
+        }
+
+        return uniqueBranches.values();
+    }
+
+    @AuraEnabled
+    public static List<HealthcareProviderSpecialty> getPortalDoctors(String hospitalName, String careId, String locationKey, String doctorId, String branchAccountId) {
+        List<HealthcareProviderSpecialty> mappings = getPortalProviderMappings(hospitalName, careId, doctorId);
+        List<HealthcareProviderSpecialty> filteredDoctors = new List<HealthcareProviderSpecialty>();
+
+        for (HealthcareProviderSpecialty mapping : mappings) {
+            if (String.isNotBlank(branchAccountId) && mapping.AccountId != branchAccountId) {
+                continue;
+            }
+            if (!matchesPortalLocation(locationKey, mapping.Account.BillingCity, mapping.Account.BillingState, mapping.Account.Name)) {
+                continue;
+            }
+            filteredDoctors.add(mapping);
+        }
+        return filteredDoctors;
+    }
+
+    private static List<HealthcareProviderSpecialty> getPortalProviderMappings(String hospitalName, String careId, String doctorId) {
+        List<HealthcareProviderSpecialty> mappings = [
+            SELECT
+                Name,
+                Practitioner.Name,
+                Practitioner.Id,
+                Practitioner.Available_Appointment_Type__c,
+                Practitioner.Image_URL__c,
+                Practitioner.Doctor_Rating__c,
+                Practitioner.Years_of_Experience__c,
+                Practitioner.Review_Count__c,
+                Practitioner.Priority_Doctor__c,
+                Specialty.Name,
+                Account.Name,
+                Practitioner.AccountId,
+                PractitionerId,
+                Practitioner.Area_of_Expertise__c,
+                Practitioner.Awards_and_Regonitions__c,
+                Practitioner.Overview__c,
+                Account.Phone,
+                Account.Website,
+                Account.BillingCity,
+                Account.BillingState,
+                Account.BillingPostalCode,
+                Account.BillingCountry,
+                SpecialtyId,
+                AccountId,
+                Account.Parent.Name
+            FROM HealthcareProviderSpecialty
+            WHERE AccountId != null
+            AND (Account.Parent.Name = :hospitalName OR Account.Name LIKE :('%' + hospitalName + '%'))
+        ];
+
+        List<HealthcareProviderSpecialty> filteredMappings = new List<HealthcareProviderSpecialty>();
+        for (HealthcareProviderSpecialty mapping : mappings) {
+            if (String.isNotBlank(careId) && mapping.SpecialtyId != careId) {
+                continue;
+            }
+            if (String.isNotBlank(doctorId) && mapping.PractitionerId != doctorId) {
+                continue;
+            }
+            filteredMappings.add(mapping);
+        }
+        return filteredMappings;
+    }
     
     @AuraEnabled
     public static List<HealthcareProviderSpecialty> getSpecialityHospiatalByMismatchDoctorsAndHospitals(String doctId) {
         List<HealthcareProviderSpecialty> getAccountId=new List<HealthcareProviderSpecialty>();
-            getAccountId = [SELECT  Practitioner.Name ,Practitioner.Image_URL__c,Specialty.Name,Account.Name,Practitioner.AccountId,Practitioner.Available_Appointment_Type__c,PractitionerId   FROM HealthcareProviderSpecialty WHERE PractitionerId=:doctId  ];
+            getAccountId = [SELECT  Practitioner.Name ,Practitioner.Image_URL__c,Specialty.Name,Account.Name,Practitioner.AccountId,Practitioner.Available_Appointment_Type__c,PractitionerId,Practitioner.Doctor_Rating__c,Practitioner.Years_of_Experience__c,Practitioner.Review_Count__c,Practitioner.Priority_Doctor__c   FROM HealthcareProviderSpecialty WHERE PractitionerId=:doctId  ];
         return getAccountId;
     }
     
@@ -567,6 +669,62 @@ return getAccounts.Id;
         @AuraEnabled
         public Boolean getHospitals;
         
+    }
+
+    public class LocationOption {
+        @AuraEnabled public String locationKey;
+        @AuraEnabled public String accountId;
+        @AuraEnabled public String accountName;
+        @AuraEnabled public String city;
+        @AuraEnabled public String state;
+        @AuraEnabled public String displayLabel;
+    }
+
+    private static String buildPortalLocationLabel(String city, String state, String accountName) {
+        if (String.isNotBlank(city)) {
+            return city;
+        }
+        if (String.isNotBlank(state)) {
+            return state;
+        }
+        return accountName;
+    }
+
+    private static String buildPortalLocationKey(String city, String state, String accountName) {
+        String cityPart = String.isBlank(city) ? '' : city.trim().toLowerCase();
+        String statePart = String.isBlank(state) ? '' : state.trim().toLowerCase();
+        if (String.isNotBlank(cityPart) || String.isNotBlank(statePart)) {
+            return cityPart + '|' + statePart;
+        }
+
+        String accountPart = String.isBlank(accountName) ? '' : accountName.trim().toLowerCase();
+        return '||' + accountPart;
+    }
+
+    private static Boolean matchesPortalLocation(String locationKey, String city, String state, String accountName) {
+        if (String.isBlank(locationKey)) {
+            return true;
+        }
+
+        List<String> locationParts = locationKey.split('\\|');
+        String selectedCity = locationParts.size() > 0 ? locationParts[0] : '';
+        String selectedState = locationParts.size() > 1 ? locationParts[1] : '';
+
+        String currentCity = String.isBlank(city) ? '' : city.trim().toLowerCase();
+        String currentState = String.isBlank(state) ? '' : state.trim().toLowerCase();
+        if (locationKey == buildPortalLocationKey(city, state, accountName)) {
+            return true;
+        }
+
+        if (String.isNotBlank(selectedCity) && selectedCity == currentCity) {
+            return true;
+        }
+
+        if (String.isBlank(selectedCity) && String.isNotBlank(selectedState) && selectedState == currentState) {
+            return true;
+        }
+
+        return false;
     }
       @AuraEnabled
     public static User getUserId( ) {

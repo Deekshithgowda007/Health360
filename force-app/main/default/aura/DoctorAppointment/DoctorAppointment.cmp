@@ -297,6 +297,9 @@
     <aura:handler name="RecordEventPass" event="c:LeadFormToDoctorAppointment" action="{!c.getLeadFormRecords}"/>
     <aura:attribute name="messageTemp" type="String" />
     <aura:attribute name="attachmentId" type="String" />
+    <aura:attribute name="portalHospitalName" type="String" default="Apollo Hospital" />
+    <aura:attribute name="portalLocationOptions" type="Object[]" default="[]" />
+    <aura:attribute name="selectedLocationId" type="String" />
     
     
     <aura:if isTrue="{!v.LeadFormComponent}">
@@ -385,35 +388,44 @@
                 
             </div>
            <lightning:card  class="lightning"> 
-            <div style="background-color: rgb(173, 216, 230); margin-top = 100px ">
+            <div class="portalShell">
+            <div class="portalHero slds-p-around_large">
+                <div class="slds-align_absolute-center">
+                    <div class="slds-text-align_center">
+                        <p class="portalEyebrow">Trusted hospital booking</p>
+                        <h1 class="slds-text-heading_large portalTitle"><b>{!v.portalHospitalName} Patient Portal</b></h1>
+                        <p class="portalSubtitle slds-m-top_x-small">Sign in, choose your care specialty, pick the nearest location, and book the right doctor.</p>
+                    </div>
+                </div>
+            </div>
 
-            
-            <lightning:layout class="search">
+            <div class="searchPanel slds-p-around_large">
+            <lightning:layout class="search portalSearchLayout">
                 <lightning:layoutItem flexibility="auto" padding="horizontal-medium">
-                    <div class="custom-box ">
-                        <c:LookUpFieldsParent objectAPIName="CareSpecialty" IconName="standard:unified_health_score" aura:id="selectedDoctors" selectedRecord="{!v.selectedCareSpecialtyLookUpRecord}" label="{!$Label.c.Search_Care_Speciality}"/>
+                    <div class="custom-box portalSearchField">
+                        <c:LookUpFieldsParent objectAPIName="CareSpecialty" IconName="standard:unified_health_score" aura:id="selectedDoctors" selectedRecord="{!v.selectedCareSpecialtyLookUpRecord}" label="Choose Care Specialty"/>
                     </div>
                 </lightning:layoutItem>
                 <lightning:layoutItem  flexibility="auto" padding="horizontal-medium">
-                    <div class="custom-box">
-                        <c:LookUpFieldsParent objectAPIName="contact" IconName="custom:custom94" aura:id="selectedDoctors"  selectedRecord="{!v.selectedContactLookUpRecord}" label="{!$Label.c.Search_Doctor}"/>
+                    <div class="custom-box portalSearchField">
+                        <c:LookUpFieldsParent objectAPIName="contact" IconName="custom:custom94" aura:id="selectedDoctors"  selectedRecord="{!v.selectedContactLookUpRecord}" label="Search Doctor"/>
                     </div>
                 </lightning:layoutItem>
                 <lightning:layoutItem  flexibility="auto" padding="horizontal-medium">
-                    <div class="custom-box">
-                        <c:LookUpFieldsParent objectAPIName="Account" isPatient="false" IconName="standard:address" aura:id="selectedDoctors" selectedRecord="{!v.selectedAccountLookUpRecord}" label="{!$Label.c.Search_Hospital}"  />
+                <div class="custom-box portalSearchField">
+                        <lightning:select name="location" label="Choose Location" value="{!v.selectedLocationId}" onchange="{!c.handleLocationChange}">
+                            <option value="">Select location</option>
+                            <aura:iteration items="{!v.portalLocationOptions}" var="location">
+                                <option value="{!location.value}">{!location.label}</option>
+                            </aura:iteration>
+                        </lightning:select>
                     </div>
                 </lightning:layoutItem>
             </lightning:layout>
-            &nbsp;
-            &nbsp;
-            &nbsp;
-            &nbsp;
-            &nbsp;
-            &nbsp;
-            <center>
-                <lightning:button label="{!$Label.c.search}" class="concern" iconName="utility:search" iconPosition="left" onclick="{!c.getDataForAppointment}" />
-            </center>
+            <div class="portalSearchAction slds-align_absolute-center slds-m-top_large">
+                <lightning:button variant="brand" label="{!$Label.c.search}" class="portalSearchButton" iconName="utility:search" iconPosition="left" onclick="{!c.getDataForAppointment}" />
+            </div>
+            </div>
             &nbsp;
             &nbsp;
             &nbsp;
@@ -493,7 +505,7 @@
                     <center>
                         <h1>
                             <b>
-                                {!$Label.c.Available_Facility}
+                                Available Locations
                             </b>
                         </h1>
                     </center>
@@ -520,7 +532,7 @@
                             </aura:if>
                             <br></br><br></br>
                             <div class="slds-border_bottom"></div>
-                            <b>&nbsp;&nbsp;{!$Label.c.Hospital_Name} : {!process.Account.Name}</b>
+                            <b>&nbsp;&nbsp;Location : {!process.Account.Name}</b>
                             <br></br>
                             <b>&nbsp;&nbsp;{!$Label.c.Phone_Number} : {!process.Account.Phone}</b>
                             <br></br>
@@ -531,7 +543,7 @@
                             <br></br>
                             <div class="slds-border_bottom"></div>
                             <br></br>
-                            <lightning:button aura:id="accId" value="{!process.Account.Id}" variant="brand" label="{!$Label.c.Select_Hospital}" title="Brand action" onclick="{! c.getDoctrsByHospitals}" class="slds-align_absolute-center cssbutton" />
+                            <lightning:button aura:id="accId" value="{!process.Account.Id}" variant="brand" label="Select Location" title="Select location" onclick="{! c.getDoctrsByHospitals}" class="slds-align_absolute-center cssbutton" />
                             <lightning:spinner aura:id="mySpinner" class="slds-hide" variant="brand" size="medium"/>
                         </lightning:card>
                     </div>
@@ -569,7 +581,7 @@
                         <center>
                             <h1>
                                 <b>
-                                    {!v.CareSpecilityforHeading}&nbsp;{!$Label.c.Doctor_at}&nbsp;{!v.HospitalforHeading}
+                                    {!v.CareSpecilityforHeading}&nbsp;Doctors at&nbsp;{!v.HospitalforHeading}
                                 </b>
                             </h1>
                         </center>
@@ -581,7 +593,7 @@
                             <center>
                                 <h1>
                                     <b>
-                                        {!$Label.c.Specialities_at}&nbsp;{!v.HospitalforHeading}
+                                        Specialties at&nbsp;{!v.HospitalforHeading}
                                     </b>
                                 </h1>
                             </center>
@@ -598,7 +610,7 @@
                                                           selectedItem="{!v.careIds}"
                                                           onselect="{!c.handleOnSelect}">
                                 <div class="slds-box specialitys">
-                                    <lightning:verticalNavigationSection label="{!$Label.c.Select_Speciality}">
+                                        <lightning:verticalNavigationSection label="Select Specialty">
                                         <aura:iteration items="{!v.CareList}" var="getrecords" >
                                             <lightning:verticalNavigationItem label="{!getrecords.Specialty.Name}" name="{!getrecords.Specialty.Id}" />
                                         </aura:iteration>
@@ -624,9 +636,10 @@
                     </div>
                     <lightning:layoutItem padding="around-medium">
                         <aura:if isTrue="{!v.showcount}">
-                            <div class="slds-box slds-size_9-of-5 availableprovider" >
+                            <div class="slds-box slds-size_9-of-5 availableprovider portalResultsHeader" >
                                 <div class="slds-float_right availableprovider"></div>
-                                <b>{!$Label.c.Available_Providers}</b> : <b>{!v.countdoctor}</b>
+                                <b>Available Doctors</b> : <b>{!v.countdoctor}</b>
+                                <span class="portalResultsHint">Sorted by priority, rating, experience, and reviews</span>
                             </div>
                         </aura:if>
                         <div class="slds-border_left" ></div>
@@ -637,9 +650,9 @@
                                         
                                         <div class="slds-size_7-of-13 slds-p-left_xx-small slds-p-horizontal_x-large" style="width:100%;">
                                             
-                                            <lightning:card >
-                                                <div class="healthcloudcss" style="width:100%;" >
-                                                    <lightning:button variant="brand" label="{!$Label.c.Book_An_Appointement}" title="Brand action" onclick="{! c.BookAppointment }" value="{!Ids.Practitioner.Id}" class="slds-float_right BUTTONFORCSS" />
+                                            <lightning:card class="doctorResultCard">
+                                                <div class="healthcloudcss doctorCardShell" style="width:100%;" >
+                                                    <lightning:button variant="brand" label="{!$Label.c.Book_An_Appointement}" title="Brand action" onclick="{! c.BookAppointment }" value="{!Ids.AccountId + '|' + Ids.Practitioner.Id}" class="slds-float_right BUTTONFORCSS" />
                                                     
                                                     <!-- <lightning:button variant="brand" label="Book An Appointment" title="Brand action" onclick="{! c.BookAppointment }" value="{!Ids.Practitioner.Id}" class="slds-float_right" /> -->
                                                     
@@ -653,14 +666,22 @@
                                                                 </td>
                                                                 
                                                                 <td>
-                                                                    <div class="health" style="font-size: 25px;">
+                                                                    <div class="health doctorName" style="font-size: 25px;">
                                                                         <h1><b>{!Ids.Practitioner.Name}</b></h1></div>
+                                                                    <div class="doctorMetaRow">
+                                                                        <aura:if isTrue="{!Ids.Practitioner.Priority_Doctor__c}">
+                                                                            <span class="doctorBadge">Priority Doctor</span>
+                                                                        </aura:if>
+                                                                        <span class="doctorMetric">Rating {!Ids.Practitioner.Doctor_Rating__c}</span>
+                                                                        <span class="doctorMetric">{!Ids.Practitioner.Review_Count__c} reviews</span>
+                                                                        <span class="doctorMetric">{!Ids.Practitioner.Years_of_Experience__c} years exp</span>
+                                                                    </div>
                                                                     
                                                                      <div class="fontfamilyfordetails" style="font-size: 17px; margin-left: 6px;">
-                                                                        <h1>{!$Label.c.Speciality}                : &nbsp;{!Ids.Specialty.Name}</h1>
-                                                                        <h1>{!$Label.c.Hospital}                  : &nbsp;{!Ids.Account.Name}</h1>
-                                                                        <h1>{!$Label.c.Appointment_Type}          :&nbsp;{!Ids.Practitioner.Available_Appointment_Type__c }</h1>
-                                                                        <h1>{!$Label.c.Address}                   : &nbsp;{!Ids.Account.BillingCity },{!Ids.Account.BillingState},</h1>
+                                                                        <h1>Specialty                : &nbsp;{!Ids.Specialty.Name}</h1>
+                                                                        <h1>Location                 : &nbsp;{!Ids.Account.Name}</h1>
+                                                                        <h1>Appointment Type         :&nbsp;{!Ids.Practitioner.Available_Appointment_Type__c }</h1>
+                                                                        <h1>Address                  : &nbsp;{!Ids.Account.BillingCity },{!Ids.Account.BillingState},</h1>
                                                                         <h1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{!Ids.Account.BillingCountry },&nbsp;{!Ids.Account.BillingPostalCode }</h1>                                                                   
                                                                        
                                                                     </div> 
@@ -686,7 +707,7 @@
                                                                         <h1><b>{!Ids.Practitioner.Name}</b></h1></div>
                                                                     <div class="health" style="font-size: 15px;">
                                                                         <h1>Speciality                : &nbsp;{!Ids.Specialty.Name}</h1>
-                                                                        <h1>Hospital                  : &nbsp;{!Ids.Account.Name}</h1>
+                                                                        <h1>Location                  : &nbsp;{!Ids.Account.Name}</h1>
                                                                         <h1>Address                   : &nbsp;{!Ids.Account.BillingCity }</h1>
                                                                         <h1>State                     :&nbsp;{!Ids.Account.BillingState }</h1>
                                                                         <h1>Zip/PostalCode            :&nbsp;{!Ids.Account.BillingPostalCode }</h1>
@@ -703,11 +724,11 @@
                                                                         <!--lightning:overlayLibrary aura:id="overlayLib"/>
                                                     <div class="popover1" value="{!Ids.Practitioner.Id}" onmouseover="{!c.handleShowPopover}">Available TimeSlot.</div>
                                                     <br/-->
-                                                                        <div classs="profilecss">
+                                                                        <div class="profilecss doctorActionBar">
                                                                             <lightning:button variant="base" label="{!$Label.c.View_Profile}"
-                                                                                              title="{!$Label.c.Click_Here_To_See_Doctor_Details}" onclick="{!c.onDetail}" value="{!Ids.Practitioner.Id}" class="viewbutton"   />&nbsp;&nbsp;
+                                                                                              title="{!$Label.c.Click_Here_To_See_Doctor_Details}" onclick="{!c.onDetail}" value="{!Ids.AccountId + '|' + Ids.Practitioner.Id}" class="viewbutton"   />&nbsp;&nbsp;
                                                                             <lightning:button variant="base" label="{!$Label.c.Docter_Avai}"
-                                                                                              title="{!$Label.c.Click_Here_To_See_Doctors_Availabilty}" onclick="{!c.handleShowPopover}" value="{!Ids.Practitioner.Id}" class="slds-border_left doctoravailability" />
+                                                                                              title="{!$Label.c.Click_Here_To_See_Doctors_Availabilty}" onclick="{!c.handleShowPopover}" value="{!Ids.AccountId + '|' + Ids.Practitioner.Id}" class="slds-border_left doctoravailability" />
                                                                         </div>
                                                                         
                                                                         <aura:if isTrue="{!AND(v.viewdoctordetails,Ids.Practitioner.Id==v.indexVar)}" > 
@@ -761,7 +782,7 @@
                                                 <br/>
                                                 <br/>
                                                 <div class="backbuttoncss">                              
-                                                    <lightning:button label="{!$Label.c.Back}"  title="{!$Label.c.Click_To_go_Hospital}" iconName="utility:back" iconPosition="left" onclick="{! c.BackToHospital}" />
+                                                    <lightning:button label="Back"  title="Back to locations" iconName="utility:back" iconPosition="left" onclick="{! c.BackToHospital}" />
                                                 </div>
                                             </div>
                                         </aura:if>
@@ -786,10 +807,10 @@
                                     <lightning:button label="{!$Label.c.Home}"   iconName="utility:agent_home" title="{!$Label.c.click_to_go_HomePage}" onclick="{! c.home}"/>
                                 </aura:if>
                                 <aura:if isTrue="{!v.showHospitalss}">
-                                    <lightning:button label="{!$Label.c.Back}"  title="{!$Label.c.Click_To_go_Hospital}" iconName="utility:back" iconPosition="left" onclick="{! c.BackToHospital}"/>
+                                    <lightning:button label="Back"  title="Back to locations" iconName="utility:back" iconPosition="left" onclick="{! c.BackToHospital}"/>
                                 </aura:if>
                                 <aura:if isTrue="{!v.showHospitalssforCare}">
-                                    <lightning:button label="{!$Label.c.Back}"  title="{!$Label.c.Click_To_go_Hospital}" iconName="utility:back" iconPosition="left" onclick="{! c.showHospitalssforCare}"/>
+                                    <lightning:button label="Back"  title="Back to locations" iconName="utility:back" iconPosition="left" onclick="{! c.showHospitalssforCare}"/>
                                     
                                 </aura:if>
                                 
@@ -806,7 +827,7 @@
                                 </aura:if>         
                                 
                                 <span class="slds-var-p-horizontal_x-small">
-                                    {!$Label.c.Page} {! (v.currentPageNumber) } {!$Label.c.of} {! (v.totalPages) }
+                                    Page {! (v.currentPageNumber) } of {! (v.totalPages) }
                                 </span>
                                 
                                 <lightning:button
@@ -955,7 +976,7 @@
                         <center>
                             <h1>
                                 <b>
-                                    {!$Label.c.Available_Facility}
+                                    Available Locations
                                 </b>
                             </h1>
                         </center>
@@ -981,7 +1002,7 @@
                             </aura:if>
                             <br></br><br></br>
                             <div class="slds-border_bottom"></div>
-                            <b>&nbsp;&nbsp;{!$Label.c.Hospital_Name} : {!process.Account.Name}</b>
+                            <b>&nbsp;&nbsp;Location : {!process.Account.Name}</b>
                             <br></br>
                             <b>&nbsp;&nbsp;{!$Label.c.Phone_Number} : {!process.Account.Phone}</b>
                             <br></br>
@@ -994,7 +1015,7 @@
                           
                             <div class="slds-border_bottom"></div>
                             <br></br>
-                            <lightning:button aura:id="accId" value="{!process.Account.Id}" variant="brand" label="{!$Label.c.Select_Hospital}" title="Brand action" onclick="{! c.getDoctrsByCareIdAndHospitals}" class="slds-align_absolute-center" />
+                            <lightning:button aura:id="accId" value="{!process.Account.Id}" variant="brand" label="Select Location" title="Select location" onclick="{! c.getDoctrsByCareIdAndHospitals}" class="slds-align_absolute-center" />
                             <lightning:spinner aura:id="mySpinner" class="slds-hide" variant="brand" size="medium"/>
                         </lightning:card>
                     </div>
@@ -1035,7 +1056,7 @@
                         
                         
                         <span class="slds-var-p-horizontal_x-small currentpages">
-                            {!$Label.c.Page} {! (v.currentPageNumbers) } {!$Label.c.of} {! (v.totalPage) }
+                            Page {! (v.currentPageNumbers) } of {! (v.totalPage) }
                         </span>
                         
                         <aura:if isTrue="{!v.shownextbtn}">

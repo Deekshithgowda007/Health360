@@ -1,0 +1,460 @@
+<template>
+    <section class="portal-shell">
+        <div class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">{portalContextLabel}</p>
+                <h1>{portalTitle}</h1>
+                <p class="hero-text">{portalSubtitle}</p>
+                <div class="hero-actions">
+                    <button class="brand-button" onclick={scrollToDiscovery}>Start Booking</button>
+                    <button class="ghost-button" onclick={showAppointmentsView}>My Appointments</button>
+                </div>
+            </div>
+            <div class="hero-card">
+                <div class="hero-stat">
+                    <span class="hero-stat-label">Hospitals</span>
+                    <strong>{hospitalCountLabel}</strong>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-label">Branches</span>
+                    <strong>{branchCountLabel}</strong>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-label">Doctors</span>
+                    <strong>{doctorCountLabel}</strong>
+                </div>
+            </div>
+        </div>
+
+        <section class="step-shell">
+            <template for:each={stepItems} for:item="step">
+                <article key={step.index} class={step.cssClass}>
+                    <span class="step-index">{step.index}</span>
+                    <div>
+                        <strong>{step.title}</strong>
+                        <p>{step.description}</p>
+                    </div>
+                </article>
+            </template>
+        </section>
+
+        <section class="auth-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="panel-kicker">Patient Access</p>
+                    <h2>Register or sign in</h2>
+                </div>
+                <template if:true={currentPatient}>
+                    <div class="patient-chip">
+                        <span>{currentPatient.name}</span>
+                        <button class="link-button" onclick={handleLogout}>Log out</button>
+                    </div>
+                </template>
+            </div>
+
+            <template if:false={currentPatient}>
+                <div class="auth-tabs">
+                    <button class={loginTabClass} data-mode="login" onclick={switchAuthMode}>Sign in</button>
+                    <button class={registerTabClass} data-mode="register" onclick={switchAuthMode}>Register</button>
+                </div>
+
+                <template if:true={isLoginMode}>
+                    <div class="form-grid">
+                        <label>
+                            <span>Email or mobile number</span>
+                            <input type="text" value={loginIdentifier} onchange={handleLoginIdentifierChange} placeholder="Enter email or 10-digit mobile number" />
+                        </label>
+                    </div>
+                    <div class="auth-actions">
+                        <button class="brand-button" onclick={handleSendOtp} disabled={isBusy}>Send OTP</button>
+                    </div>
+
+                    <template if:true={otpPending}>
+                        <div class="form-grid otp-grid">
+                            <label>
+                                <span>One-time password</span>
+                                <input type="text" value={enteredOtp} onchange={handleOtpChange} maxlength="6" placeholder="Enter the code you received" />
+                            </label>
+                            <div class="auth-actions inline">
+                                <button class="brand-button" onclick={handleVerifyOtp} disabled={isBusy}>Verify & Sign in</button>
+                            </div>
+                        </div>
+                    </template>
+                </template>
+
+                <template if:false={isLoginMode}>
+                    <div class="form-grid">
+                        <label>
+                            <span>First name</span>
+                            <input type="text" data-field="firstName" value={registration.firstName} onchange={handleRegistrationChange} />
+                        </label>
+                        <label>
+                            <span>Last name</span>
+                            <input type="text" data-field="lastName" value={registration.lastName} onchange={handleRegistrationChange} />
+                        </label>
+                        <label>
+                            <span>Email</span>
+                            <input type="email" data-field="email" value={registration.email} onchange={handleRegistrationChange} />
+                        </label>
+                        <label>
+                            <span>Phone</span>
+                            <input type="tel" data-field="phone" value={registration.phone} onchange={handleRegistrationChange} />
+                        </label>
+                        <label>
+                            <span>Street</span>
+                            <input type="text" data-field="street" value={registration.street} onchange={handleRegistrationChange} />
+                        </label>
+                        <label>
+                            <span>City</span>
+                            <input type="text" data-field="city" value={registration.city} onchange={handleRegistrationChange} />
+                        </label>
+                        <label>
+                            <span>State</span>
+                            <input type="text" data-field="state" value={registration.state} onchange={handleRegistrationChange} />
+                        </label>
+                        <label>
+                            <span>Country</span>
+                            <input type="text" data-field="country" value={registration.country} onchange={handleRegistrationChange} />
+                        </label>
+                        <label>
+                            <span>Postal code</span>
+                            <input type="text" data-field="postalCode" value={registration.postalCode} onchange={handleRegistrationChange} />
+                        </label>
+                    </div>
+                    <div class="auth-actions">
+                        <button class="brand-button" onclick={handleRegister} disabled={isBusy}>Create patient profile</button>
+                    </div>
+                </template>
+            </template>
+
+            <template if:true={authMessage}>
+                <p class="status-message">{authMessage}</p>
+            </template>
+        </section>
+
+        <section class="discovery-shell" id="discovery">
+            <div class="discovery-sidebar">
+                <div class="filter-card">
+                    <p class="panel-kicker">Context</p>
+                    <h3>{portalContextLabel}</h3>
+                    <template if:true={showHospitalSelector}>
+                        <label>
+                            <span>Hospital</span>
+                            <select value={selectedHospitalId} onchange={handleHospitalChange}>
+                                <option value="">Select hospital</option>
+                                <template for:each={hospitals} for:item="hospital">
+                                    <option key={hospital.id} value={hospital.id}>{hospital.name}</option>
+                                </template>
+                            </select>
+                        </label>
+                    </template>
+
+                    <div class="context-summary">
+                        <span class="context-label">Hospital</span>
+                        <strong>{selectedHospitalName}</strong>
+                    </div>
+                    <div class="context-summary">
+                        <span class="context-label">Specialty</span>
+                        <strong>{selectedSpecialtyName}</strong>
+                    </div>
+                    <div class="context-summary">
+                        <span class="context-label">Location</span>
+                        <strong>{selectedBranchName}</strong>
+                    </div>
+                </div>
+
+                <div class="filter-card">
+                    <p class="panel-kicker">Doctor filters</p>
+                    <h3>Refine discovery once specialty and branch are chosen</h3>
+                    <label>
+                        <span>Search</span>
+                        <input type="text" value={doctorSearch} onchange={handleSearchChange} placeholder="Doctor, specialty, branch" />
+                    </label>
+                    <label>
+                        <span>Sort doctors</span>
+                        <select value={sortBy} onchange={handleSortChange}>
+                            <option value="recommended">Recommended</option>
+                            <option value="name">Doctor name</option>
+                            <option value="specialty">Specialty</option>
+                            <option value="branch">Branch</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+
+            <div class="discovery-content">
+                <div class="section-header">
+                    <div>
+                        <p class="panel-kicker">Step 2</p>
+                        <h2>Select care specialty based on symptoms</h2>
+                    </div>
+                    <button class="ghost-button small" onclick={clearSpecialtyFilter} disabled={specialtyClearDisabled}>Show all doctors</button>
+                </div>
+
+                <template if:true={canChooseSpecialty}>
+                    <div class="specialty-grid">
+                        <template for:each={specialties} for:item="specialty">
+                            <button
+                                key={specialty.id}
+                                class={specialty.cardClass}
+                                data-id={specialty.id}
+                                onclick={handleSpecialtySelect}
+                            >
+                                <span>{specialty.name}</span>
+                                <small>{specialty.doctorCount} doctors</small>
+                            </button>
+                        </template>
+                    </div>
+                </template>
+                <template if:false={canChooseSpecialty}>
+                    <div class="empty-state compact">
+                        Choose the hospital context first to start the patient journey.
+                    </div>
+                </template>
+
+                <div class="section-header branch-header">
+                    <div>
+                        <p class="panel-kicker">Step 3</p>
+                        <h2>Select nearest location or branch</h2>
+                    </div>
+                </div>
+
+                <template if:true={canChooseBranch}>
+                    <div class="branch-grid">
+                        <template for:each={branches} for:item="branch">
+                            <button key={branch.id} class={branch.cardClass} data-id={branch.id} onclick={handleBranchCardSelect}>
+                                <span class="branch-title">{branch.name}</span>
+                                <small>{branch.city}, {branch.country}</small>
+                                <small>{branch.doctorCount} mapped doctors</small>
+                            </button>
+                        </template>
+                    </div>
+                </template>
+                <template if:false={canChooseBranch}>
+                    <div class="empty-state compact">
+                        After the patient picks a specialty, branch choices will appear here.
+                    </div>
+                </template>
+
+                <div class="section-header doctor-header">
+                    <div>
+                        <p class="panel-kicker">Step 4</p>
+                        <h2>Compare doctors and continue to booking</h2>
+                    </div>
+                    <span class="result-count">{doctorCountLabel}</span>
+                </div>
+
+                <template if:true={isBusy}>
+                    <div class="loading-state">Loading patient portal data...</div>
+                </template>
+
+                <template if:false={isBusy}>
+                    <template if:true={canShowDoctorsStep}>
+                        <template if:true={hasDoctors}>
+                            <div class="doctor-grid">
+                                <template for:each={doctors} for:item="doctor">
+                                    <article key={doctor.cardKey} class="doctor-card">
+                                        <div class="doctor-avatar">
+                                            <template if:true={doctor.imageUrl}>
+                                                <img src={doctor.imageUrl} alt={doctor.doctorName} />
+                                            </template>
+                                            <template if:false={doctor.imageUrl}>
+                                                <span>{doctor.initials}</span>
+                                            </template>
+                                        </div>
+                                        <div class="doctor-copy">
+                                            <div class="doctor-title-row">
+                                                <div>
+                                                    <h3>{doctor.doctorName}</h3>
+                                                    <p>{doctor.specialtyName}</p>
+                                                </div>
+                                                <span class="doctor-score">Recommended {doctor.recommendationScore}</span>
+                                            </div>
+                                            <div class="meta-row">
+                                                <span>{doctor.hospitalName}</span>
+                                                <span>{doctor.branchName}</span>
+                                                <span>{doctor.consultationMode}</span>
+                                            </div>
+                                            <p class="doctor-overview">{doctor.shortOverview}</p>
+                                            <div class="doctor-actions">
+                                                <button class="brand-button small" data-doctor-id={doctor.doctorId} data-branch-id={doctor.branchId} onclick={handleDoctorSelect}>View doctor</button>
+                                            </div>
+                                        </div>
+                                    </article>
+                                </template>
+                            </div>
+                        </template>
+                        <template if:false={hasDoctors}>
+                            <div class="empty-state">
+                                No doctors match the current specialty and branch.
+                            </div>
+                        </template>
+                    </template>
+                    <template if:false={canShowDoctorsStep}>
+                        <div class="empty-state">
+                            Complete the specialty and location steps first. Then the portal will show doctors for this hospital only.
+                        </div>
+                    </template>
+                </template>
+            </div>
+        </section>
+
+        <template if:true={selectedDoctor}>
+            <section class="detail-shell">
+                <div class="detail-panel">
+                    <div class="detail-header">
+                        <div class="doctor-avatar large">
+                            <template if:true={selectedDoctor.imageUrl}>
+                                <img src={selectedDoctor.imageUrl} alt={selectedDoctor.doctorName} />
+                            </template>
+                            <template if:false={selectedDoctor.imageUrl}>
+                                <span>{selectedDoctor.initials}</span>
+                            </template>
+                        </div>
+                        <div>
+                            <p class="panel-kicker">Doctor Profile</p>
+                            <h2>{selectedDoctor.doctorName}</h2>
+                            <p class="detail-subtitle">{selectedDoctor.specialtyList}</p>
+                            <div class="meta-row">
+                                <span>{selectedDoctor.consultationMode}</span>
+                                <span>{selectedDoctor.branchCount} branches</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-columns">
+                        <div>
+                            <h3>Overview</h3>
+                            <p>{selectedDoctor.overviewText}</p>
+
+                            <template if:true={selectedDoctor.hasExpertise}>
+                                <h3>Areas of expertise</h3>
+                                <div class="chip-row">
+                                    <template for:each={selectedDoctor.expertise} for:item="tag">
+                                        <span key={tag} class="chip">{tag}</span>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <template if:true={selectedDoctor.hasAwards}>
+                                <h3>Awards and recognition</h3>
+                                <ul class="detail-list">
+                                    <template for:each={selectedDoctor.awards} for:item="award">
+                                        <li key={award}>{award}</li>
+                                    </template>
+                                </ul>
+                            </template>
+                        </div>
+
+                        <div>
+                            <h3>Available branches</h3>
+                            <div class="branch-stack">
+                                <template for:each={selectedDoctor.branches} for:item="branch">
+                                    <article key={branch.id} class="branch-card">
+                                        <strong>{branch.name}</strong>
+                                        <span>{branch.hospitalName}</span>
+                                        <span>{branch.address}</span>
+                                        <span>{branch.phone}</span>
+                                    </article>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="booking-panel">
+                    <p class="panel-kicker">Booking Readiness</p>
+                    <h2>Schedule preview</h2>
+                    <p class="booking-note">
+                        The portal is now driving patient context, hospital, branch, specialty, and doctor selection.
+                        Slot rendering below uses the current scheduling model already available in the org.
+                    </p>
+
+                    <template if:true={hasSchedules}>
+                        <div class="schedule-list">
+                            <template for:each={schedules} for:item="schedule">
+                                <div key={schedule.key} class="schedule-row">
+                                    <strong>{schedule.dayOfWeek}</strong>
+                                    <span>{schedule.startTime} - {schedule.endTime}</span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                    <template if:false={hasSchedules}>
+                        <div class="empty-state compact">
+                            No active schedule preview is available for this doctor and branch yet.
+                        </div>
+                    </template>
+
+                    <template if:true={currentPatient}>
+                        <div class="patient-booking-summary">
+                            <h3>Patient context ready</h3>
+                            <p>{currentPatient.name}</p>
+                            <p>{currentPatient.email}</p>
+                            <p>{currentPatient.phone}</p>
+                        </div>
+                    </template>
+                    <template if:false={currentPatient}>
+                        <div class="empty-state compact">
+                            Sign in or register first so this doctor selection can continue into the next scheduling step.
+                        </div>
+                    </template>
+                </div>
+            </section>
+        </template>
+
+        <section class="appointments-shell" if:true={showAppointments}>
+            <div class="section-header">
+                <div>
+                    <p class="panel-kicker">Self Service</p>
+                    <h2>My appointments</h2>
+                </div>
+            </div>
+
+            <template if:true={currentPatient}>
+                <div class="appointments-grid">
+                    <div class="appointment-column">
+                        <h3>Upcoming</h3>
+                        <template if:true={hasUpcomingAppointments}>
+                            <template for:each={appointments.upcoming} for:item="appointment">
+                                <article key={appointment.id} class="appointment-card">
+                                    <strong>{appointment.appointmentNumber}</strong>
+                                    <span>{appointment.branchName}</span>
+                                    <span>{appointment.workType}</span>
+                                    <span>{appointment.displayDate}</span>
+                                    <span class="status-chip scheduled">{appointment.status}</span>
+                                </article>
+                            </template>
+                        </template>
+                        <template if:false={hasUpcomingAppointments}>
+                            <div class="empty-state compact">No upcoming appointments yet.</div>
+                        </template>
+                    </div>
+
+                    <div class="appointment-column">
+                        <h3>History</h3>
+                        <template if:true={hasHistoricalAppointments}>
+                            <template for:each={appointments.history} for:item="appointment">
+                                <article key={appointment.id} class="appointment-card">
+                                    <strong>{appointment.appointmentNumber}</strong>
+                                    <span>{appointment.branchName}</span>
+                                    <span>{appointment.workType}</span>
+                                    <span>{appointment.displayDate}</span>
+                                    <span class="status-chip history">{appointment.status}</span>
+                                </article>
+                            </template>
+                        </template>
+                        <template if:false={hasHistoricalAppointments}>
+                            <div class="empty-state compact">Past and cancelled appointments will appear here.</div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+            <template if:false={currentPatient}>
+                <div class="empty-state">
+                    Sign in or register to view patient-specific appointment history.
+                </div>
+            </template>
+        </section>
+    </section>
+</template>

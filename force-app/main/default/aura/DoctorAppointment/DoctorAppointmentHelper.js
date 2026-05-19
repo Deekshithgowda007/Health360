@@ -1,4 +1,183 @@
 ({ 
+    sortPortalDoctors : function(doctors) {
+        doctors.sort(function(leftDoctor, rightDoctor) {
+            var leftPriority = leftDoctor.Practitioner.Priority_Doctor__c ? 1 : 0;
+            var rightPriority = rightDoctor.Practitioner.Priority_Doctor__c ? 1 : 0;
+            if (leftPriority !== rightPriority) {
+                return rightPriority - leftPriority;
+            }
+
+            var leftRating = leftDoctor.Practitioner.Doctor_Rating__c || 0;
+            var rightRating = rightDoctor.Practitioner.Doctor_Rating__c || 0;
+            if (leftRating !== rightRating) {
+                return rightRating - leftRating;
+            }
+
+            var leftExperience = leftDoctor.Practitioner.Years_of_Experience__c || 0;
+            var rightExperience = rightDoctor.Practitioner.Years_of_Experience__c || 0;
+            if (leftExperience !== rightExperience) {
+                return rightExperience - leftExperience;
+            }
+
+            var leftReviews = leftDoctor.Practitioner.Review_Count__c || 0;
+            var rightReviews = rightDoctor.Practitioner.Review_Count__c || 0;
+            if (leftReviews !== rightReviews) {
+                return rightReviews - leftReviews;
+            }
+
+            return (leftDoctor.Practitioner.Name || '').localeCompare(rightDoctor.Practitioner.Name || '');
+        });
+
+        return doctors;
+    },
+
+    loadPortalLocations : function(component, careId) {
+        var action = component.get("c.getPortalLocations");
+        action.setParams({
+            hospitalName: component.get("v.portalHospitalName"),
+            careId: careId
+        });
+        action.setCallback(this, function(response) {
+            if (response.getState() === "SUCCESS") {
+                var options = response.getReturnValue() || [];
+                var mappedOptions = [];
+                for (var i = 0; i < options.length; i++) {
+                    mappedOptions.push({
+                        label: options[i].displayLabel,
+                        value: options[i].locationKey
+                    });
+                }
+                component.set("v.portalLocationOptions", mappedOptions);
+            }
+        });
+        $A.enqueueAction(action);
+    },
+
+    getPortalBranches : function(component, event, helper) {
+        var action = component.get("c.getPortalBranches");
+        action.setParams({
+            hospitalName: component.get("v.portalHospitalName"),
+            careId: component.get("v.careIds"),
+            locationKey: component.get("v.selectedLocationId"),
+            doctorId: component.get("v.getDocId")
+        });
+
+        action.setCallback(this, function(response) {
+            var state = response.getState();
+            if (state === "SUCCESS") {
+                var branches = response.getReturnValue() || [];
+                if (branches.length > 0) {
+                    component.set("v.filterHopspital", branches);
+                    component.set("v.PaginateHospitals", branches);
+                    component.set("v.careHopspital", branches);
+                    component.set("v.welcomepage", true);
+                    component.set("v.careDoctors", false);
+                    component.set("v.showrecords", false);
+                    component.set("v.showBookAppointment", false);
+                    component.set("v.providerFound", false);
+                    component.set("v.showDoctors", false);
+                    component.set("v.showPginationbutton", false);
+                    component.set("v.showcount", false);
+                    component.set("v.viewdoctordetails", false);
+                    this.prepareHospital(component, branches);
+                    return;
+                }
+
+                component.set("v.showrecords", false);
+                component.set("v.welcomepage", false);
+                component.set("v.providerFound", false);
+                component.set("v.showBookAppointment", true);
+                var toastEvent = $A.get("e.force:showToast");
+                toastEvent.setParams({
+                    title: $A.get("$Label.c.Info"),
+                    message: 'No Apollo locations were found for the selected search.',
+                    duration: '5000',
+                    key: 'info_alt',
+                    type: 'info',
+                    mode: 'dismissible'
+                });
+                toastEvent.fire();
+            }
+        });
+        $A.enqueueAction(action);
+    },
+
+    getPortalDoctors : function(component, event, helper, isDirectDoctorSelection) {
+        var action = component.get("c.getPortalDoctors");
+        action.setParams({
+            hospitalName: component.get("v.portalHospitalName"),
+            careId: component.get("v.careIds"),
+            locationKey: component.get("v.selectedLocationId"),
+            doctorId: component.get("v.getDocId"),
+            branchAccountId: component.get("v.AccId")
+        });
+
+        action.setCallback(this, function(response) {
+            var state = response.getState();
+            if (state === "SUCCESS") {
+                var doctors = this.sortPortalDoctors(response.getReturnValue() || []);
+                if (doctors.length > 0) {
+                    component.set("v.filteredData", doctors);
+                    component.set("v.CareList", doctors);
+                    component.set("v.selectedaccId", doctors);
+                    component.set("v.countdoctor", doctors.length);
+                    component.set("v.showcount", true);
+                    component.set("v.showrecords", true);
+                    component.set("v.welcomepage", false);
+                    component.set("v.showBookAppointment", false);
+                    component.set("v.providerFound", true);
+                    component.set("v.showDoctors", true);
+                    component.set("v.showPginationbutton", true);
+                    component.set("v.showHospitalss", false);
+                    component.set("v.showHospitalssforCare", false);
+                    component.set("v.careDoctors", false);
+                    component.set("v.welcomepage", false);
+                    component.set("v.CheckForSpecilaity", true);
+                    component.set("v.CareSpecilityforHeading", doctors[0].Specialty.Name);
+                    component.set("v.HospitalforHeading", doctors[0].Account.Name);
+                    this.preparePagination(component, doctors);
+                    return;
+                }
+
+                component.set("v.showrecords", false);
+                component.set("v.providerFound", false);
+                component.set("v.showBookAppointment", true);
+                var selectedSpecialty = component.get("v.careIds");
+                var selectedDoctor = component.get("v.getDocId");
+                var selectedLocation = component.get("v.selectedLocationId");
+                var noResultMessage = 'No Apollo doctors were found for the selected search.';
+
+                if (selectedDoctor && selectedLocation && selectedSpecialty) {
+                    noResultMessage = 'No matching Apollo doctor was found for this specialty in the selected location.';
+                } else if (selectedDoctor && selectedLocation) {
+                    noResultMessage = 'This doctor is not available in the selected Apollo location.';
+                } else if (selectedDoctor && selectedSpecialty) {
+                    noResultMessage = 'No Apollo doctor matched the selected specialty and doctor.';
+                } else if (selectedSpecialty && selectedLocation) {
+                    noResultMessage = 'No Apollo doctors were found for this specialty in the selected location.';
+                } else if (selectedSpecialty) {
+                    noResultMessage = 'No Apollo doctors were found for the selected specialty.';
+                } else if (selectedDoctor) {
+                    noResultMessage = 'No Apollo doctor was found for the selected doctor search.';
+                } else if (selectedLocation) {
+                    noResultMessage = 'No Apollo doctors were found in the selected location.';
+                }
+
+                var toastEvent = $A.get("e.force:showToast");
+                toastEvent.setParams({
+                    title: $A.get("$Label.c.Info"),
+                    message: noResultMessage,
+                    duration: '5000',
+                    key: 'info_alt',
+                    type: 'info',
+                    mode: 'dismissible'
+                });
+                toastEvent.fire();
+            }
+        });
+        $A.enqueueAction(action);
+    },
+
     getDoctors : function(component, event, helper,handleAllSearch) {
         //component.set("v.showrecords",false);
         var getSelectedDocIds =component.get("v.getDocId");
@@ -145,7 +324,7 @@
                         var toastEvent = $A.get("e.force:showToast");
                         toastEvent.setParams({
                             title :$A.get("$Label.c.Info"),
-                            message:$A.get("$Label.c.Please_Select_Speciality_Doctor_Or_Hospital"),
+                            message:'Please choose a care specialty, doctor, or location to continue.',
                             duration:' 5000',
                             key: 'info_alt',
                             type: 'info',
@@ -439,7 +618,7 @@
                     var toastEvent = $A.get("e.force:showToast");
                     toastEvent.setParams({
                         title :$A.get("$Label.c.Info"),
-                        message:$A.get("$Label.c.Sorry_There_Is_No_Hospital_Found_For_This_Speciality"),
+                        message:'Sorry, there are no locations available for this specialty right now.',
                         duration:' 5000',
                         key: 'info_alt',
                         type: 'info',
@@ -488,7 +667,7 @@
                     var toastEvent = $A.get("e.force:showToast");
                     toastEvent.setParams({
                         title :$A.get("$Label.c.Info"),
-                        message:$A.get("$Label.c.There_Is_No_Provider_Found_In_This_Hospital"),
+                        message:'There are no providers available for this location right now.',
                         duration:' 5000',
                         key: 'info_alt',
                         type: 'info',
@@ -593,7 +772,7 @@
                             var toastEvent = $A.get("e.force:showToast");
                             toastEvent.setParams({
                                 title :$A.get("$Label.c.Info"),
-                                message:$A.get("$Label.c.Sorry_No_Doctor_Found_In_This_Hospital"),
+                                message:'Sorry, no doctors were found for this location.',
                                 duration:' 5000',
                                 key: 'info_alt',
                                 type: 'info',
@@ -657,7 +836,7 @@
                         var toastEvent = $A.get("e.force:showToast");
                         toastEvent.setParams({
                             title :$A.get("$Label.c.Info"),
-                            message:$A.get("$Label.c.Please_Select_Speciality_Doctor_Or_Hospital"),
+                            message:'Please choose a care specialty, doctor, or location to continue.',
                             duration:' 5000',
                             key: 'info_alt',
                             type: 'info',
