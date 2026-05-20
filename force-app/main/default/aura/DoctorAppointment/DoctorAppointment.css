@@ -657,6 +657,86 @@ margin-top: 20px;
     text-transform: uppercase;
 }
 
+.THIS .portalAuthShell {
+    align-items: stretch;
+    background:
+        radial-gradient(circle at top left, rgba(26, 157, 185, 0.28), transparent 34%),
+        linear-gradient(135deg, #eaf8fc 0%, #c9eaf3 46%, #f5fbfd 100%);
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: minmax(280px, 0.95fr) minmax(360px, 1.05fr);
+    margin: 1.25rem auto;
+    max-width: 1240px;
+    padding: 1.5rem;
+}
+
+.THIS .portalAuthHero {
+    background: linear-gradient(140deg, #0c5c74 0%, #1790a9 100%);
+    border-radius: 28px;
+    box-shadow: 0 18px 40px rgba(13, 88, 107, 0.18);
+    color: #fff;
+    padding: 2.4rem 2rem;
+    position: relative;
+}
+
+.THIS .portalAuthHero:after {
+    background: rgba(255,255,255,0.12);
+    border-radius: 999px;
+    content: "";
+    height: 180px;
+    position: absolute;
+    right: -40px;
+    top: -20px;
+    width: 180px;
+}
+
+.THIS .portalAuthPageTitle {
+    color: #fff;
+    font-size: 2.2rem;
+    line-height: 1.15;
+    margin-bottom: 0.75rem;
+}
+
+.THIS .portalAuthPageText {
+    color: rgba(255,255,255,0.92);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin: 0;
+    max-width: 30rem;
+}
+
+.THIS .portalAuthCard {
+    background: rgba(255,255,255,0.96);
+    border: 1px solid rgba(31, 138, 165, 0.16);
+    border-radius: 28px;
+    box-shadow: 0 18px 42px rgba(15, 93, 115, 0.12);
+    padding: 2rem;
+}
+
+.THIS .portalStandaloneInput {
+    margin-top: 1rem;
+}
+
+.THIS .portalStandaloneActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    justify-content: flex-end;
+}
+
+.THIS .portalRegistrationForm {
+    border-top: 1px solid #d8ebf0;
+    margin-top: 1.2rem;
+    padding-top: 1rem;
+}
+
+.THIS .portalPasswordNote {
+    color: #5b7480;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    margin: 0.35rem 0 0;
+}
+
 .THIS .portalTitle {
     color: #fff;
     font-size: 2.35rem;
@@ -675,14 +755,66 @@ margin-top: 20px;
     box-shadow: 0 12px 34px rgba(15, 93, 115, 0.12);
 }
 
+.THIS .portalAuthPanel {
+    margin: 1.25rem 1.5rem 0;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(31, 138, 165, 0.14);
+    border-radius: 20px;
+    box-shadow: 0 10px 26px rgba(15, 93, 115, 0.1);
+}
+
+.THIS .portalAuthState {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.THIS .portalAuthEyebrow {
+    color: #1f8aa5;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+}
+
+.THIS .portalAuthTitle {
+    color: #123b47;
+    font-size: 1.55rem;
+    margin-bottom: 0.35rem;
+}
+
+.THIS .portalAuthText {
+    color: #496d77;
+    font-size: 0.96rem;
+    margin: 0;
+    max-width: 780px;
+}
+
+.THIS .portalAuthActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+}
+
+.THIS .portalAuthButton {
+    border-radius: 999px;
+}
+
 .THIS .portalSearchLayout {
     align-items: flex-end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
 }
 
 .THIS .portalSearchField {
     background: #f9fcfd;
     border: 1px solid #d8ebf0;
     border-radius: 14px;
+    min-height: 100%;
     padding: 0.35rem 0.55rem 0.1rem;
 }
 
@@ -695,6 +827,30 @@ margin-top: 20px;
     box-shadow: 0 10px 20px rgba(15, 93, 115, 0.18);
 }
 
+.THIS .portalInlineFilters {
+    align-items: flex-end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.THIS .portalInlineFilter {
+    background: #f9fcfd;
+    border: 1px solid #d8ebf0;
+    border-radius: 14px;
+    max-width: 320px;
+    padding: 0.3rem 0.55rem 0.1rem;
+    width: 100%;
+}
+
+.THIS .portalInlineHint {
+    color: #3b6975;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
 .THIS .portalResultsHeader {
     align-items: center;
     background: linear-gradient(135deg, #0f5d73 0%, #16748d 100%);
@@ -702,6 +858,7 @@ margin-top: 20px;
     border-radius: 16px;
     box-shadow: 0 12px 24px rgba(15, 93, 115, 0.14);
     display: flex;
+    flex-wrap: wrap;
     gap: 0.75rem;
     justify-content: space-between;
     padding: 0.95rem 1.2rem;
@@ -723,6 +880,10 @@ margin-top: 20px;
 .THIS .doctorCardShell {
     background: linear-gradient(180deg, #ffffff 0%, #f7fbfd 100%);
     padding: 0.8rem 0.8rem 0.2rem;
+}
+
+.THIS .doctorResultCard table {
+    width: 100%;
 }
 
 .THIS .doctorName {
@@ -769,4 +930,73 @@ margin-top: 20px;
 .THIS .BUTTONFORCSS {
     border-radius: 999px;
     box-shadow: none;
+}
+
+@media only screen and (max-width: 1024px) {
+    .THIS .portalAuthShell {
+        grid-template-columns: 1fr;
+        margin: 0.75rem 0.4rem 1rem;
+        padding: 0.8rem;
+    }
+
+    .THIS .portalShell {
+        margin: 1rem 0.4rem;
+    }
+
+    .THIS .searchPanel {
+        margin: -2rem 0.8rem 1rem;
+    }
+
+    .THIS .portalAuthPanel {
+        margin: 0.8rem;
+    }
+
+    .THIS .layout {
+        display: block;
+    }
+
+    .THIS .layoutitem {
+        width: 100%;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    .THIS .portalAuthHero,
+    .THIS .portalAuthCard {
+        border-radius: 22px;
+        padding: 1.4rem;
+    }
+
+    .THIS .portalAuthPageTitle {
+        font-size: 1.7rem;
+    }
+
+    .THIS .portalTitle {
+        font-size: 1.7rem;
+    }
+
+    .THIS .portalSubtitle {
+        font-size: 0.92rem;
+    }
+
+    .THIS .portalResultsHeader {
+        padding: 0.85rem 0.95rem;
+    }
+
+    .THIS .portalInlineFilter {
+        max-width: none;
+    }
+
+    .THIS .portalAuthTitle {
+        font-size: 1.3rem;
+    }
+
+    .THIS .doctorMetaRow {
+        margin-left: 0;
+    }
+
+    .THIS .imagesetups {
+        height: 84px;
+        width: 84px;
+    }
 }

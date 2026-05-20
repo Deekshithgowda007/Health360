@@ -1,4 +1,61 @@
-({ 
+({
+    getSelectedPortalLocationLabel : function(component) {
+        var selectedLocationId = component.get("v.selectedLocationId");
+        if (!selectedLocationId) {
+            return '';
+        }
+
+        var locationOptions = component.get("v.portalLocationOptions") || [];
+        for (var index = 0; index < locationOptions.length; index++) {
+            if (locationOptions[index].value === selectedLocationId) {
+                return locationOptions[index].label;
+            }
+        }
+
+        return '';
+    },
+
+    buildPortalSpecialtyNav : function(doctors) {
+        var specialtiesById = {};
+        var specialtyCards = [];
+
+        for (var index = 0; index < doctors.length; index++) {
+            var doctor = doctors[index];
+            if (!doctor || !doctor.SpecialtyId || specialtiesById[doctor.SpecialtyId]) {
+                continue;
+            }
+
+            specialtiesById[doctor.SpecialtyId] = true;
+            specialtyCards.push(doctor);
+        }
+
+        return specialtyCards;
+    },
+
+    buildPortalResultsTitle : function(component, doctors) {
+        var specialtyName = doctors.length > 0 && doctors[0].Specialty ? doctors[0].Specialty.Name : '';
+        var doctorName = doctors.length === 1 && doctors[0].Practitioner ? doctors[0].Practitioner.Name : '';
+        var locationLabel = this.getSelectedPortalLocationLabel(component);
+        var hospitalName = component.get("v.portalHospitalName");
+
+        if (doctorName && locationLabel) {
+            return doctorName + ' at ' + locationLabel;
+        }
+        if (doctorName) {
+            return doctorName + ' across ' + hospitalName;
+        }
+        if (specialtyName && locationLabel) {
+            return specialtyName + ' Doctors in ' + locationLabel;
+        }
+        if (specialtyName) {
+            return specialtyName + ' Doctors across ' + hospitalName;
+        }
+        if (locationLabel) {
+            return 'Doctors in ' + locationLabel;
+        }
+        return 'Available Doctors across ' + hospitalName;
+    },
+
     sortPortalDoctors : function(doctors) {
         doctors.sort(function(leftDoctor, rightDoctor) {
             var leftPriority = leftDoctor.Practitioner.Priority_Doctor__c ? 1 : 0;
@@ -51,6 +108,19 @@
             }
         });
         $A.enqueueAction(action);
+    },
+
+    refreshPortalDoctorResults : function(component, event, helper) {
+        var selectedSpecialtyId = component.get("v.careIds");
+        var selectedDoctorId = component.get("v.getDocId");
+        var selectedLocationId = component.get("v.selectedLocationId");
+
+        if (!selectedSpecialtyId && !selectedDoctorId && !selectedLocationId) {
+            return;
+        }
+
+        component.set("v.AccId", null);
+        this.getPortalDoctors(component, event, helper, selectedDoctorId != null);
     },
 
     getPortalBranches : function(component, event, helper) {
@@ -115,10 +185,17 @@
         action.setCallback(this, function(response) {
             var state = response.getState();
             if (state === "SUCCESS") {
-                var doctors = this.sortPortalDoctors(response.getReturnValue() || []);
+                var rawDoctors = response.getReturnValue() || [];
+                var doctors = [];
+                for (var index = 0; index < rawDoctors.length; index++) {
+                    if (rawDoctors[index] && rawDoctors[index].PractitionerId && rawDoctors[index].Practitioner) {
+                        doctors.push(rawDoctors[index]);
+                    }
+                }
+                doctors = this.sortPortalDoctors(doctors);
                 if (doctors.length > 0) {
                     component.set("v.filteredData", doctors);
-                    component.set("v.CareList", doctors);
+                    component.set("v.CareList", this.buildPortalSpecialtyNav(doctors));
                     component.set("v.selectedaccId", doctors);
                     component.set("v.countdoctor", doctors.length);
                     component.set("v.showcount", true);
@@ -132,9 +209,11 @@
                     component.set("v.showHospitalssforCare", false);
                     component.set("v.careDoctors", false);
                     component.set("v.welcomepage", false);
-                    component.set("v.CheckForSpecilaity", true);
-                    component.set("v.CareSpecilityforHeading", doctors[0].Specialty.Name);
-                    component.set("v.HospitalforHeading", doctors[0].Account.Name);
+                    component.set("v.viewdoctordetails", false);
+                    component.set("v.CheckForSpecilaity", !!component.get("v.careIds"));
+                    component.set("v.CareSpecilityforHeading", doctors[0].Specialty ? doctors[0].Specialty.Name : 'Available Doctors');
+                    component.set("v.HospitalforHeading", this.getSelectedPortalLocationLabel(component) || component.get("v.portalHospitalName"));
+                    component.set("v.portalResultsTitle", this.buildPortalResultsTitle(component, doctors));
                     this.preparePagination(component, doctors);
                     return;
                 }
@@ -142,6 +221,9 @@
                 component.set("v.showrecords", false);
                 component.set("v.providerFound", false);
                 component.set("v.showBookAppointment", true);
+                component.set("v.showcount", false);
+                component.set("v.viewdoctordetails", false);
+                component.set("v.portalResultsTitle", 'Available Doctors');
                 var selectedSpecialty = component.get("v.careIds");
                 var selectedDoctor = component.get("v.getDocId");
                 var selectedLocation = component.get("v.selectedLocationId");
@@ -157,6 +239,8 @@
                     noResultMessage = 'No Apollo doctors were found for this specialty in the selected location.';
                 } else if (selectedSpecialty) {
                     noResultMessage = 'No Apollo doctors were found for the selected specialty.';
+                } else if (selectedDoctor && !selectedLocation) {
+                    noResultMessage = 'No Apollo results were found for the selected doctor.';
                 } else if (selectedDoctor) {
                     noResultMessage = 'No Apollo doctor was found for the selected doctor search.';
                 } else if (selectedLocation) {
@@ -892,6 +976,7 @@
             {label: 'Appointment Number',fieldName: "AppointmentNumber" ,hideDefaultActions: true },
             { label: 'Appointment Date and Time', fieldName: 'SchedStartTime',type:'DateTime',hideDefaultActions: true},
             { label: 'Status', fieldName: 'Status',hideDefaultActions: true},
+            { type: 'action', typeAttributes: { rowActions: [{ label: 'Send Reminder', name: 'remind' }] } }
         ]);
             component.set('v.isShowModal',false);
             component.set("v.showBookAppointment",false);
@@ -932,8 +1017,8 @@
             }
             },
             onloadPatientapptdata:function(component,event,helper){
-            var getLeadId =component.get("v.setUserId");//'0014x00001SkvDNAAZ';//component.get("v.getLeadId");
-            var PatientId = component.get("v.setUserId");; //'0014x00001SkvDNAAZ'
+            var getLeadId = component.get("v.PatientId") || component.get("v.setUserId");
+            var PatientId = component.get("v.PatientId") || component.get("v.setUserId");
             //component.set("v.PatientId",getLeadId);
             if(PatientId != null){
             var selectedTableTab = component.get("v.AppStatus");

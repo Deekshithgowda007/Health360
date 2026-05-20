@@ -300,6 +300,13 @@
     <aura:attribute name="portalHospitalName" type="String" default="Apollo Hospital" />
     <aura:attribute name="portalLocationOptions" type="Object[]" default="[]" />
     <aura:attribute name="selectedLocationId" type="String" />
+    <aura:attribute name="portalResultsTitle" type="String" default="Available Doctors" />
+    <aura:attribute name="portalAuthenticated" type="Boolean" default="false" />
+    <aura:attribute name="portalPatientLabel" type="String" default="" />
+    <aura:attribute name="portalEntryIdentifier" type="String" default="" />
+    <aura:attribute name="portalOtpInput" type="String" default="" />
+    <aura:attribute name="portalPassword" type="String" default="" />
+    <aura:attribute name="portalConfirmPassword" type="String" default="" />
     
     
     <aura:if isTrue="{!v.LeadFormComponent}">
@@ -311,7 +318,112 @@
         <c:EinsteinSearhChildcmp/>
     
     </aura:if>
-    <aura:if isTrue="{!v.showBookAppointment}">
+    <aura:if isTrue="{!and(v.showBookAppointment, not(v.portalAuthenticated))}">
+        <div class="portalAuthShell">
+            <div class="portalAuthHero">
+                <p class="portalEyebrow">Apollo patient access</p>
+                <h1 class="portalAuthPageTitle">{!v.portalHospitalName} Patient Login</h1>
+                <p class="portalAuthPageText">Verify with your email address to continue. If your patient account does not exist, we will guide you to registration first.</p>
+            </div>
+
+            <div class="portalAuthCard">
+                <aura:if isTrue="{!v.guestUserForLoginOrSignUp}">
+                    <div>
+                        <p class="portalAuthEyebrow">New patient registration</p>
+                        <h2 class="portalAuthTitle">Create your Apollo patient account</h2>
+                        <p class="portalAuthText">We could not find an existing Apollo patient profile for this email address. Please complete registration once and we will verify your email with OTP before opening the doctor portal.</p>
+                    </div>
+                    <div class="portalRegistrationForm slds-m-top_large">
+                        <lightning:layout multipleRows="true">
+                            <lightning:layoutItem size="12" mediumDeviceSize="2" largeDeviceSize="2" padding="around-small">
+                                <lightning:select aura:id="Lead" label="Title" value="{!v.newLead.Title}">
+                                    <aura:iteration items="{!v.salutationOptions}" var="salutationOption">
+                                        <option value="{!salutationOption.value}">{!salutationOption.label}</option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12" mediumDeviceSize="5" largeDeviceSize="5" padding="around-small">
+                                <lightning:input aura:id="Lead" label="First Name" type="text" value="{!v.newLead.FirstName}" required="true" pattern="[a-zA-Z ]*" />
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12" mediumDeviceSize="5" largeDeviceSize="5" padding="around-small">
+                                <lightning:input aura:id="Lead" label="Last Name" type="text" value="{!v.newLead.LastName}" required="true" pattern="[a-zA-Z ]*" />
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12" mediumDeviceSize="6" largeDeviceSize="6" padding="around-small">
+                                <lightning:input aura:id="Lead" label="Email" type="email" value="{!v.newLead.Email}" required="true"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12" mediumDeviceSize="6" largeDeviceSize="6" padding="around-small">
+                                <lightning:input aura:id="Lead" label="Phone" type="phone" value="{!v.newLead.Phone}" required="true" maxlength="10" minlength="10" pattern="[0-9]*"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12" mediumDeviceSize="6" largeDeviceSize="6" padding="around-small">
+                                <lightning:input label="Password" type="password" value="{!v.portalPassword}" required="true"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12" mediumDeviceSize="6" largeDeviceSize="6" padding="around-small">
+                                <lightning:input label="Confirm Password" type="password" value="{!v.portalConfirmPassword}" required="true"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12" mediumDeviceSize="12" largeDeviceSize="12" padding="around-small">
+                                <lightning:input aura:id="Lead" label="Street" type="text" value="{!v.newLead.Street}" required="true"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12" mediumDeviceSize="4" largeDeviceSize="4" padding="around-small">
+                                <lightning:input aura:id="Lead" label="City" type="text" value="{!v.newLead.City}" required="true" pattern="[a-zA-Z ]*"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12" mediumDeviceSize="4" largeDeviceSize="4" padding="around-small">
+                                <lightning:input aura:id="Lead" label="State" type="text" value="{!v.newLead.State}" required="true" pattern="[a-zA-Z ]*"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12" mediumDeviceSize="4" largeDeviceSize="4" padding="around-small">
+                                <lightning:input aura:id="Lead" label="Postal Code" type="text" value="{!v.newLead.PostalCode}" required="true" pattern="[0-9]*"/>
+                            </lightning:layoutItem>
+                            <lightning:layoutItem size="12" mediumDeviceSize="12" largeDeviceSize="12" padding="around-small">
+                                <lightning:input aura:id="Lead" label="Country" type="text" value="{!v.newLead.Country}" required="true" pattern="[a-zA-Z ]*"/>
+                            </lightning:layoutItem>
+                        </lightning:layout>
+                        <p class="portalPasswordNote slds-p-horizontal_small">Email OTP verification is used for patient login in this portal. The password is validated on this form now, but secure password-based sign-in needs Experience Cloud or a dedicated auth service to store credentials safely.</p>
+                        <div class="portalStandaloneActions slds-m-top_medium">
+                            <lightning:button label="Back" variant="neutral" onclick="{!c.handleCancelFirstLead}" />
+                            <lightning:button label="Create Account" variant="brand" onclick="{!c.handleCreateContactForLoginOrSignUp}" />
+                        </div>
+                    </div>
+                    <aura:set attribute="else">
+                        <aura:if isTrue="{!v.isNextModalForSignUp}">
+                            <div>
+                                <p class="portalAuthEyebrow">Step 2 of 2</p>
+                                <h2 class="portalAuthTitle">Enter the OTP we sent you</h2>
+                                <p class="portalAuthText">Use the verification code sent to your registered email address.</p>
+                            </div>
+                            <lightning:input
+                                type="text"
+                                label="Enter OTP"
+                                value="{!v.portalOtpInput}"
+                                maxlength="6"
+                                class="portalStandaloneInput"
+                            />
+                            <div class="portalStandaloneActions">
+                                <lightning:button label="Back" variant="neutral" onclick="{!c.hideOtpModelLogin}" />
+                                <lightning:button label="Verify OTP" variant="brand" onclick="{!c.verifyOTPForLogin}" />
+                            </div>
+                            <aura:set attribute="else">
+                                <div>
+                                    <p class="portalAuthEyebrow">Step 1 of 2</p>
+                                    <h2 class="portalAuthTitle">Sign in or check your patient account</h2>
+                                    <p class="portalAuthText">Enter your registered email address. Existing patients will receive an OTP. New patients will be taken to registration automatically.</p>
+                                </div>
+                                <lightning:input
+                                    type="email"
+                                    label="Email address"
+                                    value="{!v.portalEntryIdentifier}"
+                                    class="portalStandaloneInput"
+                                />
+                                <div class="portalStandaloneActions">
+                                    <lightning:button label="Continue" variant="brand" onclick="{!c.OpenModalBoxForLogin}" />
+                                </div>
+                            </aura:set>
+                        </aura:if>
+                    </aura:set>
+                </aura:if>
+            </div>
+        </div>
+    </aura:if>
+
+    <aura:if isTrue="{!and(v.showBookAppointment, v.portalAuthenticated)}">
                 <!--div class="slds-float_right  btn">
                 <lightning:overlayLibrary aura:id="overlayLib"/>
                 <div style="display:flex;margin-right:60px;margin-top:10px;">
@@ -395,6 +507,25 @@
                         <p class="portalEyebrow">Trusted hospital booking</p>
                         <h1 class="slds-text-heading_large portalTitle"><b>{!v.portalHospitalName} Patient Portal</b></h1>
                         <p class="portalSubtitle slds-m-top_x-small">Sign in, choose your care specialty, pick the nearest location, and book the right doctor.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="portalAuthPanel slds-p-around_large">
+                <div class="portalAuthState">
+                    <div>
+                        <p class="portalAuthEyebrow">Verified patient access</p>
+                        <h2 class="portalAuthTitle">
+                            Welcome back
+                            <aura:if isTrue="{!v.portalPatientLabel != ''}">
+                                <span>, {!v.portalPatientLabel}</span>
+                            </aura:if>
+                        </h2>
+                        <p class="portalAuthText">Your Apollo patient access is verified. You can now compare doctors, book appointments, and continue to profile flows.</p>
+                    </div>
+                    <div class="portalAuthActions">
+                        <lightning:button label="My Profile" variant="neutral" onclick="{!c.openPortalProfile}" class="portalAuthButton" />
+                        <lightning:button label="Sign Out" variant="destructive-text" onclick="{!c.portalSignOut}" class="portalAuthButton" />
                     </div>
                 </div>
             </div>
@@ -576,19 +707,27 @@
         <div class="slds-box " style="height:auto;width:100%;">
             <!--lightning:card-->
                 <aura:if isTrue="{!v.CheckForSpecilaity}">
-                    <!--div class="Header_background"-->
-                    <div class="removemsgheader">
-                        <center>
-                            <h1>
-                                <b>
-                                    {!v.CareSpecilityforHeading}&nbsp;Doctors at&nbsp;{!v.HospitalforHeading}
-                                </b>
-                            </h1>
-                        </center>
-                    </div>
-                    <!--/div-->
+                    <aura:if isTrue="{!v.portalResultsTitle != 'Available Doctors'}">
+                        <div class="removemsgheader">
+                            <center>
+                                <h1>
+                                    <b>{!v.portalResultsTitle}</b>
+                                </h1>
+                            </center>
+                        </div>
+                        <aura:set attribute="else">
+                            <div class="removemsgheader">
+                                <center>
+                                    <h1>
+                                        <b>
+                                            {!v.CareSpecilityforHeading}&nbsp;Doctors at&nbsp;{!v.HospitalforHeading}
+                                        </b>
+                                    </h1>
+                                </center>
+                            </div>
+                        </aura:set>
+                    </aura:if>
                     <aura:set attribute="else">
-                        <!--div class="Header_background"-->
                         <div class="removemsgheader">
                             <center>
                                 <h1>
@@ -598,7 +737,6 @@
                                 </h1>
                             </center>
                         </div>
-                        <!--/div-->
                     </aura:set>
                 </aura:if>
             <!--/lightning:card-->
@@ -635,6 +773,17 @@
                         </lightning:layoutItem>
                     </div>
                     <lightning:layoutItem padding="around-medium">
+                        <div class="portalInlineFilters">
+                            <div class="portalInlineFilter">
+                                <lightning:select name="resultsLocation" label="Filter by Location" value="{!v.selectedLocationId}" onchange="{!c.handleLocationChange}">
+                                    <option value="">All locations</option>
+                                    <aura:iteration items="{!v.portalLocationOptions}" var="location">
+                                        <option value="{!location.value}">{!location.label}</option>
+                                    </aura:iteration>
+                                </lightning:select>
+                            </div>
+                            <span class="portalInlineHint">Changing location refreshes the doctor list instantly.</span>
+                        </div>
                         <aura:if isTrue="{!v.showcount}">
                             <div class="slds-box slds-size_9-of-5 availableprovider portalResultsHeader" >
                                 <div class="slds-float_right availableprovider"></div>
@@ -1776,7 +1925,7 @@
     
     
     <!--Login/SignUp-->
-    <aura:if isTrue="{!v.isShowLogin}">
+    <aura:if isTrue="{!and(v.isShowLogin, not(v.showBookAppointment))}">
         <div class="slds-m-around_xx-large">
             <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
                 <div class="slds-modal__container">
@@ -1836,7 +1985,7 @@
             <div class="slds-backdrop slds-backdrop_open"></div>
         </div>
     </aura:if>
-    <aura:if isTrue="{!v.guestUserForLoginOrSignUp}">
+    <aura:if isTrue="{!and(v.guestUserForLoginOrSignUp, not(v.showBookAppointment))}">
         <center>
             <div  class="slds-size_8-of-12" >
                 <lightning:card>

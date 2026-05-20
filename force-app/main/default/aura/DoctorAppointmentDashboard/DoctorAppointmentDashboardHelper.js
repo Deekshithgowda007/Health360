@@ -2,6 +2,8 @@
     setupDataTable: function (component) {
         var actions = [
             { label: 'Cancel Appointment', name: 'delete' },
+            { label: 'Mark Completed', name: 'complete' },
+            { label: 'Send Reminder', name: 'remind' },
             { label: 'Edit Appointment', name: 'Edit' },
         ];
             component.set('v.columns', [
@@ -15,6 +17,81 @@
             { label: 'Status', fieldName: 'Status',hideDefaultActions: true},
             {type: 'action', typeAttributes: { rowActions: actions } }
         ]);
+    },
+
+    initializeDashboard: function(component, event, helper) {
+        var action = component.get("c.getLoggedInPractitionerContext");
+        action.setCallback(this, function(response) {
+            if (response.getState() === "SUCCESS") {
+                var result = response.getReturnValue();
+                if (result && result.found && result.doctorEmail) {
+                    component.set("v.doctorLoginEmail", result.doctorEmail);
+                }
+            }
+        });
+        $A.enqueueAction(action);
+    },
+
+    sendDoctorOtpForResolvedDoctor: function(component) {
+        var code = new jsOTP.totp().getOtp('12345');
+        component.set("v.doctorOtpCode", code);
+
+        var action = component.get("c.sendDoctorOtpByEmail");
+        action.setParams({
+            emailAddress: component.get("v.doctorEmail"),
+            doctorName: component.get("v.doctorName"),
+            otp: component.get("v.doctorOtpCode")
+        });
+        action.setCallback(this, function(response) {
+            if (response.getState() === "SUCCESS" && response.getReturnValue() === true) {
+                component.set("v.doctorOtpSent", true);
+                var otpToast = $A.get("e.force:showToast");
+                otpToast.setParams({
+                    title: "Success!",
+                    mode:"pester",
+                    message: "OTP sent to your registered doctor email.",
+                    type:"success"
+                });
+                otpToast.fire();
+            } else {
+                var errors = response.getError();
+                var message = "Could not send doctor OTP.";
+                if (errors && errors[0] && errors[0].message) {
+                    message = errors[0].message;
+                }
+                var otpErrorToast = $A.get("e.force:showToast");
+                otpErrorToast.setParams({
+                    title: "Error!",
+                    mode:"dismissible",
+                    message: message,
+                    type:"error"
+                });
+                otpErrorToast.fire();
+            }
+        });
+        $A.enqueueAction(action);
+    },
+
+    clearTableState: function(component) {
+        component.set("v.AppointmentId", new Map());
+        component.set("v.AppointmentStatus", new Map());
+        component.set("v.allData", []);
+        component.set("v.filteredData", []);
+        component.set("v.tableData", []);
+        component.set("v.showtabledata", false);
+        component.set("v.ButtonShow", false);
+        component.set("v.selectedLeads", []);
+        component.set("v.currentPageNumber", 1);
+        component.set("v.totalPages", 1);
+    },
+
+    refreshCurrentView: function(component, event, helper) {
+        var selectedDate = component.get("v.DateTime");
+        if (selectedDate) {
+            this.onPageDateChanges(component, event, helper);
+        } else {
+            this.getTableData(component, event, helper);
+        }
     },
     
     handleComponentEventPassed : function(component, event, helper){
@@ -79,9 +156,8 @@
                 this.preparePagination(component, result);
                 }
                 else if(result.length == 0){
-                    component.set('v.showtabledata', false);
+                    this.clearTableState(component);
                     this.hideSpinner(component, event, helper);
-                     this.preparePagination(component, result);
                 }
             } 
             else if (state === "ERROR") {
@@ -91,14 +167,20 @@
         });
         $A.enqueueAction(methodcall);
         var forclose = component.find("lookup-pill");
-        $A.util.addClass(forclose, 'slds-show');
-        $A.util.removeClass(forclose, 'slds-hide');
-        var forclose = component.find("searchRes");
-        $A.util.addClass(forclose, 'slds-is-close');
-        $A.util.removeClass(forclose, 'slds-is-open');
+        if (forclose) {
+            $A.util.addClass(forclose, 'slds-show');
+            $A.util.removeClass(forclose, 'slds-hide');
+        }
+        var searchRes = component.find("searchRes");
+        if (searchRes) {
+            $A.util.addClass(searchRes, 'slds-is-close');
+            $A.util.removeClass(searchRes, 'slds-is-open');
+        }
         var lookUpTarget = component.find("lookupField");
-        $A.util.addClass(lookUpTarget, 'slds-hide');
-        $A.util.removeClass(lookUpTarget, 'slds-show');
+        if (lookUpTarget) {
+            $A.util.addClass(lookUpTarget, 'slds-hide');
+            $A.util.removeClass(lookUpTarget, 'slds-show');
+        }
     },
     
     preparePagination: function (component, imagesRecords) {
@@ -231,9 +313,8 @@
                     this.preparePagination(component, result);
                     }
                     else if(result.length == 0){
-                        component.set('v.showtabledata', false);
+                        this.clearTableState(component);
                         this.hideSpinner(component,event, helper);
-                         this.preparePagination(component, result);
                     }
                 } 
                 else if (state === "ERROR") {

@@ -130,6 +130,55 @@ public class DoctorAppointmentControllerTest {
         system.assertEquals(act.LastName,'Stellar','success');
         DoctorAppointmentController.getPatient(act.Phone);
     }
+
+    @isTest
+    static void sendAppointmentReminderTest(){
+        Account patient = new Account();
+        patient.LastName = 'Reminder Patient';
+        patient.PersonEmail = 'patient.reminder@example.com';
+        patient.Phone = '9999999999';
+        insert patient;
+
+        Account facility = new Account(Name = 'Apollo Reminder Facility');
+        insert facility;
+
+        Contact doctor = new Contact(
+            LastName = 'Reminder Doctor',
+            Email = 'doctor.reminder@example.com',
+            AccountId = facility.Id
+        );
+        insert doctor;
+
+        HealthcarePractitionerFacility practitionerFacility = new HealthcarePractitionerFacility(
+            Name = 'Reminder Facility Mapping',
+            AccountId = facility.Id,
+            PractitionerId = doctor.Id
+        );
+        insert practitionerFacility;
+
+        ServiceAppointment appointment = new ServiceAppointment();
+        appointment.AccountId = patient.Id;
+        appointment.ParentRecordId = patient.Id;
+        appointment.Status = 'Scheduled';
+        appointment.AppointmentType = 'Visit Hospital';
+        appointment.SchedStartTime = System.now().addDays(1);
+        appointment.SchedEndTime = System.now().addDays(1).addHours(1);
+        insert appointment;
+
+        insert new CarePractnFacilityAppt(
+            Name = 'Reminder Mapping',
+            HealthcarePractitionerFacilityId = practitionerFacility.Id,
+            ServiceAppointmentId = appointment.Id
+        );
+
+        Test.startTest();
+        DoctorAppointmentController.AppointmentReminderResult result =
+            DoctorAppointmentController.sendAppointmentReminder(appointment.Id);
+        Test.stopTest();
+
+        System.assertEquals(true, result.patientReminderSent, 'Patient reminder should be sent when patient email is present.');
+        System.assertEquals(true, result.doctorReminderSent, 'Doctor reminder should be sent when doctor email is present.');
+    }
     
     @istest
     static void fetchHospitalByHospitalstest(){
@@ -297,6 +346,96 @@ public class DoctorAppointmentControllerTest {
         test.startTest();
         DoctorAppointmentController.createfacilities(acnte.id,cntc.id);
         test.stopTest();
+    }
+
+    @istest
+    static void createfacilitiesHandlesCombinedSelectionIds(){
+        Date myDate = date.newinstance(1960, 2, 17);
+        Account acnte=new Account();
+        acnte.LastName='Portal';
+        insert acnte;
+
+        Contact cntc=new Contact();
+        cntc.LastName='Doctor';
+        insert cntc;
+
+        OperatingHours hour=new OperatingHours(Name='Visit Hours');
+        insert hour;
+
+        ServiceTerritory terr=new ServiceTerritory();
+        terr.Name='Portal Territory';
+        terr.IsActive=true;
+        terr.OperatingHoursId=hour.Id;
+        insert terr;
+
+        ServiceResource resource=new ServiceResource();
+        resource.Name='Portal Resource';
+        resource.IsActive=true;
+        resource.RelatedRecordId='0054x000006luXJAAY';
+        insert resource;
+
+        ServiceTerritoryMember mem=new ServiceTerritoryMember();
+        mem.ServiceTerritoryId=terr.id;
+        mem.OperatingHoursId=hour.Id;
+        mem.ServiceResourceId=resource.Id;
+        mem.EffectiveStartDate=myDate;
+        insert mem;
+
+        insert new HealthcarePractitionerFacility(
+            Name='Portal Facility',
+            AccountId=acnte.id,
+            PractitionerId=cntc.id,
+            IsActive=true,
+            ServiceTerritoryMemberId=mem.Id
+        );
+
+        WorkType wrk=new WorkType();
+        wrk.Name='Visit Type';
+        wrk.EstimatedDuration=1.00;
+        insert wrk;
+
+        WorkTypeGroup grp=new WorkTypeGroup();
+        grp.Name='Visit Group';
+        grp.IsActive=true;
+        insert grp;
+
+        insert new ServiceTerritoryWorkType(
+            ServiceTerritoryId=terr.id,
+            WorkTypeId=wrk.Id
+        );
+
+        insert new WorkTypeGroupMember(
+            WorkTypeId=wrk.id,
+            WorkTypeGroupId=grp.Id
+        );
+
+        Test.startTest();
+        DoctorAppointmentController.TimePreview preview = DoctorAppointmentController.createfacilities(acnte.Id, acnte.Id + '|' + cntc.Id);
+        List<TimeSlot> slots = DoctorAppointmentController.getTimeSlots(acnte.Id + '|' + cntc.Id, acnte.Id);
+        Test.stopTest();
+
+        System.assertNotEquals(null, preview.practitionerfacility, 'Combined selection ids should still resolve the practitioner facility.');
+        System.assertEquals(cntc.Id, preview.practitionerfacility.PractitionerId, 'The doctor id should be parsed correctly from the combined value.');
+        System.assertNotEquals(null, slots, 'Time slot lookup should safely return a list for combined ids.');
+    }
+
+    @istest
+    static void createfacilitiesReturnsEmptyPreviewWhenNoFacilityExists(){
+        Account acnte=new Account();
+        acnte.LastName='Portal Empty';
+        insert acnte;
+
+        Contact cntc=new Contact();
+        cntc.LastName='Doctor Empty';
+        insert cntc;
+
+        Test.startTest();
+        DoctorAppointmentController.TimePreview preview = DoctorAppointmentController.createfacilities(acnte.Id, cntc.Id);
+        List<TimeSlot> slots = DoctorAppointmentController.getTimeSlots(cntc.Id, acnte.Id);
+        Test.stopTest();
+
+        System.assertEquals(null, preview.practitionerfacility, 'Missing facility setup should not throw and should return an empty preview.');
+        System.assertEquals(0, slots.size(), 'Missing facility setup should return an empty slot list.');
     }
     
     @istest
@@ -591,5 +730,164 @@ public class DoctorAppointmentControllerTest {
       insert leading;
           system.assertEquals(leading.LastName,'smith','success');
         DoctorAppointmentController.convertLeadToPersonAccount(leading.Id);
+    }
+
+    @isTest
+    static void portalSpecialtyOnlySearchReturnsApolloBranchDoctors(){
+        Account hospital = new Account(Name = 'Apollo Hospital');
+        insert hospital;
+
+        Account branch = new Account(
+            Name = 'Apollo Bangalore Dental Center',
+            ParentId = hospital.Id,
+            BillingCity = 'Bangalore',
+            BillingState = 'Karnataka',
+            BillingPostalCode = '560025',
+            BillingCountry = 'India'
+        );
+        insert branch;
+
+        CareSpecialty specialty = new CareSpecialty(Name = 'Dental Care');
+        insert specialty;
+
+        Contact doctor = new Contact(
+            FirstName = 'Asha',
+            LastName = 'Nair',
+            AccountId = branch.Id,
+            Available_Appointment_Type__c = 'In Person',
+            Doctor_Rating__c = 4.8,
+            Years_of_Experience__c = 11,
+            Review_Count__c = 186,
+            Priority_Doctor__c = true
+        );
+        insert doctor;
+
+        insert new HealthcareProviderSpecialty(
+            Name = 'Apollo Bangalore Dental Center - Nair - Dental Care',
+            AccountId = branch.Id,
+            PractitionerId = doctor.Id,
+            SpecialtyId = specialty.Id
+        );
+
+        Test.startTest();
+        List<DoctorAppointmentController.LocationOption> locations = DoctorAppointmentController.getPortalLocations('Apollo Hospital', specialty.Id);
+        List<HealthcareProviderSpecialty> doctors = DoctorAppointmentController.getPortalDoctors('Apollo Hospital', specialty.Id, null, null, null);
+        Test.stopTest();
+
+        System.assertEquals(1, locations.size(), 'The specialty should surface at least one Apollo location.');
+        System.assertEquals(1, doctors.size(), 'Specialty-only search should return the Apollo branch doctor.');
+        System.assertEquals(doctor.Id, doctors[0].PractitionerId, 'The expected Apollo doctor should be returned.');
+    }
+
+    @isTest
+    static void portalLocationOnlySearchReturnsDoctorsForThatLocation(){
+        Account hospital = new Account(Name = 'Apollo Hospital');
+        insert hospital;
+
+        Account bangaloreBranch = new Account(
+            Name = 'Apollo Bangalore Center',
+            ParentId = hospital.Id,
+            BillingCity = 'Bangalore',
+            BillingState = 'Karnataka',
+            BillingPostalCode = '560001',
+            BillingCountry = 'India'
+        );
+        Account delhiBranch = new Account(
+            Name = 'Apollo Delhi Center',
+            ParentId = hospital.Id,
+            BillingCity = 'Delhi',
+            BillingState = 'Delhi',
+            BillingPostalCode = '110001',
+            BillingCountry = 'India'
+        );
+        insert new List<Account>{ bangaloreBranch, delhiBranch };
+
+        CareSpecialty dental = new CareSpecialty(Name = 'Dental Care');
+        CareSpecialty cardio = new CareSpecialty(Name = 'Cardiology');
+        insert new List<CareSpecialty>{ dental, cardio };
+
+        Contact bangaloreDoctor = new Contact(FirstName = 'Asha', LastName = 'Nair', AccountId = bangaloreBranch.Id);
+        Contact delhiDoctor = new Contact(FirstName = 'Vikram', LastName = 'Suri', AccountId = delhiBranch.Id);
+        insert new List<Contact>{ bangaloreDoctor, delhiDoctor };
+
+        insert new List<HealthcareProviderSpecialty>{
+            new HealthcareProviderSpecialty(
+                Name = 'Apollo Bangalore Center - Nair - Dental Care',
+                AccountId = bangaloreBranch.Id,
+                PractitionerId = bangaloreDoctor.Id,
+                SpecialtyId = dental.Id
+            ),
+            new HealthcareProviderSpecialty(
+                Name = 'Apollo Delhi Center - Suri - Cardiology',
+                AccountId = delhiBranch.Id,
+                PractitionerId = delhiDoctor.Id,
+                SpecialtyId = cardio.Id
+            )
+        };
+
+        Test.startTest();
+        List<DoctorAppointmentController.LocationOption> locations = DoctorAppointmentController.getPortalLocations('Apollo Hospital', null);
+        List<HealthcareProviderSpecialty> bangaloreDoctors = DoctorAppointmentController.getPortalDoctors('Apollo Hospital', null, 'bangalore|karnataka', null, null);
+        Test.stopTest();
+
+        System.assertEquals(2, locations.size(), 'All Apollo locations with doctors should be available for location-only search.');
+        System.assertEquals(1, bangaloreDoctors.size(), 'Location-only search should return only doctors from the selected location.');
+        System.assertEquals(bangaloreDoctor.Id, bangaloreDoctors[0].PractitionerId, 'The Bangalore doctor should be returned.');
+    }
+
+    @isTest
+    static void registerPortalPatientCreatesPersonAccountDirectly(){
+        Test.startTest();
+        DoctorAppointmentController.PortalPatientRegistrationResult result = DoctorAppointmentController.registerPortalPatient(
+            'Riya',
+            'Sharma',
+            'riya.sharma.portal@example.com',
+            '9876543210',
+            '12 Apollo Street',
+            'Bangalore',
+            'Karnataka',
+            'India',
+            '560001'
+        );
+        Test.stopTest();
+
+        Account patient = [
+            SELECT Id, FirstName, LastName, PersonEmail, Phone, PersonMailingCity, IsPersonAccount
+            FROM Account
+            WHERE Id = :result.patientId
+        ];
+
+        System.assertEquals('Riya Sharma', result.patientName, 'The response should include the patient name.');
+        System.assertEquals(request.email, result.patientEmail, 'The response should include the patient email.');
+        System.assertEquals(true, patient.IsPersonAccount, 'Registration should create a person account directly.');
+        System.assertEquals('riya.sharma.portal@example.com', patient.PersonEmail, 'The person account email should match.');
+        System.assertEquals('Bangalore', patient.PersonMailingCity, 'The person account mailing city should match.');
+    }
+
+    @isTest
+    static void registerPortalPatientRejectsDuplicateEmail(){
+        insert new Account(
+            FirstName = 'Existing',
+            LastName = 'Patient',
+            PersonEmail = 'existing.portal@example.com',
+            Phone = '9000000001'
+        );
+
+        try {
+            DoctorAppointmentController.registerPortalPatient(
+                'New',
+                'Patient',
+                'existing.portal@example.com',
+                '9000000002',
+                '22 New Street',
+                'Delhi',
+                'Delhi',
+                'India',
+                '110001'
+            );
+            System.assert(false, 'Duplicate patient email should raise an exception.');
+        } catch (AuraHandledException ex) {
+            System.assert(ex.getMessage().contains('email'), 'The duplicate-email message should mention email.');
+        }
     }
 }

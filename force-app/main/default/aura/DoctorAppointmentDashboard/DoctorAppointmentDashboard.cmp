@@ -31,6 +31,15 @@
     <aura:attribute name="showtabledata" type="boolean" default="false"/>
     <aura:attribute name="selectedLeads" type="List"/>
     <aura:attribute name="DateTime" type="DateTime"/>
+    <aura:attribute name="doctorResolved" type="Boolean" default="false"/>
+    <aura:attribute name="doctorName" type="String"/>
+    <aura:attribute name="doctorEmail" type="String"/>
+    <aura:attribute name="doctorAuthenticated" type="Boolean" default="false"/>
+    <aura:attribute name="doctorOtpCode" type="String"/>
+    <aura:attribute name="doctorOtpInput" type="String"/>
+    <aura:attribute name="doctorOtpSent" type="Boolean" default="false"/>
+    <aura:attribute name="doctorLoginEmail" type="String"/>
+    <ltng:require scripts="{!$Resource.jsOTP}" afterScriptsLoaded="{!c.afterLoad}" />
     
     <aura:if isTrue="{!v.Homepopup}">
         <lightning:card>
@@ -44,18 +53,60 @@
                 <h1><b>{!$Label.c.Practitioner_Appointment_DashBoard}</b></h1>
             </div>
             <div class="slds-m-around_large">
-                <div class="slds-align_absolute-center sizeBox">
-                    <c:LookUpFieldsParent objectAPIName="contact" IconName="standard:contact" aura:id="selectedDoctors" selectedRecord="{!v.selectedLookUpRecord}" label="{!$Label.c.Search_Practitioner}"/>
-                </div>
+                <aura:if isTrue="{!v.doctorResolved}">
+                    <div class="slds-align_absolute-center">
+                        <h3><b>Signed in as {!v.doctorName}</b></h3>
+                    </div>
+                    <div class="slds-align_absolute-center slds-m-top_small">
+                        <aura:if isTrue="{!not(v.doctorAuthenticated)}">
+                            <p>Verify OTP sent to {!v.doctorEmail} to access only your appointments.</p>
+                            <aura:set attribute="else">
+                                <p>Only your appointments are visible in this dashboard.</p>
+                            </aura:set>
+                        </aura:if>
+                    </div>
+                    <div class="slds-align_absolute-center slds-m-top_medium">
+                        <aura:if isTrue="{!and(v.doctorResolved, not(v.doctorAuthenticated))}">
+                            <aura:if isTrue="{!v.doctorOtpSent}">
+                                <div style="width:320px;">
+                                    <lightning:input type="text" label="Enter OTP" value="{!v.doctorOtpInput}" maxlength="6"/>
+                                    <div class="slds-m-top_medium slds-align_absolute-center">
+                                        <lightning:button variant="neutral" label="Resend OTP" onclick="{!c.sendDoctorOtp}" class="slds-m-right_small"/>
+                                        <lightning:button variant="brand" label="Verify OTP" onclick="{!c.verifyDoctorOtp}"/>
+                                    </div>
+                                </div>
+                                <aura:set attribute="else">
+                                    <lightning:button variant="brand" label="Send OTP" onclick="{!c.sendDoctorOtp}"/>
+                                </aura:set>
+                            </aura:if>
+                        </aura:if>
+                    </div>
+                    <aura:set attribute="else">
+                        <div class="slds-align_absolute-center">
+                            <h3><b>Doctor login required</b></h3>
+                        </div>
+                        <div class="slds-align_absolute-center slds-m-top_small">
+                            <p>Enter your registered doctor email to receive OTP.</p>
+                        </div>
+                        <div class="slds-align_absolute-center slds-m-top_medium">
+                            <div style="width:320px;">
+                                <lightning:input type="email" label="Doctor Email" value="{!v.doctorLoginEmail}"/>
+                                <div class="slds-m-top_medium slds-align_absolute-center">
+                                    <lightning:button variant="brand" label="Send OTP" onclick="{!c.lookupDoctorByEmail}"/>
+                                </div>
+                            </div>
+                        </div>
+                    </aura:set>
+                </aura:if>
                 <br/> 
             </div>
             <lightning:card>                               
                 <aura:if isTrue="{!v.ShowToast}">
                     <div class="slds-align_absolute-center" > 
-                        <h5><b>Please Select A Practitioner To See the Appointment DashBoard</b></h5>
+                        <h5><b>Verify doctor OTP to open your appointment dashboard.</b></h5>
                     </div>
                 </aura:if>
-                <aura:if isTrue="{!v.ShowTable}">
+                <aura:if isTrue="{!and(v.ShowTable, v.doctorAuthenticated)}">
                     <div class="slds-grid slds-p-top_low">
                         <aura:if isTrue="{!v.ShowTimeField}">
                             <div class="slds-size_3-of-10 slds-p-left_xx-small slds-p-horizontal_x-large " >

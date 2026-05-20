@@ -56,6 +56,8 @@ public without sharing class DoctorAppointmentController {
     @AuraEnabled 
     public static TimePreview createfacilities(String accntId,String contctId){
         TimePreview timeList =  new  TimePreview();
+        String normalizedAccountId = normalizePortalSelectionId(accntId, 0);
+        String normalizedContactId = normalizePortalSelectionId(contctId, 1);
         if(HealthcarePractitionerFacility.SObjectType.getDescribe().isAccessible()&&
         Schema.SObjectType.HealthcarePractitionerFacility.fields.Id.isAccessible() &&
         ServiceTerritoryWorkType.SObjectType.getDescribe().isAccessible()&&
@@ -63,14 +65,40 @@ public without sharing class DoctorAppointmentController {
         WorkTypeGroupMember.SObjectType.getDescribe().isAccessible()&&
         Schema.SObjectType.WorkTypeGroupMember.fields.Id.isAccessible())
       {
-        if(contctId != null && accntId !=null){
-            HealthcarePractitionerFacility createfac =[select Id,Name,AccountId,PractitionerId,ServiceTerritoryMember.ServiceTerritory.OperatingHours.TimeZone,ServiceTerritoryMember.ServiceResourceId,ServiceTerritoryMember.ServiceTerritoryId from HealthcarePractitionerFacility where AccountId=:accntId and PractitionerId=:contctId  ];
-            ServiceTerritoryWorkType timesl= [SELECT Id, WorkType.Name FROM ServiceTerritoryWorkType WHERE ServiceTerritoryId =: createfac.ServiceTerritoryMember.ServiceTerritoryId  ];
-            WorkTypeGroupMember timesls=[SELECT Id, WorkTypeGroup.Name FROM WorkTypeGroupMember WHERE WorkTypeId =: timesl.WorkType.Id  ];
+        if(normalizedContactId != null && normalizedAccountId !=null){
+            List<HealthcarePractitionerFacility> facilities = [
+                select Id,Name,AccountId,PractitionerId,ServiceTerritoryMember.ServiceTerritory.OperatingHours.TimeZone,ServiceTerritoryMember.ServiceResourceId,ServiceTerritoryMember.ServiceTerritoryId
+                from HealthcarePractitionerFacility
+                where AccountId=:normalizedAccountId and PractitionerId=:normalizedContactId
+                limit 1
+            ];
+            if (facilities.isEmpty()) {
+                return timeList;
+            }
+
+            HealthcarePractitionerFacility createfac = facilities[0];
+            List<ServiceTerritoryWorkType> territoryWorkTypes = [
+                SELECT Id, WorkTypeId, WorkType.Name
+                FROM ServiceTerritoryWorkType
+                WHERE ServiceTerritoryId =: createfac.ServiceTerritoryMember.ServiceTerritoryId
+                LIMIT 1
+            ];
+            if (territoryWorkTypes.isEmpty()) {
+                timeList.practitionerfacility = createfac;
+                return timeList;
+            }
+
+            ServiceTerritoryWorkType timesl = territoryWorkTypes[0];
+            List<WorkTypeGroupMember> workTypeGroupMembers = [
+                SELECT Id, WorkTypeId, WorkTypeGroupId, WorkTypeGroup.Name
+                FROM WorkTypeGroupMember
+                WHERE WorkTypeId =: timesl.WorkTypeId
+                LIMIT 1
+            ];
             
             timeList.practitionerfacility=createfac;
             timeList.workTypeName=timesl;
-            timeList.workTypeGroupName=timesls;
+            timeList.workTypeGroupName=workTypeGroupMembers.isEmpty() ? null : workTypeGroupMembers[0];
         }
     }
         return timeList;
@@ -198,6 +226,133 @@ System.debug('Exception :'+ e);
       //}
         return verifyOtp;
     }
+
+    @AuraEnabled
+    public static AppointmentReminderResult sendAppointmentReminder(String serviceAppointmentId){
+        if (String.isBlank(serviceAppointmentId)) {
+            throw new AuraHandledException('Appointment id is required.');
+        }
+
+        ServiceAppointment appointment = [
+            SELECT Id, AppointmentNumber, Status, AppointmentType, SchedStartTime, SchedEndTime,
+                   Zoom_Meeting_Url__c, AccountId, Account.Name, Account.PersonEmail, Account.Phone,
+                   WorkType.Name
+            FROM ServiceAppointment
+            WHERE Id = :serviceAppointmentId
+            LIMIT 1
+        ];
+
+        if (appointment.Status != 'Scheduled') {
+            throw new AuraHandledException('Reminders can be sent only for scheduled appointments.');
+        }
+
+        List<CarePractnFacilityAppt> facilityMappings = [
+            SELECT HealthcarePractitionerFacility.Practitioner.Name,
+                   HealthcarePractitionerFacility.Practitioner.Email,
+                   HealthcarePractitionerFacility.Account.Name,
+                   HealthcarePractitionerFacility.Account.BillingStreet,
+                   HealthcarePractitionerFacility.Account.BillingCity,
+                   HealthcarePractitionerFacility.Account.BillingState,
+                   HealthcarePractitionerFacility.Account.BillingPostalCode,
+                   HealthcarePractitionerFacility.Account.BillingCountry
+            FROM CarePractnFacilityAppt
+            WHERE ServiceAppointmentId = :serviceAppointmentId
+            LIMIT 1
+        ];
+
+        CarePractnFacilityAppt facilityMapping = facilityMappings.isEmpty() ? null : facilityMappings[0];
+        String doctorName = facilityMapping != null && facilityMapping.HealthcarePractitionerFacility != null
+            && facilityMapping.HealthcarePractitionerFacility.Practitioner != null
+            ? facilityMapping.HealthcarePractitionerFacility.Practitioner.Name : 'Doctor';
+        String doctorEmail = facilityMapping != null && facilityMapping.HealthcarePractitionerFacility != null
+            && facilityMapping.HealthcarePractitionerFacility.Practitioner != null
+            ? facilityMapping.HealthcarePractitionerFacility.Practitioner.Email : null;
+        String facilityName = facilityMapping != null && facilityMapping.HealthcarePractitionerFacility != null
+            && facilityMapping.HealthcarePractitionerFacility.Account != null
+            ? facilityMapping.HealthcarePractitionerFacility.Account.Name : null;
+        String facilityAddress = facilityMapping != null && facilityMapping.HealthcarePractitionerFacility != null
+            && facilityMapping.HealthcarePractitionerFacility.Account != null
+            ? joinReminderValues(new List<String>{
+                facilityMapping.HealthcarePractitionerFacility.Account.BillingStreet,
+                facilityMapping.HealthcarePractitionerFacility.Account.BillingCity,
+                facilityMapping.HealthcarePractitionerFacility.Account.BillingState,
+                facilityMapping.HealthcarePractitionerFacility.Account.BillingPostalCode,
+                facilityMapping.HealthcarePractitionerFacility.Account.BillingCountry
+            }, ', ')
+            : null;
+
+        String appointmentWindow = '';
+        if (appointment.SchedStartTime != null) {
+            appointmentWindow = appointment.SchedStartTime.format('dd MMM yyyy, hh:mm a');
+        }
+        if (appointment.SchedEndTime != null) {
+            appointmentWindow += ' - ' + appointment.SchedEndTime.format('hh:mm a');
+        }
+
+        String visitType = appointment.WorkType != null ? appointment.WorkType.Name : appointment.AppointmentType;
+        String patientName = appointment.Account != null ? appointment.Account.Name : 'Patient';
+        String patientEmail = appointment.Account != null ? appointment.Account.PersonEmail : null;
+
+        List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
+
+        if (String.isNotBlank(patientEmail)) {
+            Messaging.SingleEmailMessage patientMail = new Messaging.SingleEmailMessage();
+            patientMail.setToAddresses(new String[] { patientEmail });
+            patientMail.setSenderDisplayName('Apollo Health 360');
+            patientMail.setSubject('Appointment Reminder - ' + appointment.AppointmentNumber);
+            patientMail.setBccSender(false);
+            patientMail.setUseSignature(true);
+            patientMail.setHtmlBody(
+                'Hello ' + patientName + ',<br/><br/>' +
+                'This is a reminder for your upcoming appointment.<br/><br/>' +
+                '<b>Appointment Number:</b> ' + appointment.AppointmentNumber + '<br/>' +
+                '<b>Doctor:</b> ' + doctorName + '<br/>' +
+                '<b>Visit Type:</b> ' + String.valueOf(visitType) + '<br/>' +
+                '<b>Date & Time:</b> ' + appointmentWindow + '<br/>' +
+                '<b>Location:</b> ' + String.valueOf(facilityName) + '<br/>' +
+                '<b>Address:</b> ' + String.valueOf(facilityAddress) + '<br/>' +
+                (String.isNotBlank(appointment.Zoom_Meeting_Url__c) ? '<b>Join Link:</b> ' + appointment.Zoom_Meeting_Url__c + '<br/>' : '') +
+                '<br/>Please arrive a few minutes early and keep this reminder handy.<br/><br/>' +
+                'Regards,<br/>Apollo Health 360'
+            );
+            emails.add(patientMail);
+        }
+
+        if (String.isNotBlank(doctorEmail)) {
+            Messaging.SingleEmailMessage doctorMail = new Messaging.SingleEmailMessage();
+            doctorMail.setToAddresses(new String[] { doctorEmail });
+            doctorMail.setSenderDisplayName('Apollo Health 360');
+            doctorMail.setSubject('Doctor Reminder - ' + appointment.AppointmentNumber);
+            doctorMail.setBccSender(false);
+            doctorMail.setUseSignature(true);
+            doctorMail.setHtmlBody(
+                'Hello ' + doctorName + ',<br/><br/>' +
+                'This is a reminder for your upcoming patient appointment.<br/><br/>' +
+                '<b>Appointment Number:</b> ' + appointment.AppointmentNumber + '<br/>' +
+                '<b>Patient:</b> ' + patientName + '<br/>' +
+                '<b>Visit Type:</b> ' + String.valueOf(visitType) + '<br/>' +
+                '<b>Date & Time:</b> ' + appointmentWindow + '<br/>' +
+                '<b>Facility:</b> ' + String.valueOf(facilityName) + '<br/>' +
+                '<b>Facility Address:</b> ' + String.valueOf(facilityAddress) + '<br/>' +
+                (String.isNotBlank(appointment.Zoom_Meeting_Url__c) ? '<b>Join Link:</b> ' + appointment.Zoom_Meeting_Url__c + '<br/>' : '') +
+                '<br/>Regards,<br/>Apollo Health 360'
+            );
+            emails.add(doctorMail);
+        }
+
+        if (emails.isEmpty()) {
+            throw new AuraHandledException('No email address is configured for the patient or doctor on this appointment.');
+        }
+
+        Messaging.sendEmail(emails);
+
+        AppointmentReminderResult result = new AppointmentReminderResult();
+        result.patientReminderSent = String.isNotBlank(patientEmail);
+        result.doctorReminderSent = String.isNotBlank(doctorEmail);
+        result.patientEmail = patientEmail;
+        result.doctorEmail = doctorEmail;
+        return result;
+    }
     
     @AuraEnabled
     public static String createLead(Lead lead){
@@ -232,6 +387,115 @@ System.debug('Exception :'+ e);
         }
         return returnval;
     }
+
+    private static String joinReminderValues(List<String> values, String separator) {
+        List<String> filteredValues = new List<String>();
+        for (String value : values) {
+            if (String.isNotBlank(value)) {
+                filteredValues.add(value);
+            }
+        }
+        return String.join(filteredValues, separator);
+    }
+
+    @AuraEnabled
+    public static PortalPatientRegistrationResult registerPortalPatient(
+        String firstName,
+        String lastName,
+        String email,
+        String phone,
+        String street,
+        String city,
+        String state,
+        String country,
+        String postalCode
+    ){
+        firstName = firstName != null ? firstName.trim() : null;
+        lastName = lastName != null ? lastName.trim() : null;
+        email = email != null ? email.trim() : null;
+        phone = phone != null ? phone.trim() : null;
+        street = street != null ? street.trim() : null;
+        city = city != null ? city.trim() : null;
+        state = state != null ? state.trim() : null;
+        country = country != null ? country.trim() : null;
+        postalCode = postalCode != null ? postalCode.trim() : null;
+
+        if (String.isBlank(firstName) || String.isBlank(lastName) || String.isBlank(email) ||
+            String.isBlank(phone) || String.isBlank(street) || String.isBlank(city) ||
+            String.isBlank(state) || String.isBlank(country) || String.isBlank(postalCode)) {
+            throw new AuraHandledException('Please fill all required patient details.');
+        }
+
+        if (!Pattern.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', email)) {
+            throw new AuraHandledException('Please enter a valid email address.');
+        }
+
+        if (!Pattern.matches('^[0-9]{10}$', phone)) {
+            throw new AuraHandledException('Phone number must contain exactly 10 digits.');
+        }
+
+        List<Account> existingPatients = [
+            SELECT Id, Name, PersonEmail, Phone
+            FROM Account
+            WHERE IsPersonAccount = true
+            AND (PersonEmail = :email OR Phone = :phone)
+            LIMIT 1
+        ];
+
+        if (!existingPatients.isEmpty()) {
+            Account existingPatient = existingPatients[0];
+            if (existingPatient.PersonEmail == email) {
+                throw new AuraHandledException('An account already exists with this email address.');
+            }
+            throw new AuraHandledException('An account already exists with this phone number.');
+        }
+
+        Account patient = new Account();
+        Id personAccountRecordTypeId = getPersonAccountRecordTypeId();
+        if (personAccountRecordTypeId != null) {
+            patient.RecordTypeId = personAccountRecordTypeId;
+        }
+        patient.FirstName = firstName;
+        patient.LastName = lastName;
+        patient.PersonEmail = email;
+        patient.Phone = phone;
+        patient.PersonMailingStreet = street;
+        patient.PersonMailingCity = city;
+        patient.PersonMailingState = state;
+        patient.PersonMailingCountry = country;
+        patient.PersonMailingPostalCode = postalCode;
+
+        Database.SaveResult saveResult = Database.insert(patient, false);
+        if (!saveResult.isSuccess()) {
+            String errorMessage = 'We could not create the patient person account.';
+            if (saveResult.getErrors() != null && !saveResult.getErrors().isEmpty()) {
+                errorMessage = saveResult.getErrors()[0].getMessage();
+            }
+            throw new AuraHandledException(errorMessage);
+        }
+
+        PortalPatientRegistrationResult result = new PortalPatientRegistrationResult();
+        result.patientId = patient.Id;
+        result.patientName = patient.FirstName + ' ' + patient.LastName;
+        result.patientEmail = patient.PersonEmail;
+        return result;
+    }
+
+    private static Id getPersonAccountRecordTypeId() {
+        List<RecordType> personRecordTypes = [
+            SELECT Id
+            FROM RecordType
+            WHERE SObjectType = 'Account'
+            AND IsPersonType = true
+            LIMIT 1
+        ];
+
+        if (!personRecordTypes.isEmpty()) {
+            return personRecordTypes[0].Id;
+        }
+
+        return null;
+    }
     
     @AuraEnabled(cacheable=false)
     public static boolean sendOTPs(Id recordId,string otp) {
@@ -250,18 +514,46 @@ System.debug('Exception :'+ e);
     public static List<TimeSlot> getTimeSlots(String contctId,String accntId){
         HealthcarePractitionerFacility createfac=new HealthcarePractitionerFacility();
         List<TimeSlot> getSlots=new List<TimeSlot>();
+        String normalizedAccountId = normalizePortalSelectionId(accntId, 0);
+        String normalizedContactId = normalizePortalSelectionId(contctId, 1);
         if(TimeSlot.SObjectType.getDescribe().isAccessible()&&
         Schema.SObjectType.TimeSlot.fields.Id.isAccessible()&&
         HealthcarePractitionerFacility.SObjectType.getDescribe().isAccessible()&&
         Schema.SObjectType.HealthcarePractitionerFacility.fields.Id.isAccessible())
       {
-        if(contctId != null && accntId !=null){
-            createfac =[select Id,Name,AccountId,PractitionerId,ServiceTerritoryMember.ServiceTerritory.OperatingHours.TimeZone,ServiceTerritoryMember.ServiceResourceId from HealthcarePractitionerFacility where AccountId=:accntId and PractitionerId=:contctId  ];
+        if(normalizedContactId != null && normalizedAccountId !=null){
+            List<HealthcarePractitionerFacility> facilities = [
+                select Id,Name,AccountId,PractitionerId,ServiceTerritoryMember.ServiceTerritory.OperatingHours.TimeZone,ServiceTerritoryMember.ServiceResourceId
+                from HealthcarePractitionerFacility
+                where AccountId=:normalizedAccountId and PractitionerId=:normalizedContactId
+                limit 1
+            ];
+            if (facilities.isEmpty()) {
+                return getSlots;
+            }
+            createfac = facilities[0];
             getSlots =[Select DayOfWeek,StartTime,EndTime from TimeSlot where OperatingHoursId=:createfac.ServiceTerritoryMember.ServiceTerritory.OperatingHours.Id  ];
         }
        
     }
         return getSlots;
+    }
+
+    private static String normalizePortalSelectionId(String rawId, Integer expectedIndex) {
+        if (String.isBlank(rawId)) {
+            return rawId;
+        }
+
+        List<String> selectionParts = rawId.split('\\|');
+        if (selectionParts.size() <= 1) {
+            return rawId;
+        }
+
+        if (expectedIndex != null && selectionParts.size() > expectedIndex) {
+            return selectionParts[expectedIndex];
+        }
+
+        return selectionParts[selectionParts.size() - 1];
     }
     
     @AuraEnabled
@@ -416,37 +708,85 @@ System.debug('Exception :'+ e);
     }
 
     private static List<HealthcareProviderSpecialty> getPortalProviderMappings(String hospitalName, String careId, String doctorId) {
-        List<HealthcareProviderSpecialty> mappings = [
-            SELECT
-                Name,
-                Practitioner.Name,
-                Practitioner.Id,
-                Practitioner.Available_Appointment_Type__c,
-                Practitioner.Image_URL__c,
-                Practitioner.Doctor_Rating__c,
-                Practitioner.Years_of_Experience__c,
-                Practitioner.Review_Count__c,
-                Practitioner.Priority_Doctor__c,
-                Specialty.Name,
-                Account.Name,
-                Practitioner.AccountId,
-                PractitionerId,
-                Practitioner.Area_of_Expertise__c,
-                Practitioner.Awards_and_Regonitions__c,
-                Practitioner.Overview__c,
-                Account.Phone,
-                Account.Website,
-                Account.BillingCity,
-                Account.BillingState,
-                Account.BillingPostalCode,
-                Account.BillingCountry,
-                SpecialtyId,
-                AccountId,
-                Account.Parent.Name
-            FROM HealthcareProviderSpecialty
-            WHERE AccountId != null
-            AND (Account.Parent.Name = :hospitalName OR Account.Name LIKE :('%' + hospitalName + '%'))
-        ];
+        String normalizedHospitalName = String.isBlank(hospitalName) ? null : hospitalName.trim();
+        String hospitalBrand = normalizedHospitalName;
+        if (String.isNotBlank(normalizedHospitalName) && normalizedHospitalName.contains(' ')) {
+            hospitalBrand = normalizedHospitalName.substringBefore(' ');
+        }
+
+        List<HealthcareProviderSpecialty> mappings;
+        if (String.isBlank(normalizedHospitalName)) {
+            mappings = [
+                SELECT
+                    Name,
+                    Practitioner.Name,
+                    Practitioner.Id,
+                    Practitioner.Available_Appointment_Type__c,
+                    Practitioner.Image_URL__c,
+                    Practitioner.Doctor_Rating__c,
+                    Practitioner.Years_of_Experience__c,
+                    Practitioner.Review_Count__c,
+                    Practitioner.Priority_Doctor__c,
+                    Specialty.Name,
+                    Account.Name,
+                    Practitioner.AccountId,
+                    PractitionerId,
+                    Practitioner.Area_of_Expertise__c,
+                    Practitioner.Awards_and_Regonitions__c,
+                    Practitioner.Overview__c,
+                    Account.Phone,
+                    Account.Website,
+                    Account.BillingCity,
+                    Account.BillingState,
+                    Account.BillingPostalCode,
+                    Account.BillingCountry,
+                    SpecialtyId,
+                    AccountId,
+                    Account.Parent.Name
+                FROM HealthcareProviderSpecialty
+                WHERE AccountId != null
+                AND PractitionerId != null
+            ];
+        } else {
+            mappings = [
+                SELECT
+                    Name,
+                    Practitioner.Name,
+                    Practitioner.Id,
+                    Practitioner.Available_Appointment_Type__c,
+                    Practitioner.Image_URL__c,
+                    Practitioner.Doctor_Rating__c,
+                    Practitioner.Years_of_Experience__c,
+                    Practitioner.Review_Count__c,
+                    Practitioner.Priority_Doctor__c,
+                    Specialty.Name,
+                    Account.Name,
+                    Practitioner.AccountId,
+                    PractitionerId,
+                    Practitioner.Area_of_Expertise__c,
+                    Practitioner.Awards_and_Regonitions__c,
+                    Practitioner.Overview__c,
+                    Account.Phone,
+                    Account.Website,
+                    Account.BillingCity,
+                    Account.BillingState,
+                    Account.BillingPostalCode,
+                    Account.BillingCountry,
+                    SpecialtyId,
+                    AccountId,
+                    Account.Parent.Name
+                FROM HealthcareProviderSpecialty
+                WHERE AccountId != null
+                AND PractitionerId != null
+                AND (
+                    Account.Parent.Name = :normalizedHospitalName
+                    OR Account.Parent.Name LIKE :('%' + normalizedHospitalName + '%')
+                    OR Account.Name LIKE :('%' + normalizedHospitalName + '%')
+                    OR Account.Parent.Name LIKE :('%' + hospitalBrand + '%')
+                    OR Account.Name LIKE :('%' + hospitalBrand + '%')
+                )
+            ];
+        }
 
         List<HealthcareProviderSpecialty> filteredMappings = new List<HealthcareProviderSpecialty>();
         for (HealthcareProviderSpecialty mapping : mappings) {
@@ -625,6 +965,31 @@ return getAccounts.Id;
         public List<CareSpecialty> speciality;
         
         
+    }
+
+    public class PortalPatientRegistrationRequest {
+        @AuraEnabled public String firstName;
+        @AuraEnabled public String lastName;
+        @AuraEnabled public String email;
+        @AuraEnabled public String phone;
+        @AuraEnabled public String street;
+        @AuraEnabled public String city;
+        @AuraEnabled public String state;
+        @AuraEnabled public String country;
+        @AuraEnabled public String postalCode;
+    }
+
+    public class PortalPatientRegistrationResult {
+        @AuraEnabled public String patientId;
+        @AuraEnabled public String patientName;
+        @AuraEnabled public String patientEmail;
+    }
+
+    public class AppointmentReminderResult {
+        @AuraEnabled public Boolean patientReminderSent;
+        @AuraEnabled public Boolean doctorReminderSent;
+        @AuraEnabled public String patientEmail;
+        @AuraEnabled public String doctorEmail;
     }
     
     public class TimePreview{

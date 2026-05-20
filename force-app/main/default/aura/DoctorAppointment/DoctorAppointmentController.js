@@ -45,6 +45,58 @@
         //cmp.set("v.messageTemp", message);
     },
 
+    openApolloLogin : function(component, event, helper) {
+        component.set("v.isShowLogin", false);
+        component.set("v.showBookAppointment", true);
+        component.set("v.isNextModalsForLogin", true);
+        component.set("v.isNextModalForSignUp", false);
+        component.set("v.showconfirmbotton", true);
+        component.set("v.showverifybotton", false);
+        component.set("v.hideNumberButtonLogin", true);
+        component.set("v.hideOtpButtonLogin", false);
+        component.set("v.guestUserForLoginOrSignUp", false);
+        component.set("v.portalEntryIdentifier", "");
+        component.set("v.portalOtpInput", "");
+        component.set("v.newLead", {
+            'sobjectType': 'Lead',
+            'Title': '',
+            'FirstName': '',
+            'LastName': '',
+            'Email': '',
+            'Address': '',
+            'Company': '',
+            'Phone': '',
+            'Street': '',
+            'City': '',
+            'Country': '',
+            'State': '',
+            'PostalCode': ''
+        });
+    },
+
+    portalSignOut : function(component, event, helper) {
+        component.set("v.portalAuthenticated", false);
+        component.set("v.portalPatientLabel", '');
+        component.set("v.PatientId", null);
+        component.set("v.MyAppointments", false);
+        component.set("v.showPeronAccountAppointment", false);
+        component.set("v.serviceappointments", false);
+        component.set("v.showBookAppointment", true);
+        component.set("v.portalEntryIdentifier", "");
+        component.set("v.portalOtpInput", "");
+        component.set("v.portalPassword", "");
+        component.set("v.portalConfirmPassword", "");
+        component.set("v.guestUserForLoginOrSignUp", false);
+        component.set("v.isNextModalForSignUp", false);
+        component.set("v.isNextModalsForLogin", true);
+    },
+
+    openPortalProfile : function(component, event, helper) {
+        component.set("v.showBookAppointment", false);
+        component.set("v.showrecords", false);
+        helper.onloadPatientapptdata(component, event, helper);
+    },
+
 // handleCancel:function(component, event, helper) {
 //     component.set("v.isShowLogin",false);
 //     component.set("v.showrecords",true);
@@ -53,12 +105,16 @@
   
     
     handleCancelFirstLead:function(component, event, helper){
-        component.set("v.isShowLogin",true);
+        component.set("v.isShowLogin",false);
         component.set("v.isNextModalsForLogin",true);
+        component.set("v.isNextModalForSignUp",false);
         component.set("v.showconfirmbotton",true);
         component.set("v.hideNumberButtonLogin",true);
         component.set("v.guestUserForLoginOrSignUp",false);
         component.set("v.showBookAppointment",true);
+        component.set("v.portalOtpInput", "");
+        component.set("v.portalPassword", "");
+        component.set("v.portalConfirmPassword", "");
     },
     
     handleCancelforSecondLeadPage:function(component, event, helper){
@@ -263,20 +319,35 @@
         helper.showSpinner(component);
         var code=component.get("v.otpCode");
         if(code!=null){
-            var getEmail=component.find('inputValue').get("v.value");
+            var getEmail = (component.get("v.portalEntryIdentifier") || '').trim();
+            if(!getEmail && component.find('inputValue')){
+                getEmail = component.find('inputValue').get("v.value");
+            }
             
-            if(getEmail==[]){
+            if(!getEmail){
                 var toastEvent = $A.get("e.force:showToast");
                 toastEvent.setParams({
                     title:$A.get("$Label.c.Error"),
                     mode:"dismissible",
-                    message:$A.get("$Label.c.Please_Enter_Your_Email_Or_Phone_Number"),
+                    message:"Please enter your registered email address.",
                     type:"error"
                 });
                 toastEvent.fire();
                 helper.hideSpinner(component);
             }
             else{
+                if(!/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(getEmail)){
+                    var emailToast = $A.get("e.force:showToast");
+                    emailToast.setParams({
+                        title:$A.get("$Label.c.Error"),
+                        mode:"dismissible",
+                        message:"Please enter a valid email address to continue.",
+                        type:"error"
+                    });
+                    emailToast.fire();
+                    helper.hideSpinner(component);
+                    return;
+                }
                 var callMethod=component.get("c.getPatient");
                 callMethod.setParams({
                     getEmail : getEmail
@@ -286,53 +357,20 @@
                     if(state=='SUCCESS'){
                         var result=responce.getReturnValue();
                         if(result.confirming==null){
-                            if (/^[0-9]*$/g.test(getEmail)) {
-                                if(getEmail.length >10 || getEmail.length <10){
-                                    var toastEvent = $A.get("e.force:showToast");
-                                    toastEvent.setParams({
-                                        title:$A.get("$Label.c.Error"),
-                                        mode:"dismissible",
-                                        message:$A.get("$Label.c.Phone_Number_Must_Contain_Min_Or_Max_10_digits"),
-                                        type:"error"
-                                    });
-                                    toastEvent.fire();
-                                    helper.hideSpinner(component);
-                                }
-                                else{
-                                    component.set("v.guestUserForLoginOrSignUp",false);
-                                    component.set("v.guestUser",true);
-                                    component.set("v.showrecords",false);
-                                    component.set("v.isShowLogin",false);
-                                    component.set("v.isNextModalsForLogin",false);
-                                    component.set("v.showBookAppointment",false);
-                                    helper.hideSpinner(component);
-                                }
-                            }
-                            else{
-                                if(!/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(getEmail)){
-                                    var toastEvent = $A.get("e.force:showToast");
-                                    toastEvent.setParams({
-                                        title:$A.get("$Label.c.Error"),
-                                        mode:"dismissible",
-                                        message:$A.get("$Label.c.Please_Type_Valid_Email_Address_Or_WhatsApp_Number"),
-                                        type:"error"
-                                    });
-                                    toastEvent.fire();
-                                    helper.hideSpinner(component);
-                                }
-                                else{
-                                    component.set("v.guestUserForLoginOrSignUp",true);
-                                    component.set("v.showrecords",false);
-                                    component.set("v.isShowLogin",false);
-                                    component.set("v.isNextModalsForLogin",false);
-                                    component.set("v.showBookAppointment",false);
-                                    helper.hideSpinner(component); 
-                                }
-                            }
+                            component.set("v.guestUserForLoginOrSignUp",true);
+                            component.set("v.showrecords",false);
+                            component.set("v.isShowLogin",false);
+                            component.set("v.isNextModalsForLogin",false);
+                            component.set("v.showBookAppointment",true);
+                            component.set("v.portalPatientLabel", "");
+                            component.set("v.newLead.Email", getEmail);
+                            helper.hideSpinner(component);
                         }
-                        if(result.confirming==true){
+                        else if(result.confirming==true){
                             var recordIds=result.patientOtp.Id;
                             component.set("v.PatientId",recordIds);
+                            component.set("v.portalPatientLabel", result.patientOtp.Name);
+                            component.set("v.portalEntryIdentifier", getEmail);
                             var action=component.get("c.sendOTP");
                             action.setParams({
                                 recordId : recordIds,
@@ -352,7 +390,7 @@
                                     var toastEvent = $A.get("e.force:showToast");
                                     toastEvent.setParams({        
                                         title:$A.get("$Label.c.Success"),      
-                                        message:$A.get("$Label.c.OTP_Sent_To_Your_Email"),
+                                        message:"OTP sent to your email address.",
                                         type:"success",
                                         mode:"pester"      
                                     });
@@ -362,37 +400,11 @@
                             $A.enqueueAction(action);       
                         }
                         else{
-                            var recordId=result.patientOtp.Id;
-                            component.set("v.PatientId",recordId);
-                            var actions=component.get("c.sendOTPs");
-                            actions.setParams({
-                                recordId : recordId,
-                                otp : code                   
-                            });
-                            actions.setCallback(this,function(responcess){
-                                var statess=responcess.getState();
-                                if(statess=='SUCCESS'){
-                                    helper.hideSpinner(component);
-                                    var returnvalue=responcess.getReturnValue();
-                                    component.set("v.isNextModalForSignUp",true);
-                                    component.set("v.showverifybotton",true);
-                                    component.set("v.hideOtpButtonLogin",true);
-                                    component.set("v.showconfirmbotton",false);
-                                    component.set("v.hideNumberButtonLogin",false);
-                                    component.set("v.isNextModalsForLogin",false);
-                                    // component.set("v.buttondisable",true);
-                                    var toastEvent = $A.get("e.force:showToast");
-                                    toastEvent.setParams({        
-                                        title:$A.get("$Label.c.Success"),      
-                                        message:$A.get("$Label.c.OTP_Sent_To_Your_WhatsApp_Number"),
-                                        type:"success",
-                                        mode:"pester"      
-                                    });
-                                    toastEvent.fire();
-                                }
-                            });
-                            $A.enqueueAction(actions);       
-                            
+                            component.set("v.guestUserForLoginOrSignUp",true);
+                            component.set("v.showBookAppointment",true);
+                            component.set("v.newLead.Email", getEmail);
+                            component.set("v.portalPatientLabel", "");
+                            helper.hideSpinner(component);
                         }
                     }
                     
@@ -422,8 +434,11 @@
     verifyOTPForLogin: function(component,event,helper){
         helper.showSpinner(component);
         var patientId=component.get("v.PatientId");
-        var confirming=component.find('confirmotp').get("v.value");
-        if(confirming == []){
+        var confirming = (component.get("v.portalOtpInput") || '').trim();
+        if(!confirming && component.find('confirmotp')){
+            confirming = component.find('confirmotp').get("v.value");
+        }
+        if(!confirming){
             var toastEvent = $A.get("e.force:showToast");
             toastEvent.setParams({
                 title :$A.get("$Label.c.Error"),
@@ -434,6 +449,7 @@
                 mode: 'dismissible'
             });
             toastEvent.fire();
+            helper.hideSpinner(component);
             
         }
         else{
@@ -443,6 +459,14 @@
                     component.set('v.isShowLogin',false);
                     component.set('v.showrecords',false);
                     component.set('v.MyAppointments',true);
+                    component.set('v.portalAuthenticated', true);
+                    component.set('v.guestUserForLoginOrSignUp', false);
+                    component.set('v.isNextModalForSignUp', false);
+                    component.set('v.isNextModalsForLogin', true);
+                    component.set('v.portalOtpInput', '');
+                    if(!component.get('v.portalPatientLabel')){
+                        component.set('v.portalPatientLabel', component.get("v.portalEntryIdentifier"));
+                    }
                     var toastEvent = $A.get("e.force:showToast");
                     toastEvent.setParams({        
                         title:$A.get("$Label.c.Success"),      
@@ -451,6 +475,7 @@
                         mode:"pester"      
                     });
                     toastEvent.fire();
+                    helper.hideSpinner(component);
                 }
                 else{
                     var toastEvent = $A.get("e.force:showToast");
@@ -463,8 +488,12 @@
                         mode: 'dismissible'
                     });
                     toastEvent.fire();
+                    helper.hideSpinner(component);
                 }
                 
+            }
+            else{
+                helper.hideSpinner(component);
             }
         }
     },
@@ -493,7 +522,7 @@
         
     },
     hideOtpModelLogin: function(component,event,helper){
-        component.set("v.isShowLogin",true);
+        component.set("v.isShowLogin",false);
         component.set("v.isNextModalsForLogin",true);
         component.set("v.isNextModalForSignUp",false);
         component.set("v.showverifybotton",false);
@@ -502,6 +531,7 @@
         component.set("v.showBookAppointment",true);
         component.set("v.hideNumberButtonLogin",true);
         component.set('v.LoginButton',true);
+        component.set("v.portalOtpInput", "");
         
     },
     hideModalBoxForFlow: function(component,event,helper){
@@ -539,18 +569,29 @@
                             if (state === "SUCCESS") {
                                 helper.hideSpinner(component);
                                 var result = response.getReturnValue();
-                                if(result != null){
-                                    component.set("v.WorkTypeId",result.workTypeName.WorkTypeId);
-                                    var workTypeId=component.get("v.WorkTypeId");
-                                    component.set("v.WorkTypeGroupId",result.workTypeGroupName.WorkTypeGroupId);
-                                    var WorkTypeGroupId=component.get("v.WorkTypeGroupId");  
-                                    component.set("v.timezonename",result.practitionerfacility.ServiceTerritoryMember.ServiceTerritory.OperatingHours.TimeZone);
-                                    var timeZone=component.get("v.timezonename");
-                                    component.set("v.territoryId",result.practitionerfacility.ServiceTerritoryMember.ServiceTerritoryId);
-                                    var territoryId=component.get("v.territoryId");
-                                    component.set("v.resourceId",result.practitionerfacility.ServiceTerritoryMember.ServiceResourceId);
-                                    var resourceId=component.get("v.resourceId");
-                                }   
+                                if(!result || !result.practitionerfacility || !result.workTypeName || !result.workTypeGroupName){
+                                    var toastEvent = $A.get("e.force:showToast");
+                                    toastEvent.setParams({
+                                        title :$A.get("$Label.c.Info"),
+                                        message:'No appointment schedule is configured yet for this doctor at the selected location.',
+                                        duration:' 5000',
+                                        key: 'info_alt',
+                                        type: 'info',
+                                        mode: 'dismissible'
+                                    });
+                                    toastEvent.fire();
+                                    return;
+                                }
+                                component.set("v.WorkTypeId",result.workTypeName.WorkTypeId);
+                                var workTypeId=component.get("v.WorkTypeId");
+                                component.set("v.WorkTypeGroupId",result.workTypeGroupName.WorkTypeGroupId);
+                                var WorkTypeGroupId=component.get("v.WorkTypeGroupId");  
+                                component.set("v.timezonename",result.practitionerfacility.ServiceTerritoryMember.ServiceTerritory.OperatingHours.TimeZone);
+                                var timeZone=component.get("v.timezonename");
+                                component.set("v.territoryId",result.practitionerfacility.ServiceTerritoryMember.ServiceTerritoryId);
+                                var territoryId=component.get("v.territoryId");
+                                component.set("v.resourceId",result.practitionerfacility.ServiceTerritoryMember.ServiceResourceId);
+                                var resourceId=component.get("v.resourceId");
                                 component.set("v.iframepopup",false);
                                 component.set('v.FlowPopup',true);
                                 
@@ -642,18 +683,29 @@
                                 if (state === "SUCCESS") {
                                     helper.hideSpinner(component);
                                     var result = response.getReturnValue();
-                                    if(result != null){
-                                        component.set("v.WorkTypeId",result.workTypeName.WorkTypeId);
-                                        var workTypeId=component.get("v.WorkTypeId");
-                                        component.set("v.WorkTypeGroupId",result.workTypeGroupName.WorkTypeGroupId);
-                                        var WorkTypeGroupId=component.get("v.WorkTypeGroupId");  
-                                        component.set("v.timezonename",result.practitionerfacility.ServiceTerritoryMember.ServiceTerritory.OperatingHours.TimeZone);
-                                        var timeZone=component.get("v.timezonename");
-                                        component.set("v.territoryId",result.practitionerfacility.ServiceTerritoryMember.ServiceTerritoryId);
-                                        var territoryId=component.get("v.territoryId");
-                                        component.set("v.resourceId",result.practitionerfacility.ServiceTerritoryMember.ServiceResourceId);
-                                        var resourceId=component.get("v.resourceId");
-                                    }   
+                                    if(!result || !result.practitionerfacility || !result.workTypeName || !result.workTypeGroupName){
+                                        var toastEvent = $A.get("e.force:showToast");
+                                        toastEvent.setParams({
+                                            title :$A.get("$Label.c.Info"),
+                                            message:'No appointment schedule is configured yet for this doctor at the selected location.',
+                                            duration:' 5000',
+                                            key: 'info_alt',
+                                            type: 'info',
+                                            mode: 'dismissible'
+                                        });
+                                        toastEvent.fire();
+                                        return;
+                                    }
+                                    component.set("v.WorkTypeId",result.workTypeName.WorkTypeId);
+                                    var workTypeId=component.get("v.WorkTypeId");
+                                    component.set("v.WorkTypeGroupId",result.workTypeGroupName.WorkTypeGroupId);
+                                    var WorkTypeGroupId=component.get("v.WorkTypeGroupId");  
+                                    component.set("v.timezonename",result.practitionerfacility.ServiceTerritoryMember.ServiceTerritory.OperatingHours.TimeZone);
+                                    var timeZone=component.get("v.timezonename");
+                                    component.set("v.territoryId",result.practitionerfacility.ServiceTerritoryMember.ServiceTerritoryId);
+                                    var territoryId=component.get("v.territoryId");
+                                    component.set("v.resourceId",result.practitionerfacility.ServiceTerritoryMember.ServiceResourceId);
+                                    var resourceId=component.get("v.resourceId");
                                     component.set("v.iframepopup",false);
                                     component.set('v.FlowPopup',true);
                                     
@@ -836,7 +888,7 @@
     
     handleCreateContact: function(component, event,helper) {
         var getLeadValue=component.get("v.newLead");
-        if (!/^[a-zA-Z]*$/g.test(getLeadValue.FirstName)) {
+        if (!/^[a-zA-Z ]*$/g.test(getLeadValue.FirstName)) {
             var toastEvent = $A.get("e.force:showToast");
             toastEvent.setParams({
                 title :$A.get("$Label.c.Error"),
@@ -848,7 +900,7 @@
             });
             toastEvent.fire();
         }
-        else if(!/^[a-zA-Z]*$/g.test(getLeadValue.LastName)) {
+        else if(!/^[a-zA-Z ]*$/g.test(getLeadValue.LastName)) {
             var toastEvent = $A.get("e.force:showToast");
             toastEvent.setParams({
                 title :$A.get("$Label.c.Error"),
@@ -860,7 +912,7 @@
             });
             toastEvent.fire();
         }
-            else if(!/^[a-zA-Z]*$/g.test(getLeadValue.City)) {
+            else if(!/^[a-zA-Z ]*$/g.test(getLeadValue.City)) {
                 var toastEvent = $A.get("e.force:showToast");
                 toastEvent.setParams({
                     title :$A.get("$Label.c.Error"),
@@ -872,7 +924,7 @@
                 });
                 toastEvent.fire();
             }
-                else if(!/^[a-zA-Z]*$/g.test(getLeadValue.Country)) {
+                else if(!/^[a-zA-Z ]*$/g.test(getLeadValue.Country)) {
                     var toastEvent = $A.get("e.force:showToast");
                     toastEvent.setParams({
                         title :$A.get("$Label.c.Error"),
@@ -884,7 +936,7 @@
                     });
                     toastEvent.fire();
                 }
-                    else if(!/^[a-zA-Z]*$/g.test(getLeadValue.State)) {
+                    else if(!/^[a-zA-Z ]*$/g.test(getLeadValue.State)) {
                         var toastEvent = $A.get("e.force:showToast");
                         toastEvent.setParams({
                             title :$A.get("$Label.c.Error"),
@@ -909,10 +961,19 @@
                             toastEvent.fire();
                         }
                             else{
-                                var allValid = component.find('Lead').reduce(function (validSoFar, inputCmp) {
-                                    inputCmp.reportValidity();
-                                    return validSoFar && inputCmp.checkValidity();
-                                }, true);
+                                var leadInputs = component.find('Lead');
+                                if (!Array.isArray(leadInputs)) {
+                                    leadInputs = leadInputs ? [leadInputs] : [];
+                                }
+                                var allValid = true;
+                                leadInputs.forEach(function(inputCmp) {
+                                    if (inputCmp && typeof inputCmp.reportValidity === 'function') {
+                                        inputCmp.reportValidity();
+                                    }
+                                    if (inputCmp && typeof inputCmp.checkValidity === 'function') {
+                                        allValid = allValid && inputCmp.checkValidity();
+                                    }
+                                });
                                 if(allValid){
                                     var saveContactAction = component.get("c.createLead");
                                     saveContactAction.setParams({
@@ -1113,6 +1174,20 @@
     },
     
     handleOnSelect:function(component, event, helper) {
+        var selectedSpecialtyId = event.getParam ? event.getParam("name") : null;
+        var isPortalSearchFlow =
+            component.get("v.selectedCareSpecialtyLookUpRecord") != null ||
+            component.get("v.selectedContactLookUpRecord") != null ||
+            !!component.get("v.selectedLocationId");
+
+        if (selectedSpecialtyId && component.get("v.showrecords") && isPortalSearchFlow) {
+            component.set("v.careIds", selectedSpecialtyId);
+            component.set("v.viewdoctordetails", false);
+            helper.loadPortalLocations(component, selectedSpecialtyId);
+            helper.refreshPortalDoctorResults(component, event, helper);
+            return;
+        }
+
         var getcareId =component.get('v.selectedCareSpecialtyLookUpRecord');
         var getcontactId =component.get('v.selectedContactLookUpRecord');
         var getAccountId =component.get('v.selectedAccountLookUpRecord');
@@ -1143,10 +1218,32 @@
     },
     
     BookAppointment:function(component, event, helper) {
+        if (!component.get("v.portalAuthenticated")) {
+            component.set("v.isShowLogin",true);
+            component.set("v.isNextModalsForLogin",true);
+            component.set("v.isNextModalForSignUp",false);
+            component.set("v.showconfirmbotton",true);
+            component.set("v.showverifybotton",false);
+            component.set("v.hideNumberButtonLogin",true);
+            component.set("v.hideOtpButtonLogin",false);
+            component.set("v.guestUserForLoginOrSignUp",false);
+            var authToast = $A.get("e.force:showToast");
+            authToast.setParams({
+                title :$A.get("$Label.c.Info"),
+                message:'Please sign in with OTP verification before booking an Apollo appointment.',
+                duration:' 5000',
+                key: 'info_alt',
+                type: 'info',
+                mode: 'dismissible'
+            });
+            authToast.fire();
+            return;
+        }
+
        
         var getleadId= component.get("v.getLeadId");
-        var patientIds= '0014x00001SkvDNAAZ';//component.get("v.PatientId");//'0014x00001SkvDNAAZ';
-        var patientId =component.get("v.setUserId");//;
+        var patientIds = component.get("v.PatientId");
+        var patientId = component.get("v.PatientId") || component.get("v.setUserId");
       // alert(loggedUserId);
        // alert(patientId);
         
@@ -1188,19 +1285,18 @@
             
              if(patientIds != null){
              // alert('loggedUserId');
-                let contactId   =  event.getSource().get("v.value");
                 component.set("v.contactId",contactId);
                 component.set("v.isShowModal",false);
                 var careId =component.get("v.careSpcId"); 
                // alert("careId"+careId);
-                var patientId=component.get("v.setUserId");//'0014x00001SkvDNAAZ'; //
+                var patientId=component.get("v.PatientId") || component.get("v.setUserId");
                //  alert('patientId'+patientId);
                  helper.getMyValue(component,helper,event);
                 var win;
                // alert('inside');
                 var action = component.get("c.insertDummyAttachment");
                 action.setParams({
-                    PatientId : patientIds
+                    PatientId : patientId
                 });
                 action.setCallback(this, function(response){
                     var state = response.getState();
@@ -1216,7 +1312,7 @@
                         
                         //win = window.open(url.invitationFetch.InvitationLink,'targetWindow',' width=600px,height=600px ');
                     }
-                     helper.sendattchid(component, event, helper,url);
+                     helper.sendattchid(component, event, helper, url);
                 });
                 $A.enqueueAction(action);
          
@@ -1485,17 +1581,13 @@
             return;
         }
 
-        if(selectedLocationId && getcareId == null && getcontactId == null){
-            helper.getPortalBranches(component, event, helper);
-            return;
-        }
-
         helper.getPortalDoctors(component, event, helper, getcontactId != null);
         
     },
     handleLocationChange : function(component, event, helper) {
         component.set("v.selectedLocationId", event.getSource().get("v.value"));
         component.set("v.AccId", null);
+        helper.refreshPortalDoctorResults(component, event, helper);
     },
     
     onDetail :function(component, event, helper) {
@@ -1532,9 +1624,11 @@
         component.set("v.showBookAppointment",true);
 
         component.set("v.showrecords",false);
+        component.set("v.portalResultsTitle",'Available Doctors');
         component.set('v.selectedContactLookUpRecord',null);
         component.set('v.selectedAccountLookUpRecord',null);
         component.set('v.selectedCareSpecialtyLookUpRecord',null);
+        component.set('v.selectedLocationId','');
         $A.get('e.force:refreshView').fire();
         
     },
@@ -1544,11 +1638,13 @@
         component.set('v.showBookAppointment',true);
         component.set('v.welcomepage',false);
         component.set('v.showrecords',false);
+        component.set("v.portalResultsTitle",'Available Doctors');
         component.set('v.careDoctors',false);
         component.set('v.selectedaccId',[]);
         component.set('v.selectedContactLookUpRecord',null);
         component.set('v.selectedAccountLookUpRecord',null);
         component.set('v.selectedCareSpecialtyLookUpRecord',null);
+        component.set('v.selectedLocationId','');
         
         component.set("v.showcount",true);
     },
@@ -1695,6 +1791,80 @@
             component.set('v.ButtonShow', false);
         }
     },
+
+    handleAction : function(component, event, helper) {
+        var action = event.getParam('action');
+        var row = event.getParam('row');
+
+        if (!action || action.name !== 'remind') {
+            return;
+        }
+
+        if (!row || !row.Id) {
+            var missingRowToast = $A.get("e.force:showToast");
+            missingRowToast.setParams({
+                title: "Error!",
+                mode:"dismissible",
+                message: "Appointment details are not available for reminder.",
+                type:"error"
+            });
+            missingRowToast.fire();
+            return;
+        }
+
+        if (row.Status !== 'Scheduled') {
+            var infoToast = $A.get("e.force:showToast");
+            infoToast.setParams({
+                title: "Info",
+                mode:"dismissible",
+                message: "Reminders can be sent only for scheduled appointments.",
+                type:"info"
+            });
+            infoToast.fire();
+            return;
+        }
+
+        var remindAction = component.get("c.sendAppointmentReminder");
+        remindAction.setParams({
+            serviceAppointmentId: row.Id
+        });
+        remindAction.setCallback(this, function(response){
+            if(response.getState() === "SUCCESS"){
+                var result = response.getReturnValue();
+                var reminderMessage = "Reminder sent";
+                if (result && result.patientReminderSent && result.doctorReminderSent) {
+                    reminderMessage = "Reminder sent to both patient and doctor.";
+                } else if (result && result.patientReminderSent) {
+                    reminderMessage = "Reminder sent to patient.";
+                } else if (result && result.doctorReminderSent) {
+                    reminderMessage = "Reminder sent to doctor.";
+                }
+                var successToast = $A.get("e.force:showToast");
+                successToast.setParams({
+                    title: "Success!",
+                    mode:"pester",
+                    message: reminderMessage,
+                    type:"success"
+                });
+                successToast.fire();
+            } else {
+                var errors = response.getError();
+                var errorMessage = 'Could not send appointment reminder.';
+                if (errors && errors[0] && errors[0].message) {
+                    errorMessage = errors[0].message;
+                }
+                var errorToast = $A.get("e.force:showToast");
+                errorToast.setParams({
+                    title: "Error!",
+                    mode:"dismissible",
+                    message: errorMessage,
+                    type:"error"
+                });
+                errorToast.fire();
+            }
+        });
+        $A.enqueueAction(remindAction);
+    },
     
     handleConfirmDialogCancel : function(component, event, helper) {
         component.set('v.showCancelBox', false);
@@ -1736,22 +1906,33 @@
                 if (state === "SUCCESS") {
                     helper.hideSpinner(component);
                     var result = response.getReturnValue();
-                    if(result != null){
-                        component.set("v.WorkTypeId",result.workTypeName.WorkTypeId);
-                        var workTypeId=component.get("v.WorkTypeId");
-                        component.set("v.WorkTypeGroupId",result.workTypeGroupName.WorkTypeGroupId);
-                        var WorkTypeGroupId=component.get("v.WorkTypeGroupId");  
-                        component.set("v.timezonename",result.practitionerfacility.ServiceTerritoryMember.ServiceTerritory.OperatingHours.TimeZone);
-                        var timeZone=component.get("v.timezonename");
-                        component.set("v.territoryId",result.practitionerfacility.ServiceTerritoryMember.ServiceTerritoryId);
-                        var territoryId=component.get("v.territoryId");
-                        component.set("v.resourceId",result.practitionerfacility.ServiceTerritoryMember.ServiceResourceId);
-                        var resourceId=component.get("v.resourceId");
-                    }   
+                    if(!result || !result.practitionerfacility || !result.workTypeName || !result.workTypeGroupName){
+                        var toastEvent = $A.get("e.force:showToast");
+                        toastEvent.setParams({
+                            title :$A.get("$Label.c.Info"),
+                            message:'No appointment schedule is configured yet for this doctor at the selected location.',
+                            duration:' 5000',
+                            key: 'info_alt',
+                            type: 'info',
+                            mode: 'dismissible'
+                        });
+                        toastEvent.fire();
+                        return;
+                    }
+                    component.set("v.WorkTypeId",result.workTypeName.WorkTypeId);
+                    var workTypeId=component.get("v.WorkTypeId");
+                    component.set("v.WorkTypeGroupId",result.workTypeGroupName.WorkTypeGroupId);
+                    var WorkTypeGroupId=component.get("v.WorkTypeGroupId");  
+                    component.set("v.timezonename",result.practitionerfacility.ServiceTerritoryMember.ServiceTerritory.OperatingHours.TimeZone);
+                    var timeZone=component.get("v.timezonename");
+                    component.set("v.territoryId",result.practitionerfacility.ServiceTerritoryMember.ServiceTerritoryId);
+                    var territoryId=component.get("v.territoryId");
+                    component.set("v.resourceId",result.practitionerfacility.ServiceTerritoryMember.ServiceResourceId);
+                    var resourceId=component.get("v.resourceId");
                     component.set("v.showZoompopup",false);
                     component.set('v.FlowPopup',true);
-                      var patientId=component.get("v.setUserId"); //'0014x00001SkvDNAAZ'
-                    var patientIds='0014x00001SkvDNAAZ';
+                      var patientId=component.get("v.PatientId") || component.get("v.setUserId");
+                    var patientIds = patientId;
                     var ServeySubjectId=component.get("v.ServeySubjectId");
                     var appTypeName=component.get("v.RadioSelector");
                     const flow = component.find("flowData");
@@ -1961,7 +2142,7 @@
     
     
         var sectionAuraId = event.target.getAttribute("data-auraId");
-        var PatientId =component.get("v.setUserId");//'0014x00001SkvDNAAZ';//component.get("v.PatientId");
+        var PatientId = component.get("v.PatientId") || component.get("v.setUserId");
        
         if(sectionAuraId=='lunchSection'){
              
@@ -2274,34 +2455,42 @@ if(sectionState == -1){
 }
 ,
     handleCreateContactForLoginOrSignUp : function(component, event,helper) {
-        var getLeadValue=component.get("v.newLead");
-        if (!/^[a-zA-Z]*$/g.test(getLeadValue.FirstName)) {
-            var toastEvent = $A.get("e.force:showToast");
-            toastEvent.setParams({
-                title :$A.get("$Label.c.Error"),
-                message:$A.get("$Label.c.FirstName_Must_Contain_Only_Letters"),
-                duration:' 3000',
-                key: 'info_alt',
-                type: 'error',
-                mode: 'pester'
-            });
-            toastEvent.fire();
-        }
-        else if(!/^[a-zA-Z]*$/g.test(getLeadValue.LastName)) {
-            var toastEvent = $A.get("e.force:showToast");
-            toastEvent.setParams({
-                title :$A.get("$Label.c.Error"),
-                message:$A.get("$Label.c.LastName_Must_Contain_Only_Letters"),
-                duration:' 3000',
-                key: 'info_alt',
-                type: 'error',
-                mode: 'pester'
-            });
-            toastEvent.fire();
-        }
-            else if(!/^[a-zA-Z]*$/g.test(getLeadValue.City)) {
-                var toastEvent = $A.get("e.force:showToast");
-                toastEvent.setParams({
+        try {
+            var getLeadValue = component.get("v.newLead") || {};
+            var portalPassword = component.get("v.portalPassword");
+            var portalConfirmPassword = component.get("v.portalConfirmPassword");
+
+            if (!/^[a-zA-Z ]*$/.test(getLeadValue.FirstName || '')) {
+                var firstNameToast = $A.get("e.force:showToast");
+                firstNameToast.setParams({
+                    title :$A.get("$Label.c.Error"),
+                    message:$A.get("$Label.c.FirstName_Must_Contain_Only_Letters"),
+                    duration:' 3000',
+                    key: 'info_alt',
+                    type: 'error',
+                    mode: 'pester'
+                });
+                firstNameToast.fire();
+                return;
+            }
+
+            if (!/^[a-zA-Z ]*$/.test(getLeadValue.LastName || '')) {
+                var lastNameToast = $A.get("e.force:showToast");
+                lastNameToast.setParams({
+                    title :$A.get("$Label.c.Error"),
+                    message:$A.get("$Label.c.LastName_Must_Contain_Only_Letters"),
+                    duration:' 3000',
+                    key: 'info_alt',
+                    type: 'error',
+                    mode: 'pester'
+                });
+                lastNameToast.fire();
+                return;
+            }
+
+            if (!/^[a-zA-Z ]*$/.test(getLeadValue.City || '')) {
+                var cityToast = $A.get("e.force:showToast");
+                cityToast.setParams({
                     title :$A.get("$Label.c.Error"),
                     message:$A.get("$Label.c.City_Must_Contain_Only_Letters"),
                     duration:' 3000',
@@ -2309,128 +2498,223 @@ if(sectionState == -1){
                     type: 'error',
                     mode: 'pester'
                 });
-                toastEvent.fire();
+                cityToast.fire();
+                return;
             }
-                else if(!/^[a-zA-Z]*$/g.test(getLeadValue.Country)) {
-                    var toastEvent = $A.get("e.force:showToast");
-                    toastEvent.setParams({
-                        title :$A.get("$Label.c.Error"),
-                        message:$A.get("$Label.c.Country_Must_Contain_Only_Letters"),
-                        duration:' 3000',
-                        key: 'info_alt',
-                        type: 'error',
-                        mode: 'pester'
-                    });
-                    toastEvent.fire();
+
+            if (!/^[a-zA-Z ]*$/.test(getLeadValue.Country || '')) {
+                var countryToast = $A.get("e.force:showToast");
+                countryToast.setParams({
+                    title :$A.get("$Label.c.Error"),
+                    message:$A.get("$Label.c.Country_Must_Contain_Only_Letters"),
+                    duration:' 3000',
+                    key: 'info_alt',
+                    type: 'error',
+                    mode: 'pester'
+                });
+                countryToast.fire();
+                return;
+            }
+
+            if (!/^[a-zA-Z ]*$/.test(getLeadValue.State || '')) {
+                var stateToast = $A.get("e.force:showToast");
+                stateToast.setParams({
+                    title :$A.get("$Label.c.Error"),
+                    message:$A.get("$Label.c.State_Must_Contain_Only_Letters"),
+                    duration:' 3000',
+                    key: 'info_alt',
+                    type: 'error',
+                    mode: 'pester'
+                });
+                stateToast.fire();
+                return;
+            }
+
+            if (!/^[0-9]*$/.test(getLeadValue.PostalCode || '')) {
+                var postalToast = $A.get("e.force:showToast");
+                postalToast.setParams({
+                    title :$A.get("$Label.c.Error"),
+                    message:$A.get("$Label.c.PostalCode_Must_Contain_Only_Numbers"),
+                    duration:' 3000',
+                    key: 'info_alt',
+                    type: 'error',
+                    mode: 'pester'
+                });
+                postalToast.fire();
+                return;
+            }
+
+            if (!portalPassword) {
+                var passwordToast = $A.get("e.force:showToast");
+                passwordToast.setParams({
+                    title :$A.get("$Label.c.Error"),
+                    message:'Please enter a password.',
+                    duration:' 3000',
+                    key: 'info_alt',
+                    type: 'error',
+                    mode: 'pester'
+                });
+                passwordToast.fire();
+                return;
+            }
+
+            if (portalPassword.length < 8) {
+                var passwordLengthToast = $A.get("e.force:showToast");
+                passwordLengthToast.setParams({
+                    title :$A.get("$Label.c.Error"),
+                    message:'Password must contain at least 8 characters.',
+                    duration:' 3000',
+                    key: 'info_alt',
+                    type: 'error',
+                    mode: 'pester'
+                });
+                passwordLengthToast.fire();
+                return;
+            }
+
+            if (portalPassword !== portalConfirmPassword) {
+                var passwordMatchToast = $A.get("e.force:showToast");
+                passwordMatchToast.setParams({
+                    title :$A.get("$Label.c.Error"),
+                    message:'Password and confirm password must match.',
+                    duration:' 3000',
+                    key: 'info_alt',
+                    type: 'error',
+                    mode: 'pester'
+                });
+                passwordMatchToast.fire();
+                return;
+            }
+
+            var leadInputs = component.find('Lead');
+            if (!Array.isArray(leadInputs)) {
+                leadInputs = leadInputs ? [leadInputs] : [];
+            }
+
+            var allValid = true;
+            leadInputs.forEach(function(inputCmp) {
+                if (inputCmp && typeof inputCmp.reportValidity === 'function') {
+                    inputCmp.reportValidity();
                 }
-                    else if(!/^[a-zA-Z]*$/g.test(getLeadValue.State)) {
-                        var toastEvent = $A.get("e.force:showToast");
-                        toastEvent.setParams({
-                            title :$A.get("$Label.c.Error"),
-                            message:$A.get("$Label.c.State_Must_Contain_Only_Letters"),
-                            duration:' 3000',
-                            key: 'info_alt',
-                            type: 'error',
-                            mode: 'pester'
-                        });
-                        toastEvent.fire();
-                    }
-                        else if(!/^[0-9]*$/g.test(getLeadValue.PostalCode)) {
-                            var toastEvent = $A.get("e.force:showToast");
-                            toastEvent.setParams({
-                                title :$A.get("$Label.c.Error"),
-                                message:$A.get("$Label.c.PostalCode_Must_Contain_Only_Numbers"),
-                                duration:' 3000',
+                if (inputCmp && typeof inputCmp.checkValidity === 'function') {
+                    allValid = allValid && inputCmp.checkValidity();
+                }
+            });
+
+            if(!allValid){
+                var requiredToast = $A.get("e.force:showToast");
+                requiredToast.setParams({
+                    title :$A.get("$Label.c.Error"),
+                    message:$A.get("$Label.c.Please_Fill_All_Reaquired_Filelds"),
+                    duration:' 3000',
+                    key: 'info_alt',
+                    type: 'error',
+                    mode: 'pester'
+                });
+                requiredToast.fire();
+                return;
+            }
+
+            helper.showSpinner(component);
+            var saveContactAction = component.get("c.registerPortalPatient");
+            saveContactAction.setParams({
+                firstName: getLeadValue.FirstName,
+                lastName: getLeadValue.LastName,
+                email: getLeadValue.Email,
+                phone: getLeadValue.Phone,
+                street: getLeadValue.Street,
+                city: getLeadValue.City,
+                state: getLeadValue.State,
+                country: getLeadValue.Country,
+                postalCode: getLeadValue.PostalCode
+            });
+            saveContactAction.setCallback(this, function(response) {
+                var state = response.getState();
+                if(state === "SUCCESS") {
+                    var registrationResult = response.getReturnValue();
+                    component.set('v.PatientId', registrationResult.patientId);
+                    component.set('v.portalEntryIdentifier', registrationResult.patientEmail);
+                    component.set('v.portalPatientLabel', registrationResult.patientName);
+                    var otpAction = component.get("c.sendOTP");
+                    otpAction.setParams({
+                        recordId : registrationResult.patientId,
+                        otp : component.get("v.otpCode")
+                    });
+                    otpAction.setCallback(this, function(otpResponse) {
+                        helper.hideSpinner(component);
+                        if(otpResponse.getState() === "SUCCESS") {
+                            component.set('v.showBookAppointment',true);
+                            component.set('v.guestUserForLoginOrSignUp',false);
+                            component.set('v.isNextModalForSignUp',true);
+                            component.set('v.isNextModalsForLogin',false);
+                            component.set('v.showverifybotton',true);
+                            component.set('v.showconfirmbotton',false);
+                            component.set('v.portalOtpInput', '');
+                            component.set('v.portalPassword', '');
+                            component.set('v.portalConfirmPassword', '');
+                            var successToast = $A.get("e.force:showToast");
+                            successToast.setParams({
+                                title :$A.get("$Label.c.Success"),
+                                message:"Person account created successfully. We sent an OTP to your email to verify your Apollo patient access.",
+                                duration:' 5000',
                                 key: 'info_alt',
-                                type: 'error',
+                                type: 'success',
                                 mode: 'pester'
                             });
-                            toastEvent.fire();
+                            successToast.fire();
+                        } else {
+                            var otpErrorToast = $A.get("e.force:showToast");
+                            otpErrorToast.setParams({
+                                title:$A.get("$Label.c.Error"),
+                                mode:"dismissible",
+                                message:'Person account was created, but OTP could not be sent. Please try login again.',
+                                type:"error"
+                            });
+                            otpErrorToast.fire();
                         }
-                            else{
-                                var allValid = component.find('Lead').reduce(function (validSoFar, inputCmp) {
-                                    inputCmp.reportValidity();
-                                    return validSoFar && inputCmp.checkValidity();
-                                }, true);
-                                if(allValid){
-                                    component.set('v.showBookAppointment',true);
-                                    component.set('v.guestUserForLoginOrSignUp',false);
-                                    component.set('v.MyAppointments',true);
-                                    var saveContactAction = component.get("c.createLead");
-                                    saveContactAction.setParams({
-                                        "lead": component.get("v.newLead")
-                                    }); 
-                                    saveContactAction.setCallback(this, function(response) {
-                                        var state = response.getState();
-                                        if(state === "SUCCESS") {
-                                            var getUserType = response.getReturnValue();
-                                            if(getUserType !=null){
-                                                var methodCall=component.get("c.convertLeadToPersonAccount");
-                                                methodCall.setParams({
-                                                    "leadId":getUserType
-                                                });
-                                                methodCall.setCallback(this, function(responses) {
-                                                    var getConvert = responses.getState();
-                                                    if(getConvert === "SUCCESS") {
-                                                        var convertToAccount = responses.getReturnValue();
-                                                        component.set('v.getLeadId',convertToAccount);         
-                                                        var toastEvent = $A.get("e.force:showToast");
-                                                        toastEvent.setParams({
-                                                            title :$A.get("$Label.c.Success"),
-                                                            message:$A.get("$Label.c.Your_Account_has_been_Created_Successfully"),
-                                                            duration:' 5000',
-                                                            key: 'info_alt',
-                                                            type: 'success',
-                                                            mode: 'pester'
-                                                        });
-                                                        toastEvent.fire();
-                                                        
-                                                        
-                                                    }
-                                                });
-                                                $A.enqueueAction(methodCall);
-                                            }
-                                            
-                                            else if(getUserType=='emailexits'){
-                                                var toastEvent = $A.get("e.force:showToast");
-                                                toastEvent.setParams({
-                                                    title:$A.get("$Label.c.Error"),
-                                                    mode:"dismissible",
-                                                    message:$A.get("$Label.c.Account_Is_Already_Exists_With_This_Email_Address"),
-                                                    type:"error"
-                                                });
-                                                toastEvent.fire();
-                                                
-                                            }
-                                                else if(getUserType=='phoneexixts'){
-                                                    var toastEvent = $A.get("e.force:showToast");
-                                                    toastEvent.setParams({
-                                                        title:$A.get("$Label.c.Error"),
-                                                        mode:"dismissible",
-                                                        message:$A.get("$Label.c.Account_Is_Already_Exists_With_This_Phone_Number"),
-                                                        type:"error"
-                                                    });
-                                                    toastEvent.fire();
-                                                    
-                                                }
-                                        }
-                                        
-                                    });
-                                    $A.enqueueAction(saveContactAction);
-                                }
-                                else {
-                                    var toastEvent = $A.get("e.force:showToast");
-                                    toastEvent.setParams({
-                                        title :$A.get("$Label.c.Error"),
-                                        message:$A.get("$Label.c.Please_Fill_All_Reaquired_Filelds"),
-                                        duration:' 3000',
-                                        key: 'info_alt',
-                                        type: 'error',
-                                        mode: 'pester'
-                                    });
-                                    toastEvent.fire();
-                                }
-                            }
+                    });
+                    $A.enqueueAction(otpAction);
+                }
+                else if(state === "ERROR") {
+                    helper.hideSpinner(component);
+                    var errors = response.getError();
+                    var errorMessage = 'We could not create the patient profile. Please try again.';
+                    if (errors && errors[0] && errors[0].message) {
+                        errorMessage = errors[0].message;
+                    }
+                    var errorToast = $A.get("e.force:showToast");
+                    errorToast.setParams({
+                        title:$A.get("$Label.c.Error"),
+                        mode:"dismissible",
+                        message:errorMessage,
+                        type:"error"
+                    });
+                    errorToast.fire();
+                }
+                else {
+                    helper.hideSpinner(component);
+                    var incompleteToast = $A.get("e.force:showToast");
+                    incompleteToast.setParams({
+                        title:$A.get("$Label.c.Error"),
+                        mode:"dismissible",
+                        message:'Registration could not be completed. Please refresh and try again.',
+                        type:"error"
+                    });
+                    incompleteToast.fire();
+                }
+            });
+            $A.enqueueAction(saveContactAction);
+        } catch (error) {
+            helper.hideSpinner(component);
+            var clientErrorToast = $A.get("e.force:showToast");
+            clientErrorToast.setParams({
+                title:$A.get("$Label.c.Error"),
+                mode:"dismissible",
+                message:(error && error.message) ? error.message : 'Registration could not start due to a page error.',
+                type:"error"
+            });
+            clientErrorToast.fire();
+        }
     },
        
         
