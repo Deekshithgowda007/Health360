@@ -976,7 +976,7 @@
             {label: 'Appointment Number',fieldName: "AppointmentNumber" ,hideDefaultActions: true },
             { label: 'Appointment Date and Time', fieldName: 'SchedStartTime',type:'DateTime',hideDefaultActions: true},
             { label: 'Status', fieldName: 'Status',hideDefaultActions: true},
-            { type: 'action', typeAttributes: { rowActions: [{ label: 'Send Reminder', name: 'remind' }] } }
+            { type: 'action', typeAttributes: { rowActions: [{ label: 'Send Reminder', name: 'remind' }, { label: 'Cancel Appointment', name: 'cancel' }] } }
         ]);
             component.set('v.isShowModal',false);
             component.set("v.showBookAppointment",false);

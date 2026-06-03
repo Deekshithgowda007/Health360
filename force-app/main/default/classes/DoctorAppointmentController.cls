@@ -259,6 +259,29 @@ System.debug('Exception :'+ e);
         return sendAppointmentEmail(latestAppointmentLinks[0].ServiceAppointmentId, false);
     }
 
+    @AuraEnabled
+    public static AppointmentReminderResult cancelPatientAppointment(String serviceAppointmentId){
+        if (String.isBlank(serviceAppointmentId)) {
+            throw new AuraHandledException('Appointment id is required.');
+        }
+
+        ServiceAppointment appointmentToCancel = [
+            SELECT Id, Status
+            FROM ServiceAppointment
+            WHERE Id = :serviceAppointmentId
+            LIMIT 1
+        ];
+
+        if (appointmentToCancel.Status != 'Scheduled') {
+            throw new AuraHandledException('Only scheduled appointments can be cancelled.');
+        }
+
+        appointmentToCancel.Status = 'Canceled';
+        update appointmentToCancel;
+
+        return sendAppointmentCancellationEmail(serviceAppointmentId);
+    }
+
     private static AppointmentReminderResult sendAppointmentEmail(String serviceAppointmentId, Boolean isReminder){
         ServiceAppointment appointment = [
             SELECT Id, AppointmentNumber, Status, AppointmentType, SchedStartTime, SchedEndTime,
@@ -379,6 +402,120 @@ System.debug('Exception :'+ e);
         }
 
         Messaging.sendEmail(emails);
+
+        AppointmentReminderResult result = new AppointmentReminderResult();
+        result.patientReminderSent = String.isNotBlank(patientEmail);
+        result.doctorReminderSent = String.isNotBlank(doctorEmail);
+        result.patientEmail = patientEmail;
+        result.doctorEmail = doctorEmail;
+        return result;
+    }
+
+    private static AppointmentReminderResult sendAppointmentCancellationEmail(String serviceAppointmentId){
+        ServiceAppointment appointment = [
+            SELECT Id, AppointmentNumber, Status, AppointmentType, SchedStartTime, SchedEndTime,
+                   Zoom_Meeting_Url__c, AccountId, Account.Name, Account.PersonEmail, Account.Phone,
+                   WorkType.Name
+            FROM ServiceAppointment
+            WHERE Id = :serviceAppointmentId
+            LIMIT 1
+        ];
+
+        List<CarePractnFacilityAppt> facilityMappings = [
+            SELECT HealthcarePractitionerFacility.Practitioner.Name,
+                   HealthcarePractitionerFacility.Practitioner.Email,
+                   HealthcarePractitionerFacility.Account.Name,
+                   HealthcarePractitionerFacility.Account.BillingStreet,
+                   HealthcarePractitionerFacility.Account.BillingCity,
+                   HealthcarePractitionerFacility.Account.BillingState,
+                   HealthcarePractitionerFacility.Account.BillingPostalCode,
+                   HealthcarePractitionerFacility.Account.BillingCountry
+            FROM CarePractnFacilityAppt
+            WHERE ServiceAppointmentId = :serviceAppointmentId
+            LIMIT 1
+        ];
+
+        CarePractnFacilityAppt facilityMapping = facilityMappings.isEmpty() ? null : facilityMappings[0];
+        String doctorName = facilityMapping != null && facilityMapping.HealthcarePractitionerFacility != null
+            && facilityMapping.HealthcarePractitionerFacility.Practitioner != null
+            ? facilityMapping.HealthcarePractitionerFacility.Practitioner.Name : 'Doctor';
+        String doctorEmail = facilityMapping != null && facilityMapping.HealthcarePractitionerFacility != null
+            && facilityMapping.HealthcarePractitionerFacility.Practitioner != null
+            ? facilityMapping.HealthcarePractitionerFacility.Practitioner.Email : null;
+        String facilityName = facilityMapping != null && facilityMapping.HealthcarePractitionerFacility != null
+            && facilityMapping.HealthcarePractitionerFacility.Account != null
+            ? facilityMapping.HealthcarePractitionerFacility.Account.Name : null;
+        String facilityAddress = facilityMapping != null && facilityMapping.HealthcarePractitionerFacility != null
+            && facilityMapping.HealthcarePractitionerFacility.Account != null
+            ? joinReminderValues(new List<String>{
+                facilityMapping.HealthcarePractitionerFacility.Account.BillingStreet,
+                facilityMapping.HealthcarePractitionerFacility.Account.BillingCity,
+                facilityMapping.HealthcarePractitionerFacility.Account.BillingState,
+                facilityMapping.HealthcarePractitionerFacility.Account.BillingPostalCode,
+                facilityMapping.HealthcarePractitionerFacility.Account.BillingCountry
+            }, ', ')
+            : null;
+
+        String appointmentWindow = '';
+        if (appointment.SchedStartTime != null) {
+            appointmentWindow = appointment.SchedStartTime.format('dd MMM yyyy, hh:mm a');
+        }
+        if (appointment.SchedEndTime != null) {
+            appointmentWindow += ' - ' + appointment.SchedEndTime.format('hh:mm a');
+        }
+
+        String visitType = appointment.WorkType != null ? appointment.WorkType.Name : appointment.AppointmentType;
+        String patientName = appointment.Account != null ? appointment.Account.Name : 'Patient';
+        String patientEmail = appointment.Account != null ? appointment.Account.PersonEmail : null;
+
+        List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
+
+        if (String.isNotBlank(patientEmail)) {
+            Messaging.SingleEmailMessage patientMail = new Messaging.SingleEmailMessage();
+            patientMail.setToAddresses(new String[] { patientEmail });
+            patientMail.setSenderDisplayName('Apollo Health 360');
+            patientMail.setSubject('Appointment Cancelled - ' + appointment.AppointmentNumber);
+            patientMail.setBccSender(false);
+            patientMail.setUseSignature(true);
+            patientMail.setHtmlBody(
+                'Hello ' + patientName + ',<br/><br/>' +
+                'Your appointment has been cancelled successfully.<br/><br/>' +
+                '<b>Appointment Number:</b> ' + appointment.AppointmentNumber + '<br/>' +
+                '<b>Doctor:</b> ' + doctorName + '<br/>' +
+                '<b>Visit Type:</b> ' + String.valueOf(visitType) + '<br/>' +
+                '<b>Cancelled Time Slot:</b> ' + appointmentWindow + '<br/>' +
+                '<b>Location:</b> ' + String.valueOf(facilityName) + '<br/>' +
+                '<b>Address:</b> ' + String.valueOf(facilityAddress) + '<br/>' +
+                '<br/>If needed, you can book another appointment from the patient portal.' +
+                '<br/><br/>Regards,<br/>Apollo Health 360'
+            );
+            emails.add(patientMail);
+        }
+
+        if (String.isNotBlank(doctorEmail)) {
+            Messaging.SingleEmailMessage doctorMail = new Messaging.SingleEmailMessage();
+            doctorMail.setToAddresses(new String[] { doctorEmail });
+            doctorMail.setSenderDisplayName('Apollo Health 360');
+            doctorMail.setSubject('Patient Appointment Cancelled - ' + appointment.AppointmentNumber);
+            doctorMail.setBccSender(false);
+            doctorMail.setUseSignature(true);
+            doctorMail.setHtmlBody(
+                'Hello ' + doctorName + ',<br/><br/>' +
+                'The patient appointment below has been cancelled.<br/><br/>' +
+                '<b>Appointment Number:</b> ' + appointment.AppointmentNumber + '<br/>' +
+                '<b>Patient:</b> ' + patientName + '<br/>' +
+                '<b>Visit Type:</b> ' + String.valueOf(visitType) + '<br/>' +
+                '<b>Cancelled Time Slot:</b> ' + appointmentWindow + '<br/>' +
+                '<b>Facility:</b> ' + String.valueOf(facilityName) + '<br/>' +
+                '<b>Facility Address:</b> ' + String.valueOf(facilityAddress) + '<br/>' +
+                '<br/>Regards,<br/>Apollo Health 360'
+            );
+            emails.add(doctorMail);
+        }
+
+        if (!emails.isEmpty()) {
+            Messaging.sendEmail(emails);
+        }
 
         AppointmentReminderResult result = new AppointmentReminderResult();
         result.patientReminderSent = String.isNotBlank(patientEmail);

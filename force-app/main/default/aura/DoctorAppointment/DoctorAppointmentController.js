@@ -1796,7 +1796,7 @@
         var action = event.getParam('action');
         var row = event.getParam('row');
 
-        if (!action || action.name !== 'remind') {
+        if (!action || !action.name) {
             return;
         }
 
@@ -1809,6 +1809,64 @@
                 type:"error"
             });
             missingRowToast.fire();
+            return;
+        }
+
+        if (action.name === 'cancel') {
+            if (row.Status !== 'Scheduled') {
+                var cancelInfoToast = $A.get("e.force:showToast");
+                cancelInfoToast.setParams({
+                    title: "Info",
+                    mode:"dismissible",
+                    message: "Only scheduled appointments can be cancelled.",
+                    type:"info"
+                });
+                cancelInfoToast.fire();
+                return;
+            }
+
+            var shouldCancel = window.confirm('Do you want to cancel this appointment?');
+            if (!shouldCancel) {
+                return;
+            }
+
+            var cancelAction = component.get("c.cancelPatientAppointment");
+            cancelAction.setParams({
+                serviceAppointmentId: row.Id
+            });
+            cancelAction.setCallback(this, function(response){
+                if(response.getState() === "SUCCESS"){
+                    var cancelSuccessToast = $A.get("e.force:showToast");
+                    cancelSuccessToast.setParams({
+                        title: "Success!",
+                        mode:"pester",
+                        message: "Appointment cancelled successfully. A cancellation email has been sent to the patient.",
+                        type:"success"
+                    });
+                    cancelSuccessToast.fire();
+                    component.set("v.AppStatus", "Scheduled");
+                    helper.onloadPatientapptdata(component, event, helper);
+                } else {
+                    var cancelErrors = response.getError();
+                    var cancelErrorMessage = 'Could not cancel the appointment.';
+                    if (cancelErrors && cancelErrors[0] && cancelErrors[0].message) {
+                        cancelErrorMessage = cancelErrors[0].message;
+                    }
+                    var cancelErrorToast = $A.get("e.force:showToast");
+                    cancelErrorToast.setParams({
+                        title: "Error!",
+                        mode:"dismissible",
+                        message: cancelErrorMessage,
+                        type:"error"
+                    });
+                    cancelErrorToast.fire();
+                }
+            });
+            $A.enqueueAction(cancelAction);
+            return;
+        }
+
+        if (action.name !== 'remind') {
             return;
         }
 
