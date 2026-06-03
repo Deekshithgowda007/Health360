@@ -154,6 +154,90 @@
     onPageSizeChange: function(component, event, helper) {    
         helper.preparePagination(component, component.get('v.filteredData'));
     },
+
+    closeClinicalUpdateModal: function(component, event, helper) {
+        component.set("v.showClinicalUpdateModal", false);
+    },
+
+    submitClinicalUpdate: function(component, event, helper) {
+        try {
+            var appointmentId = component.get("v.selectedAppointmentId");
+            if (!appointmentId) {
+                throw new Error("Appointment id is missing for clinical update.");
+            }
+
+            var action = component.get("c.saveClinicalUpdate");
+            var payload = {
+                encounterType: component.get("v.clinicalEncounterType"),
+                encounterSummary: component.get("v.clinicalEncounterSummary"),
+                allergyName: component.get("v.clinicalAllergyName"),
+                allergySeverity: component.get("v.clinicalAllergySeverity"),
+                conditionName: component.get("v.clinicalConditionName"),
+                conditionSeverity: component.get("v.clinicalConditionSeverity"),
+                medicationName: component.get("v.clinicalMedicationName"),
+                immunizationName: component.get("v.clinicalImmunizationName"),
+                immunizationDate: component.get("v.clinicalImmunizationDate"),
+                procedureName: component.get("v.clinicalProcedureName"),
+                carePlanSubject: component.get("v.clinicalCarePlanSubject"),
+                carePlanNotes: component.get("v.clinicalCarePlanNotes")
+            };
+            if (!action) {
+                throw new Error("Clinical update action is not available.");
+            }
+
+            action.setParams({
+                serviceAppointmentId: appointmentId,
+                clinicalPayloadJson: JSON.stringify(payload)
+            });
+
+            component.set('v.showmyspinner', true);
+            action.setCallback(this, function(response) {
+                component.set('v.showmyspinner', false);
+                if (response.getState() === "SUCCESS") {
+                    var result = response.getReturnValue();
+                    component.set("v.showClinicalUpdateModal", false);
+                    var successMessage = "Clinical update saved for " + result.patientName + ".";
+                    if (result.warningMessage) {
+                        successMessage += " " + result.warningMessage;
+                    }
+                    var successToast = $A.get("e.force:showToast");
+                    successToast.setParams({
+                        title: "Success!",
+                        mode:"pester",
+                        message: successMessage,
+                        type:"success"
+                    });
+                    successToast.fire();
+                } else {
+                    var errors = response.getError();
+                    var message = 'Could not save clinical update.';
+                    if (errors && errors[0] && errors[0].message) {
+                        message = errors[0].message;
+                    }
+                    var errorToast = $A.get("e.force:showToast");
+                    errorToast.setParams({
+                        title: "Error!",
+                        mode:"dismissible",
+                        message: message,
+                        type:"error"
+                    });
+                    errorToast.fire();
+                }
+            });
+            $A.enqueueAction(action);
+        } catch (e) {
+            component.set('v.showmyspinner', false);
+            var catchToast = $A.get("e.force:showToast");
+            catchToast.setParams({
+                title: "Error!",
+                mode:"dismissible",
+                message: e && e.message ? e.message : 'Clinical update could not be started.',
+                type:"error"
+            });
+            catchToast.fire();
+        }
+    },
+
     handleComponentEventPass : function(component, event, helper) {
         if (component.get("v.doctorResolved")) {
             return;
@@ -339,6 +423,25 @@
                         }
                     });
                     $A.enqueueAction(remindAction);
+                    break;
+
+                case 'clinical':
+                    component.set("v.selectedAppointmentId", SAId);
+                    component.set("v.selectedAppointmentNumber", row.AppointmentNumber);
+                    component.set("v.selectedPatientName", row.PatientName);
+                    component.set("v.clinicalEncounterType", "");
+                    component.set("v.clinicalEncounterSummary", "");
+                    component.set("v.clinicalAllergyName", "");
+                    component.set("v.clinicalAllergySeverity", "Moderate");
+                    component.set("v.clinicalConditionName", "");
+                    component.set("v.clinicalConditionSeverity", "Moderate");
+                    component.set("v.clinicalMedicationName", "");
+                    component.set("v.clinicalImmunizationName", "");
+                    component.set("v.clinicalImmunizationDate", null);
+                    component.set("v.clinicalProcedureName", "");
+                    component.set("v.clinicalCarePlanSubject", "");
+                    component.set("v.clinicalCarePlanNotes", "");
+                    component.set("v.showClinicalUpdateModal", true);
                     break;
                 
                 case 'Edit':

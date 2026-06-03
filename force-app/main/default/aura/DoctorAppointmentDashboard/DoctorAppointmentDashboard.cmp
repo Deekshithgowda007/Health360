@@ -39,6 +39,22 @@
     <aura:attribute name="doctorOtpInput" type="String"/>
     <aura:attribute name="doctorOtpSent" type="Boolean" default="false"/>
     <aura:attribute name="doctorLoginEmail" type="String"/>
+    <aura:attribute name="showClinicalUpdateModal" type="Boolean" default="false"/>
+    <aura:attribute name="selectedAppointmentId" type="String"/>
+    <aura:attribute name="selectedAppointmentNumber" type="String"/>
+    <aura:attribute name="selectedPatientName" type="String"/>
+    <aura:attribute name="clinicalEncounterType" type="String"/>
+    <aura:attribute name="clinicalEncounterSummary" type="String"/>
+    <aura:attribute name="clinicalAllergyName" type="String"/>
+    <aura:attribute name="clinicalAllergySeverity" type="String" default="Moderate"/>
+    <aura:attribute name="clinicalConditionName" type="String"/>
+    <aura:attribute name="clinicalConditionSeverity" type="String" default="Moderate"/>
+    <aura:attribute name="clinicalMedicationName" type="String"/>
+    <aura:attribute name="clinicalImmunizationName" type="String"/>
+    <aura:attribute name="clinicalImmunizationDate" type="Date"/>
+    <aura:attribute name="clinicalProcedureName" type="String"/>
+    <aura:attribute name="clinicalCarePlanSubject" type="String"/>
+    <aura:attribute name="clinicalCarePlanNotes" type="String"/>
     <ltng:require scripts="{!$Resource.jsOTP}" afterScriptsLoaded="{!c.afterLoad}" />
     
     <aura:if isTrue="{!v.Homepopup}">
@@ -245,6 +261,72 @@
                 <h6><b> ..... Sorry You Dont Have Any Appointment Yet .....</b></h6>
               </div>
                                                  
+    </aura:if>
+
+    <aura:if isTrue="{!v.showClinicalUpdateModal}">
+        <section role="dialog" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium">Clinical Update</h2>
+                    <p class="slds-m-top_x-small">Appointment {!v.selectedAppointmentNumber} for {!v.selectedPatientName}</p>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning:layout multipleRows="true">
+                        <lightning:layoutItem size="12" mediumDeviceSize="6" padding="around-small">
+                            <lightning:input label="Encounter Type" value="{!v.clinicalEncounterType}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="12" mediumDeviceSize="6" padding="around-small">
+                            <lightning:input label="Medication" value="{!v.clinicalMedicationName}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="12" padding="around-small">
+                            <lightning:textarea label="Encounter Summary / Impression" value="{!v.clinicalEncounterSummary}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="12" mediumDeviceSize="6" padding="around-small">
+                            <lightning:input label="Allergy" value="{!v.clinicalAllergyName}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="12" mediumDeviceSize="6" padding="around-small">
+                            <lightning:select label="Allergy Severity" value="{!v.clinicalAllergySeverity}">
+                                <option value="Mild">Mild</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="Severe">Severe</option>
+                                <option value="High">High</option>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="12" mediumDeviceSize="6" padding="around-small">
+                            <lightning:input label="Health Condition" value="{!v.clinicalConditionName}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="12" mediumDeviceSize="6" padding="around-small">
+                            <lightning:select label="Condition Severity" value="{!v.clinicalConditionSeverity}">
+                                <option value="Mild">Mild</option>
+                                <option value="Moderate">Moderate</option>
+                                <option value="Severe">Severe</option>
+                                <option value="High">High</option>
+                            </lightning:select>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="12" mediumDeviceSize="6" padding="around-small">
+                            <lightning:input label="Immunization" value="{!v.clinicalImmunizationName}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="12" mediumDeviceSize="6" padding="around-small">
+                            <lightning:input type="date" label="Immunization Date" value="{!v.clinicalImmunizationDate}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="12" padding="around-small">
+                            <lightning:input label="Medical Procedure" value="{!v.clinicalProcedureName}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="12" padding="around-small">
+                            <lightning:input label="Care Plan Subject" value="{!v.clinicalCarePlanSubject}"/>
+                        </lightning:layoutItem>
+                        <lightning:layoutItem size="12" padding="around-small">
+                            <lightning:textarea label="Care Plan Notes" value="{!v.clinicalCarePlanNotes}"/>
+                        </lightning:layoutItem>
+                    </lightning:layout>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning:button label="Cancel" onclick="{!c.closeClinicalUpdateModal}" />
+                    <lightning:button variant="brand" label="Save Clinical Update" onclick="{!c.submitClinicalUpdate}" class="slds-m-left_small"/>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
     </aura:if>
     
 </aura:component>

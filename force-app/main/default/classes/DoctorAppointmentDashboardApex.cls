@@ -6,6 +6,14 @@ public with sharing class DoctorAppointmentDashboardApex {
         @AuraEnabled public Boolean found;
     }
 
+    public class ClinicalUpdateResult {
+        @AuraEnabled public Boolean success;
+        @AuraEnabled public Integer recordsCreated;
+        @AuraEnabled public String patientId;
+        @AuraEnabled public String patientName;
+        @AuraEnabled public String warningMessage;
+    }
+
     @AuraEnabled
     public static PractitionerContext getLoggedInPractitionerContext() {
         PractitionerContext context = new PractitionerContext();
@@ -113,12 +121,192 @@ public with sharing class DoctorAppointmentDashboardApex {
     public static DoctorAppointmentController.AppointmentReminderResult sendAppointmentReminder(String serviceAppointmentId) {
         return DoctorAppointmentController.sendAppointmentReminder(serviceAppointmentId);
     }
+
+    @AuraEnabled
+    public static ClinicalUpdateResult saveClinicalUpdate(
+        String serviceAppointmentId,
+        String clinicalPayloadJson
+    ) {
+        if (String.isBlank(serviceAppointmentId)) {
+            throw new AuraHandledException('Appointment id is required.');
+        }
+        if (String.isBlank(clinicalPayloadJson)) {
+            throw new AuraHandledException('Clinical update details are required.');
+        }
+
+        Map<String, Object> payload = (Map<String, Object>) JSON.deserializeUntyped(clinicalPayloadJson);
+        String encounterType = payload.containsKey('encounterType') ? String.valueOf(payload.get('encounterType')) : null;
+        String encounterSummary = payload.containsKey('encounterSummary') ? String.valueOf(payload.get('encounterSummary')) : null;
+        String allergyName = payload.containsKey('allergyName') ? String.valueOf(payload.get('allergyName')) : null;
+        String allergySeverity = payload.containsKey('allergySeverity') ? String.valueOf(payload.get('allergySeverity')) : null;
+        String conditionName = payload.containsKey('conditionName') ? String.valueOf(payload.get('conditionName')) : null;
+        String conditionSeverity = payload.containsKey('conditionSeverity') ? String.valueOf(payload.get('conditionSeverity')) : null;
+        String medicationName = payload.containsKey('medicationName') ? String.valueOf(payload.get('medicationName')) : null;
+        String immunizationName = payload.containsKey('immunizationName') ? String.valueOf(payload.get('immunizationName')) : null;
+        String procedureName = payload.containsKey('procedureName') ? String.valueOf(payload.get('procedureName')) : null;
+        String carePlanSubject = payload.containsKey('carePlanSubject') ? String.valueOf(payload.get('carePlanSubject')) : null;
+        String carePlanNotes = payload.containsKey('carePlanNotes') ? String.valueOf(payload.get('carePlanNotes')) : null;
+        Date immunizationDate = null;
+        if (payload.containsKey('immunizationDate') && payload.get('immunizationDate') != null && String.isNotBlank(String.valueOf(payload.get('immunizationDate')))) {
+            immunizationDate = Date.valueOf(String.valueOf(payload.get('immunizationDate')));
+        }
+
+        ServiceAppointment appointment = [
+            SELECT Id, AccountId, Account.Name, SchedStartTime
+            FROM ServiceAppointment
+            WHERE Id = :serviceAppointmentId
+            LIMIT 1
+        ];
+
+        if (appointment.AccountId == null) {
+            throw new AuraHandledException('No patient is linked to this appointment.');
+        }
+
+        try {
+            Integer createdCount = 0;
+            List<String> warnings = new List<String>();
+
+            if (String.isNotBlank(allergyName)) {
+                insert new AllergyIntolerance(
+                    PatientId = appointment.AccountId,
+                    Status = 'Active',
+                    Type = 'Allergy',
+                    Category = 'Medication',
+                    Severity = String.isBlank(allergySeverity) ? 'Moderate' : allergySeverity
+                );
+                createdCount++;
+            }
+
+            if (String.isNotBlank(conditionName)) {
+                Id conditionCodeId = ensureCodeSetBundle(conditionName.trim());
+                if (conditionCodeId != null) {
+                    HealthCondition condition = new HealthCondition();
+                    condition.PatientId = appointment.AccountId;
+                    condition.ConditionCodeId = conditionCodeId;
+                    condition.ConditionStatus = 'Active';
+                    condition.DiagnosticStatus = 'Confirmed';
+                    condition.Severity = String.isBlank(conditionSeverity) ? 'Moderate' : conditionSeverity;
+                    insert condition;
+                    createdCount++;
+                } else {
+                    warnings.add('Health condition code not found for "' + conditionName + '"');
+                }
+            }
+
+            if (String.isNotBlank(medicationName)) {
+                Id medicationId = ensureMedication(medicationName.trim());
+                MedicationRequest medicationRequest = new MedicationRequest();
+                medicationRequest.PatientId = appointment.AccountId;
+                medicationRequest.MedicationId = medicationId;
+                medicationRequest.Status = 'Active';
+                medicationRequest.Type = 'Order';
+                insert medicationRequest;
+                createdCount++;
+            }
+
+            if (String.isNotBlank(encounterSummary) || String.isNotBlank(encounterType)) {
+                ClinicalEncounter encounter = new ClinicalEncounter();
+                encounter.PatientId = appointment.AccountId;
+                Datetime encounterStartDate = appointment.SchedStartTime != null ? appointment.SchedStartTime : System.now();
+                if (encounterStartDate > System.now()) {
+                    encounterStartDate = System.now();
+                }
+                encounter.StartDate = encounterStartDate;
+                encounter.Category = 'Follow-up';
+                encounter.Status = 'Finished';
+                if (String.isNotBlank(encounterType)) {
+                    Id encounterTypeId = ensureCodeSetBundle(encounterType.trim());
+                    if (encounterTypeId != null) {
+                        encounter.TypeId = encounterTypeId;
+                    } else {
+                        warnings.add('Encounter type code not found for "' + encounterType + '"');
+                    }
+                }
+                insert encounter;
+                createdCount++;
+            }
+
+            if (String.isNotBlank(immunizationName)) {
+                Id vaccineCodeId = ensureCodeSetBundle(immunizationName.trim());
+                if (vaccineCodeId != null) {
+                    PatientImmunization immunization = new PatientImmunization();
+                    immunization.PatientId = appointment.AccountId;
+                    immunization.VaccineCodeId = vaccineCodeId;
+                    immunization.VaccinationDate = immunizationDate == null ? Date.today() : immunizationDate;
+                    immunization.Status = 'Completed';
+                    insert immunization;
+                    createdCount++;
+                } else {
+                    warnings.add('Immunization code not found for "' + immunizationName + '"');
+                }
+            }
+
+            if (String.isNotBlank(procedureName)) {
+                Id procedureCodeId = ensureCodeSetBundle(procedureName.trim());
+                if (procedureCodeId != null) {
+                    PatientMedicalProcedure procedureRecord = new PatientMedicalProcedure();
+                    procedureRecord.PatientId = appointment.AccountId;
+                    procedureRecord.CodeId = procedureCodeId;
+                    procedureRecord.Status = 'Completed';
+                    insert procedureRecord;
+                    createdCount++;
+                } else {
+                    warnings.add('Procedure code not found for "' + procedureName + '"');
+                }
+            }
+
+            if (String.isNotBlank(carePlanSubject) || String.isNotBlank(carePlanNotes)) {
+                Case carePlan = new Case();
+                carePlan.AccountId = appointment.AccountId;
+                carePlan.Subject = String.isBlank(carePlanSubject) ? 'Doctor care plan update' : carePlanSubject.trim();
+                carePlan.Description = carePlanNotes;
+                carePlan.Status = 'New';
+                insert carePlan;
+                createdCount++;
+            }
+
+            if (createdCount == 0) {
+                throw new AuraHandledException('Please enter at least one clinical update before saving.');
+            }
+
+            ClinicalUpdateResult result = new ClinicalUpdateResult();
+            result.success = true;
+            result.recordsCreated = createdCount;
+            result.patientId = appointment.AccountId;
+            result.patientName = appointment.Account != null ? appointment.Account.Name : null;
+            result.warningMessage = warnings.isEmpty() ? null : String.join(warnings, '; ');
+            return result;
+        } catch (DmlException ex) {
+            String message = 'Could not save clinical update.';
+            if (ex.getNumDml() > 0) {
+                message = ex.getDmlMessage(0);
+            } else if (String.isNotBlank(ex.getMessage())) {
+                message = ex.getMessage();
+            }
+            throw new AuraHandledException(message);
+        }
+    }
     
     @AuraEnabled
     public static List<CarePractnFacilityAppt> fetchContact(String conId,String status){
         List<CarePractnFacilityAppt>  createfac=new List<CarePractnFacilityAppt>();
         if(conId !=null && status !=null){
-         createfac =[select HealthcarePractitionerFacility.Account.Name,HealthcarePractitionerFacility.Practitioner.Name,ServiceAppointment.AppointmentNumber,ServiceAppointmentId,ServiceAppointment.Status,ServiceAppointment.DueDate,ServiceAppointment.WorkType.name,ServiceAppointment.SchedStartTime from CarePractnFacilityAppt where HealthcarePractitionerFacility.PractitionerId =:conId AND ServiceAppointment.Status=:status WITH SECURITY_ENFORCED ];
+         createfac =[
+             select HealthcarePractitionerFacility.Account.Name,
+                    HealthcarePractitionerFacility.Practitioner.Name,
+                    ServiceAppointment.Account.Name,
+                    ServiceAppointment.AppointmentNumber,
+                    ServiceAppointmentId,
+                    ServiceAppointment.Status,
+                    ServiceAppointment.DueDate,
+                    ServiceAppointment.WorkType.name,
+                    ServiceAppointment.SchedStartTime
+             from CarePractnFacilityAppt
+             where HealthcarePractitionerFacility.PractitionerId =:conId
+             AND ServiceAppointment.Status=:status
+             WITH SECURITY_ENFORCED
+             ORDER BY ServiceAppointment.SchedStartTime DESC
+         ];
     }
             return createfac;
     }
@@ -126,11 +314,11 @@ public with sharing class DoctorAppointmentDashboardApex {
    @AuraEnabled
     public static ServiceAppointment updateCancel(String serviceAppointmentIds){
         ServiceAppointment updateapp=new ServiceAppointment();
-         updateapp=[SELECT Id,Status FROM ServiceAppointment WHERE Id=:serviceAppointmentIds WITH SECURITY_ENFORCED];
+         updateapp=[SELECT Id,Status FROM ServiceAppointment WHERE Id=:serviceAppointmentIds];
         if(updateapp.Status == 'Scheduled'){
             updateapp.Status ='Canceled';
         }
-        if (ServiceAppointment.SObjectType.getDescribe().isAccessible() && !Schema.sObjectType.ServiceAppointment.fields.Status.isUpdateable()) {
+        if (ServiceAppointment.SObjectType.getDescribe().isAccessible() && Schema.sObjectType.ServiceAppointment.fields.Status.isUpdateable()) {
             update updateapp;
         }
        return updateapp;
@@ -146,7 +334,6 @@ public with sharing class DoctorAppointmentDashboardApex {
             SELECT Id, Status
             FROM ServiceAppointment
             WHERE Id = :serviceAppointmentId
-            WITH SECURITY_ENFORCED
         ];
 
         if (updateApp.Status == newStatus) {
@@ -154,7 +341,17 @@ public with sharing class DoctorAppointmentDashboardApex {
         }
 
         updateApp.Status = newStatus;
-        update updateApp;
+        try {
+            update updateApp;
+        } catch (DmlException ex) {
+            String errorMessage = 'Could not update appointment status.';
+            if (ex.getNumDml() > 0) {
+                errorMessage = ex.getDmlMessage(0);
+            } else if (String.isNotBlank(ex.getMessage())) {
+                errorMessage = ex.getMessage();
+            }
+            throw new AuraHandledException(errorMessage);
+        }
         return updateApp;
     }
     
@@ -163,7 +360,24 @@ public with sharing class DoctorAppointmentDashboardApex {
         DateTime endTime=selectedDate.addHours(23);
         List<CarePractnFacilityAppt> createfaces=new List<CarePractnFacilityAppt>();
         try{
-         createfaces =[select HealthcarePractitionerFacility.Account.Name,HealthcarePractitionerFacility.Practitioner.Name,ServiceAppointment.AppointmentNumber,ServiceAppointmentId,ServiceAppointment.SchedStartTime,ServiceAppointment.Status,ServiceAppointment.DueDate,ServiceAppointment.WorkType.name from CarePractnFacilityAppt WHERE HealthcarePractitionerFacility.PractitionerId=:selectedCon AND ServiceAppointment.SchedStartTime>=:selectedDate AND ServiceAppointment.SchedEndTime<=:endTime AND ServiceAppointment.Status=:status WITH SECURITY_ENFORCED];
+         createfaces =[
+             select HealthcarePractitionerFacility.Account.Name,
+                    HealthcarePractitionerFacility.Practitioner.Name,
+                    ServiceAppointment.Account.Name,
+                    ServiceAppointment.AppointmentNumber,
+                    ServiceAppointmentId,
+                    ServiceAppointment.SchedStartTime,
+                    ServiceAppointment.Status,
+                    ServiceAppointment.DueDate,
+                    ServiceAppointment.WorkType.name
+             from CarePractnFacilityAppt
+             WHERE HealthcarePractitionerFacility.PractitionerId=:selectedCon
+             AND ServiceAppointment.SchedStartTime>=:selectedDate
+             AND ServiceAppointment.SchedEndTime<=:endTime
+             AND ServiceAppointment.Status=:status
+             WITH SECURITY_ENFORCED
+             ORDER BY ServiceAppointment.SchedStartTime DESC
+         ];
         }
          catch(Exception e){
              System.debug('Exception>>'+ e);
@@ -195,5 +409,45 @@ public with sharing class DoctorAppointmentDashboardApex {
              System.debug('Exception>>'+ e);
         }
         return delacccon;
+    }
+
+    private static Id ensureCodeSetBundle(String recordName) {
+        if (String.isBlank(recordName)) {
+            return null;
+        }
+
+        String likeValue = '%' + recordName + '%';
+        List<CodeSetBundle> existingCodes = [
+            SELECT Id, Name
+            FROM CodeSetBundle
+            WHERE Name = :recordName
+            OR Name LIKE :likeValue
+            LIMIT 1
+        ];
+        if (!existingCodes.isEmpty()) {
+            return existingCodes[0].Id;
+        }
+        return null;
+    }
+
+    private static Id ensureMedication(String medicationName) {
+        if (String.isBlank(medicationName)) {
+            return null;
+        }
+
+        List<Medication> existingMedications = [
+            SELECT Id, Name
+            FROM Medication
+            WHERE Name = :medicationName
+            LIMIT 1
+        ];
+        if (!existingMedications.isEmpty()) {
+            return existingMedications[0].Id;
+        }
+
+        Medication medication = new Medication();
+        medication.Name = medicationName;
+        insert medication;
+        return medication.Id;
     }
 }

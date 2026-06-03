@@ -232,7 +232,34 @@ System.debug('Exception :'+ e);
         if (String.isBlank(serviceAppointmentId)) {
             throw new AuraHandledException('Appointment id is required.');
         }
+        return sendAppointmentEmail(serviceAppointmentId, true);
+    }
 
+    @AuraEnabled
+    public static AppointmentReminderResult sendLatestAppointmentConfirmation(String patientId, String accountId, String practitionerId){
+        if (String.isBlank(patientId) || String.isBlank(accountId) || String.isBlank(practitionerId)) {
+            throw new AuraHandledException('Patient, location, and practitioner details are required.');
+        }
+
+        List<CarePractnFacilityAppt> latestAppointmentLinks = [
+            SELECT ServiceAppointmentId
+            FROM CarePractnFacilityAppt
+            WHERE ServiceAppointment.AccountId = :patientId
+              AND HealthcarePractitionerFacility.AccountId = :accountId
+              AND HealthcarePractitionerFacility.PractitionerId = :practitionerId
+              AND ServiceAppointment.Status = 'Scheduled'
+            ORDER BY ServiceAppointment.CreatedDate DESC
+            LIMIT 1
+        ];
+
+        if (latestAppointmentLinks.isEmpty() || latestAppointmentLinks[0].ServiceAppointmentId == null) {
+            throw new AuraHandledException('We could not find the latest booked appointment to send confirmation.');
+        }
+
+        return sendAppointmentEmail(latestAppointmentLinks[0].ServiceAppointmentId, false);
+    }
+
+    private static AppointmentReminderResult sendAppointmentEmail(String serviceAppointmentId, Boolean isReminder){
         ServiceAppointment appointment = [
             SELECT Id, AppointmentNumber, Status, AppointmentType, SchedStartTime, SchedEndTime,
                    Zoom_Meeting_Url__c, AccountId, Account.Name, Account.PersonEmail, Account.Phone,
@@ -243,7 +270,7 @@ System.debug('Exception :'+ e);
         ];
 
         if (appointment.Status != 'Scheduled') {
-            throw new AuraHandledException('Reminders can be sent only for scheduled appointments.');
+            throw new AuraHandledException((isReminder ? 'Reminders' : 'Confirmations') + ' can be sent only for scheduled appointments.');
         }
 
         List<CarePractnFacilityAppt> facilityMappings = [
@@ -292,6 +319,14 @@ System.debug('Exception :'+ e);
         String visitType = appointment.WorkType != null ? appointment.WorkType.Name : appointment.AppointmentType;
         String patientName = appointment.Account != null ? appointment.Account.Name : 'Patient';
         String patientEmail = appointment.Account != null ? appointment.Account.PersonEmail : null;
+        String patientSubject = isReminder ? 'Appointment Reminder - ' : 'Appointment Confirmation - ';
+        String doctorSubject = isReminder ? 'Doctor Reminder - ' : 'Appointment Confirmed - ';
+        String patientIntro = isReminder
+            ? 'This is a reminder for your upcoming appointment.'
+            : 'Your appointment has been successfully booked.';
+        String doctorIntro = isReminder
+            ? 'This is a reminder for your upcoming patient appointment.'
+            : 'A new patient appointment has been successfully booked.';
 
         List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
 
@@ -299,12 +334,12 @@ System.debug('Exception :'+ e);
             Messaging.SingleEmailMessage patientMail = new Messaging.SingleEmailMessage();
             patientMail.setToAddresses(new String[] { patientEmail });
             patientMail.setSenderDisplayName('Apollo Health 360');
-            patientMail.setSubject('Appointment Reminder - ' + appointment.AppointmentNumber);
+            patientMail.setSubject(patientSubject + appointment.AppointmentNumber);
             patientMail.setBccSender(false);
             patientMail.setUseSignature(true);
             patientMail.setHtmlBody(
                 'Hello ' + patientName + ',<br/><br/>' +
-                'This is a reminder for your upcoming appointment.<br/><br/>' +
+                patientIntro + '<br/><br/>' +
                 '<b>Appointment Number:</b> ' + appointment.AppointmentNumber + '<br/>' +
                 '<b>Doctor:</b> ' + doctorName + '<br/>' +
                 '<b>Visit Type:</b> ' + String.valueOf(visitType) + '<br/>' +
@@ -312,8 +347,7 @@ System.debug('Exception :'+ e);
                 '<b>Location:</b> ' + String.valueOf(facilityName) + '<br/>' +
                 '<b>Address:</b> ' + String.valueOf(facilityAddress) + '<br/>' +
                 (String.isNotBlank(appointment.Zoom_Meeting_Url__c) ? '<b>Join Link:</b> ' + appointment.Zoom_Meeting_Url__c + '<br/>' : '') +
-                '<br/>Please arrive a few minutes early and keep this reminder handy.<br/><br/>' +
-                'Regards,<br/>Apollo Health 360'
+                '<br/>Regards,<br/>Apollo Health 360'
             );
             emails.add(patientMail);
         }
@@ -322,12 +356,12 @@ System.debug('Exception :'+ e);
             Messaging.SingleEmailMessage doctorMail = new Messaging.SingleEmailMessage();
             doctorMail.setToAddresses(new String[] { doctorEmail });
             doctorMail.setSenderDisplayName('Apollo Health 360');
-            doctorMail.setSubject('Doctor Reminder - ' + appointment.AppointmentNumber);
+            doctorMail.setSubject(doctorSubject + appointment.AppointmentNumber);
             doctorMail.setBccSender(false);
             doctorMail.setUseSignature(true);
             doctorMail.setHtmlBody(
                 'Hello ' + doctorName + ',<br/><br/>' +
-                'This is a reminder for your upcoming patient appointment.<br/><br/>' +
+                doctorIntro + '<br/><br/>' +
                 '<b>Appointment Number:</b> ' + appointment.AppointmentNumber + '<br/>' +
                 '<b>Patient:</b> ' + patientName + '<br/>' +
                 '<b>Visit Type:</b> ' + String.valueOf(visitType) + '<br/>' +

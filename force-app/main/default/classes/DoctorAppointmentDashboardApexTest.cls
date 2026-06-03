@@ -166,6 +166,44 @@ public class DoctorAppointmentDashboardApexTest{
         System.assertEquals(true, result.patientReminderSent, 'Patient reminder should be sent through the dashboard proxy.');
         System.assertEquals(true, result.doctorReminderSent, 'Doctor reminder should be sent through the dashboard proxy.');
     }
+
+    @isTest
+    static void saveClinicalUpdateTest(){
+        Account patient = new Account();
+        patient.LastName = 'Clinical Patient';
+        patient.PersonEmail = 'clinical.patient@example.com';
+        patient.Phone = '9000000011';
+        insert patient;
+
+        ServiceAppointment appointment = new ServiceAppointment(
+            AccountId = patient.Id,
+            ParentRecordId = patient.Id,
+            Status = 'Scheduled',
+            AppointmentType = 'Visit Hospital',
+            SchedStartTime = System.now().addDays(1),
+            SchedEndTime = System.now().addDays(1).addHours(1)
+        );
+        insert appointment;
+
+        DoctorAppointmentDashboardApex.ClinicalUpdateRequest request =
+            new DoctorAppointmentDashboardApex.ClinicalUpdateRequest();
+        request.encounterSummary = 'Patient is recovering well and requires observation.';
+        request.allergyName = 'Dust Allergy';
+        request.carePlanSubject = 'Post visit care plan';
+        request.carePlanNotes = 'Continue hydration and review again in one week.';
+
+        Test.startTest();
+        DoctorAppointmentDashboardApex.ClinicalUpdateResult result =
+            DoctorAppointmentDashboardApex.saveClinicalUpdate(appointment.Id, request);
+        Test.stopTest();
+
+        System.assertEquals(true, result.success, 'Clinical update should save successfully.');
+        System.assertEquals(patient.Id, result.patientId, 'The update should be linked to the appointment patient.');
+        System.assertEquals(3, result.recordsCreated, 'Encounter, allergy, and care plan should be created.');
+        System.assertEquals(1, [SELECT Count() FROM AllergyIntolerance WHERE PatientId = :patient.Id AND Name = 'Dust Allergy']);
+        System.assertEquals(1, [SELECT Count() FROM Case WHERE AccountId = :patient.Id AND Subject = 'Post visit care plan']);
+        System.assertEquals(1, [SELECT Count() FROM ClinicalEncounter WHERE PatientId = :patient.Id]);
+    }
     @isTest static void fetchContactByDateTest(){
         Contact c=new Contact();
         c.LastName='Test';

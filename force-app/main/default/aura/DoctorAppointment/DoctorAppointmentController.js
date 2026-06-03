@@ -2137,11 +2137,14 @@
     },
     
     toggleSection : function(component, event, helper) {
-       // alert("hiii");
-       
-    
-    
-        var sectionAuraId = event.target.getAttribute("data-auraId");
+        var currentTarget = event.currentTarget || event.target;
+        var sectionAuraId = currentTarget ? currentTarget.getAttribute("data-auraId") : null;
+        if (!sectionAuraId && event.target) {
+            sectionAuraId = event.target.getAttribute("data-auraId");
+        }
+        if (!sectionAuraId) {
+            return;
+        }
         var PatientId = component.get("v.PatientId") || component.get("v.setUserId");
        
         if(sectionAuraId=='lunchSection'){
@@ -2454,6 +2457,45 @@ if(sectionState == -1){
 }
 }
 ,
+    handleBookingFlowStatusChange: function(component, event, helper) {
+        var status = event.getParam("status");
+        if (status !== "FINISHED" && status !== "FINISHED_SCREEN") {
+            return;
+        }
+
+        var patientId = component.get("v.PatientId") || component.get("v.setUserId");
+        var accountId = component.get("v.AccId");
+        var practitionerId = component.get("v.contactId");
+
+        if (!patientId || !accountId || !practitionerId) {
+            return;
+        }
+
+        var confirmationAction = component.get("c.sendLatestAppointmentConfirmation");
+        confirmationAction.setParams({
+            patientId: patientId,
+            accountId: accountId,
+            practitionerId: practitionerId
+        });
+        confirmationAction.setCallback(this, function(response) {
+            if (response.getState() !== "SUCCESS") {
+                return;
+            }
+
+            var result = response.getReturnValue();
+            if (result && result.patientReminderSent) {
+                var toastEvent = $A.get("e.force:showToast");
+                toastEvent.setParams({
+                    title: "Success",
+                    message: "Appointment booked successfully. Confirmation email sent.",
+                    type: "success",
+                    mode: "dismissible"
+                });
+                toastEvent.fire();
+            }
+        });
+        $A.enqueueAction(confirmationAction);
+    },
     handleCreateContactForLoginOrSignUp : function(component, event,helper) {
         try {
             var getLeadValue = component.get("v.newLead") || {};

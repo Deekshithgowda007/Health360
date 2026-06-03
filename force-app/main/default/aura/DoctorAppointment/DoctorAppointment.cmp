@@ -1095,7 +1095,7 @@
                             <div class="c-container">
                                 <!--lightning:button label="Back" onclick="{!c.handleOnBack}" variant="brand" class="marginbottom"/-->
                                 
-                                <lightning:flow aura:id="flowData"/>
+                                <lightning:flow aura:id="flowData" onstatuschange="{!c.handleBookingFlowStatusChange}"/>
                                 
                                 <!--iframe width="800" height="600" style="border: 1px solid" src="https://tech-kasetti-healthcloud.my.site.com/ltng/survey/runtimeApp.app?invitationId=0Ki4x0000011E0w&amp;surveyName=dental_care_survey&amp;UUID=c1a7639f-bb6a-4258-98dc-83896d54333a" /-->
                                 

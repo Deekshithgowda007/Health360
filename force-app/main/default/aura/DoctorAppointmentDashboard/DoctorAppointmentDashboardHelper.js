@@ -3,6 +3,7 @@
         var actions = [
             { label: 'Cancel Appointment', name: 'delete' },
             { label: 'Mark Completed', name: 'complete' },
+            { label: 'Clinical Update', name: 'clinical' },
             { label: 'Send Reminder', name: 'remind' },
             { label: 'Edit Appointment', name: 'Edit' },
         ];
@@ -11,6 +12,7 @@
             typeAttributes: { label: { fieldName: "AppointmentNumber" }, tooltip:"AppointmentNumber", target: "_blank" }  
             },
             { label: 'Appointment Date', fieldName: 'SchedStartTime',type:'DateTime',hideDefaultActions: true},
+            { label: 'Patient', fieldName: 'PatientName',type:'text',hideDefaultActions: true},
             { label: 'Facility', fieldName: 'Department',type:'text',hideDefaultActions: true},
             { label: 'Practitioner', fieldName: 'Provider',type:'text',hideDefaultActions: true},
             { label: 'Visit Type', fieldName: 'VisitType',hideDefaultActions: true},
@@ -135,6 +137,7 @@
                     row.Provider = jrows.Practitioner.Name;  
                     row.Department = jrows.Account.Name;
                     var Appointmentrows=row.ServiceAppointment;
+                    row.PatientName = Appointmentrows.Account ? Appointmentrows.Account.Name : '';
                     row.SchedStartTime =$A.localizationService.formatDate(Appointmentrows.SchedStartTime, "MM/dd/yyyy, hh:mm a");
                     row.Status = Appointmentrows.Status;
                     row.AppointmentUrl =baseUrlOfOrg+Appointmentrows.Id;
@@ -296,6 +299,7 @@
                         row.Provider = jrows.Practitioner.Name;  
                         row.Department = jrows.Account.Name;
                         var Appointmentrows=row.ServiceAppointment;
+                        row.PatientName = Appointmentrows.Account ? Appointmentrows.Account.Name : '';
                         row.SchedStartTime =$A.localizationService.formatDate(Appointmentrows.SchedStartTime, "MM/dd/yyyy, hh:mm a");
                         row.Status = Appointmentrows.Status;
                         row.AppointmentUrl =baseUrlOfOrg+Appointmentrows.Id;
