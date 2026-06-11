@@ -236,6 +236,14 @@ System.debug('Exception :'+ e);
     }
 
     @AuraEnabled
+    public static AppointmentReminderResult sendAppointmentCompletion(String serviceAppointmentId){
+        if (String.isBlank(serviceAppointmentId)) {
+            throw new AuraHandledException('Appointment id is required.');
+        }
+        return sendCompletedAppointmentEmail(serviceAppointmentId);
+    }
+
+    @AuraEnabled
     public static AppointmentReminderResult sendLatestAppointmentConfirmation(String patientId, String accountId, String practitionerId){
         if (String.isBlank(patientId) || String.isBlank(accountId) || String.isBlank(practitionerId)) {
             throw new AuraHandledException('Patient, location, and practitioner details are required.');
@@ -524,6 +532,92 @@ System.debug('Exception :'+ e);
         result.doctorEmail = doctorEmail;
         return result;
     }
+
+    private static AppointmentReminderResult sendCompletedAppointmentEmail(String serviceAppointmentId){
+        ServiceAppointment appointment = [
+            SELECT Id, AppointmentNumber, Status, AppointmentType, SchedStartTime, SchedEndTime,
+                   Zoom_Meeting_Url__c, AccountId, Account.Name, Account.PersonEmail, Account.Phone,
+                   WorkType.Name
+            FROM ServiceAppointment
+            WHERE Id = :serviceAppointmentId
+            LIMIT 1
+        ];
+
+        if (appointment.Status != 'Completed') {
+            throw new AuraHandledException('Completion email can be sent only for completed appointments.');
+        }
+
+        List<CarePractnFacilityAppt> facilityMappings = [
+            SELECT HealthcarePractitionerFacility.Practitioner.Name,
+                   HealthcarePractitionerFacility.Practitioner.Email,
+                   HealthcarePractitionerFacility.Account.Name,
+                   HealthcarePractitionerFacility.Account.BillingStreet,
+                   HealthcarePractitionerFacility.Account.BillingCity,
+                   HealthcarePractitionerFacility.Account.BillingState,
+                   HealthcarePractitionerFacility.Account.BillingPostalCode,
+                   HealthcarePractitionerFacility.Account.BillingCountry
+            FROM CarePractnFacilityAppt
+            WHERE ServiceAppointmentId = :serviceAppointmentId
+            LIMIT 1
+        ];
+
+        CarePractnFacilityAppt facilityMapping = facilityMappings.isEmpty() ? null : facilityMappings[0];
+        String doctorName = facilityMapping != null && facilityMapping.HealthcarePractitionerFacility != null
+            && facilityMapping.HealthcarePractitionerFacility.Practitioner != null
+            ? facilityMapping.HealthcarePractitionerFacility.Practitioner.Name : 'Doctor';
+        String facilityName = facilityMapping != null && facilityMapping.HealthcarePractitionerFacility != null
+            && facilityMapping.HealthcarePractitionerFacility.Account != null
+            ? facilityMapping.HealthcarePractitionerFacility.Account.Name : null;
+        String facilityAddress = facilityMapping != null && facilityMapping.HealthcarePractitionerFacility != null
+            && facilityMapping.HealthcarePractitionerFacility.Account != null
+            ? joinReminderValues(new List<String>{
+                facilityMapping.HealthcarePractitionerFacility.Account.BillingStreet,
+                facilityMapping.HealthcarePractitionerFacility.Account.BillingCity,
+                facilityMapping.HealthcarePractitionerFacility.Account.BillingState,
+                facilityMapping.HealthcarePractitionerFacility.Account.BillingPostalCode,
+                facilityMapping.HealthcarePractitionerFacility.Account.BillingCountry
+            }, ', ')
+            : null;
+
+        String appointmentWindow = '';
+        if (appointment.SchedStartTime != null) {
+            appointmentWindow = appointment.SchedStartTime.format('dd MMM yyyy, hh:mm a');
+        }
+        if (appointment.SchedEndTime != null) {
+            appointmentWindow += ' - ' + appointment.SchedEndTime.format('hh:mm a');
+        }
+
+        String patientName = appointment.Account != null ? appointment.Account.Name : 'Patient';
+        String patientEmail = appointment.Account != null ? appointment.Account.PersonEmail : null;
+        if (String.isBlank(patientEmail)) {
+            throw new AuraHandledException('No patient email is configured for this appointment.');
+        }
+
+        Messaging.SingleEmailMessage patientMail = new Messaging.SingleEmailMessage();
+        patientMail.setToAddresses(new String[] { patientEmail });
+        patientMail.setSenderDisplayName('Apollo Health 360');
+        patientMail.setSubject('Appointment Completed - ' + appointment.AppointmentNumber);
+        patientMail.setBccSender(false);
+        patientMail.setUseSignature(true);
+        patientMail.setHtmlBody(
+            'Hello ' + patientName + ',<br/><br/>' +
+            'Your appointment has been marked as completed.<br/><br/>' +
+            '<b>Appointment Number:</b> ' + appointment.AppointmentNumber + '<br/>' +
+            '<b>Doctor:</b> ' + doctorName + '<br/>' +
+            '<b>Completed Visit Time:</b> ' + appointmentWindow + '<br/>' +
+            '<b>Location:</b> ' + String.valueOf(facilityName) + '<br/>' +
+            '<b>Address:</b> ' + String.valueOf(facilityAddress) + '<br/>' +
+            '<br/>Thank you for visiting Apollo Health 360.' +
+            '<br/><br/>Regards,<br/>Apollo Health 360'
+        );
+        Messaging.sendEmail(new Messaging.SingleEmailMessage[] { patientMail });
+
+        AppointmentReminderResult result = new AppointmentReminderResult();
+        result.patientReminderSent = true;
+        result.doctorReminderSent = false;
+        result.patientEmail = patientEmail;
+        return result;
+    }
     
     @AuraEnabled
     public static String createLead(Lead lead){
@@ -783,18 +877,21 @@ System.debug('Exception :'+ e);
         Account.SObjectType.getDescribe().isAccessible()&&
         Schema.SObjectType.Account.fields.Id.isAccessible()){
             if(PatientId != null && status != null ){
+                patientData=[Select Id,Name,HealthCloudGA__Gender__pc,PersonMaritalStatus,Phone,PersonMailingCity,PersonMailingCountry ,PersonMailingPostalCode,PersonMailingState,PersonMailingStreet,PersonEmail,PersonBirthdate FROM Account WHERE Id=:PatientId ];
+                patientapptDetails.patientDetails = patientData;
                 if(status == 'Completed & Cancelled'){
-                    getApptDetails = [SELECT Id,DueDate,AppointmentNumber,SchedEndTime,SchedStartTime,Status FROM ServiceAppointment WHERE AccountId=:patientId AND (Status='Completed' OR Status='Canceled') ];/*( AND Practitioner.AccountId =:getHospitalName)*/
+                    getApptDetails = [SELECT Id,DueDate,AppointmentNumber,SchedEndTime,SchedStartTime,Status FROM ServiceAppointment WHERE AccountId=:patientId AND (Status='Completed' OR Status='Canceled') ORDER BY SchedStartTime DESC ];/*( AND Practitioner.AccountId =:getHospitalName)*/
                     patientapptDetails.patientApptDetails = getApptDetails;
                     System.debug('getApptDetails'+getApptDetails);
                 }
-                if(status == 'Scheduled'){
-                    patientData=[Select Id,Name,HealthCloudGA__Gender__pc,PersonMaritalStatus,Phone,PersonMailingCity,PersonMailingCountry ,PersonMailingPostalCode,PersonMailingState,PersonMailingStreet,PersonEmail,PersonBirthdate FROM Account WHERE Id=:PatientId ];
-                    getApptDetails = [SELECT Id,DueDate,AppointmentNumber,SchedEndTime,SchedStartTime,Status FROM ServiceAppointment WHERE AccountId=:PatientId AND Status=:status ];/*( AND Practitioner.AccountId =:getHospitalName)*/
-                    patientapptDetails.patientDetails = patientData;
+                else if(status == 'Scheduled'){
+                    getApptDetails = [SELECT Id,DueDate,AppointmentNumber,SchedEndTime,SchedStartTime,Status FROM ServiceAppointment WHERE AccountId=:PatientId AND Status=:status ORDER BY SchedStartTime DESC ];/*( AND Practitioner.AccountId =:getHospitalName)*/
                     patientapptDetails.patientApptDetails = getApptDetails;
-                                        System.debug('patientData'+patientData);
-
+                    System.debug('patientData'+patientData);
+                }
+                else if(status == 'Completed' || status == 'Canceled'){
+                    getApptDetails = [SELECT Id,DueDate,AppointmentNumber,SchedEndTime,SchedStartTime,Status FROM ServiceAppointment WHERE AccountId=:PatientId AND Status=:status ORDER BY SchedStartTime DESC ];
+                    patientapptDetails.patientApptDetails = getApptDetails;
                 }
             }  
             /*if(PatientId == null && status != null && leadId != null){

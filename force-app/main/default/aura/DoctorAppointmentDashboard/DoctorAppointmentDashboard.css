@@ -1,13 +1,270 @@
-.THIS .sizeBox{
-    width:400px;
+.THIS .dashboardShell {
+    background: linear-gradient(180deg, #f4fbfc 0%, #eef6f9 100%);
+    min-height: 100vh;
+    padding: 1.5rem;
 }
 
-.THIS .fontsize{
-    background-color:#2f7786;
-    font-family:Arial;
-    font-size: 30px;
-    color:white;
+.THIS .dashboardShellCard .slds-card {
+    background: transparent;
+    border: none;
+    box-shadow: none;
 }
-.THIS .buttonLeft{
-    margin-left:700px;
+
+.THIS .dashboardHero {
+    background: linear-gradient(135deg, #0f5d73 0%, #1a7d96 55%, #54b7c7 100%);
+    border-radius: 28px;
+    box-shadow: 0 24px 50px rgba(15, 93, 115, 0.18);
+    color: #fff;
+    margin: 0 1.25rem 1.5rem;
+    padding: 2rem 1.5rem;
+    text-align: center;
+}
+
+.THIS .dashboardHeroInner {
+    margin: 0 auto;
+    max-width: 900px;
+}
+
+.THIS .dashboardEyebrow {
+    color: rgba(255,255,255,0.78);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+}
+
+.THIS .fontsize {
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 1rem;
+}
+
+.THIS .fontsize h1 {
+    color: #fff;
+    font-size: 2rem;
+    margin: 0;
+}
+
+.THIS .dashboardSubtitle {
+    color: rgba(255,255,255,0.82);
+    font-size: 1rem;
+    margin: 0.65rem auto 0;
+    max-width: 700px;
+}
+
+.THIS .dashboardIntroCard,
+.THIS .dashboardTableShell .slds-card {
+    background: linear-gradient(180deg, #ffffff 0%, #f9fcfd 100%);
+    border: 1px solid #d8ebf0;
+    border-radius: 24px;
+    box-shadow: 0 18px 36px rgba(15, 93, 115, 0.08);
+}
+
+.THIS .dashboardIntroCard {
+    padding: 0.75rem 0.5rem;
+}
+
+.THIS .dashboardAuthPanel {
+    max-width: 320px;
+    width: 100%;
+}
+
+.THIS .dashboardInfoBanner {
+    background: #eef8fb;
+    border: 1px solid #d0e8ee;
+    border-radius: 16px;
+    color: #1f5663;
+    margin: 1rem 1rem 0;
+    padding: 0.95rem 1rem;
+}
+
+.THIS .dashboardFilterBar {
+    align-items: flex-end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 0 1rem;
+}
+
+.THIS .dashboardFilterControl {
+    min-width: 220px;
+}
+
+.THIS .dashboardFilterControl .slds-select,
+.THIS .dashboardFilterControl .slds-input,
+.THIS .dashboardAuthPanel .slds-input {
+    border-color: #c6dde5;
+    border-radius: 14px;
+    min-height: 44px;
+}
+
+.THIS .dashboardFilterControl .slds-form-element__label,
+.THIS .dashboardAuthPanel .slds-form-element__label {
+    color: #123b47;
+    font-weight: 700;
+}
+
+.THIS .dashboardActionSlot {
+    align-items: flex-end;
+    display: flex;
+    flex: 1 1 220px;
+    justify-content: flex-end;
+    margin-left: auto;
+}
+
+.THIS .dashboardPrimaryButton,
+.THIS .dashboardShell .slds-button_brand,
+.THIS .dashboardShell .slds-button_neutral,
+.THIS .dashboardShell .slds-button_brand-outline {
+    border-radius: 999px;
+}
+
+.THIS .dashboardPrimaryButton,
+.THIS .dashboardShell .slds-button_brand {
+    box-shadow: 0 10px 22px rgba(15, 93, 115, 0.18);
+}
+
+.THIS .dashboardShell .slds-button:hover {
+    transform: translateY(-1px);
+    transition: transform 0.18s ease;
+}
+
+.THIS .dashboardTabset {
+    margin: 0 1rem;
+}
+
+.THIS .dashboardTabset .slds-tabs_scoped__nav {
+    background: #f4fafc;
+    border: 1px solid #d8ebf0;
+    border-radius: 18px 18px 0 0;
+    padding: 0.25rem;
+}
+
+.THIS .dashboardTabset .slds-tabs_scoped__item {
+    border-radius: 999px;
+    margin-right: 0.35rem;
+}
+
+.THIS .dashboardTabset .slds-tabs_scoped__link {
+    border-radius: 999px;
+    color: #235766;
+    font-weight: 700;
+    min-height: 42px;
+}
+
+.THIS .dashboardTablePanel {
+    padding: 0.5rem 0 0.25rem;
+}
+
+.THIS .dashboardTablePanel .slds-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.THIS .dashboardTablePanel .slds-table thead th {
+    background: #f3fafc;
+    color: #214d59;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.THIS .dashboardTablePanel .slds-table tbody tr:hover > td {
+    background: #f8fcfd;
+}
+
+.THIS .dashboardEmptyState {
+    color: #54727d;
+    display: block;
+    font-weight: 700;
+    padding: 2rem 1rem;
+}
+
+.THIS .statusPill {
+    border-radius: 999px;
+    font-weight: 700;
+    padding: 0.15rem 0.65rem;
+}
+
+.THIS .statusScheduled {
+    background: #e6f5f8;
+    color: #0f5d73;
+}
+
+.THIS .statusCompleted {
+    background: #e9f8ef;
+    color: #136c37;
+}
+
+.THIS .statusCanceled {
+    background: #fdeceb;
+    color: #a63e34;
+}
+
+.THIS .headingForNoAppointment {
+    background: #ffffff;
+    border: 1px solid #d8ebf0;
+    border-radius: 18px;
+    box-shadow: 0 14px 28px rgba(15, 93, 115, 0.08);
+    margin: 1rem 1.5rem;
+    padding: 1rem;
+}
+
+.THIS .slds-modal__container {
+    border-radius: 24px;
+    overflow: hidden;
+}
+
+.THIS .slds-modal__header {
+    background: linear-gradient(135deg, #0f5d73 0%, #1a7d96 100%);
+    color: #fff;
+}
+
+.THIS .slds-modal__footer {
+    background: #f8fbfc;
+}
+
+@media only screen and (max-width: 1024px) {
+    .THIS .dashboardShell {
+        padding: 1rem;
+    }
+
+    .THIS .dashboardActionSlot {
+        justify-content: flex-start;
+        margin-left: 0;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    .THIS .dashboardHero {
+        margin: 0 0 1.25rem;
+        padding: 1.6rem 1.2rem;
+    }
+
+    .THIS .fontsize h1 {
+        font-size: 1.6rem;
+    }
+
+    .THIS .dashboardSubtitle {
+        font-size: 0.92rem;
+    }
+
+    .THIS .dashboardIntroCard {
+        margin: 0 0 1rem;
+    }
+
+    .THIS .dashboardFilterBar {
+        padding: 0 0.5rem;
+    }
+
+    .THIS .dashboardFilterControl,
+    .THIS .dashboardActionSlot {
+        min-width: 100%;
+        width: 100%;
+    }
+
+    .THIS .dashboardTabset {
+        margin: 0 0.5rem;
+    }
 }

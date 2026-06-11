@@ -42,6 +42,7 @@
                     component.set("v.ShowToast", true);
                     component.set("v.ShowTable", false);
                     component.set("v.AppStatus", "Scheduled");
+                    component.set("v.activeTabId", "badge");
                     helper.sendDoctorOtpForResolvedDoctor(component);
                 } else {
                     var noDoctorToast = $A.get("e.force:showToast");
@@ -118,6 +119,8 @@
         component.set("v.ShowTimeField", true);
         component.set("v.ShowToast", false);
         component.set("v.ShowTable", true);
+        component.set("v.AppStatus", "Scheduled");
+        component.set("v.activeTabId", "badge");
         var successToast = $A.get("e.force:showToast");
         successToast.setParams({
             title: "Success!",
@@ -341,15 +344,38 @@
                     completeAction.setCallback(this, function(response){
                         helper.hideSpinner(component);
                         if(response.getState() === "SUCCESS"){
-                            var successToast = $A.get("e.force:showToast");
-                            successToast.setParams({
-                                title: "Success!",
-                                mode:"pester",
-                                message: "Appointment marked as completed.",
-                                type:"success"
+                            var completionMailAction = component.get("c.sendAppointmentCompletion");
+                            completionMailAction.setParams({
+                                serviceAppointmentId: SAId
                             });
-                            successToast.fire();
-                            helper.refreshCurrentView(component, event, helper);
+                            completionMailAction.setCallback(this, function(mailResponse){
+                                var successToast = $A.get("e.force:showToast");
+                                if(mailResponse.getState() === "SUCCESS"){
+                                    successToast.setParams({
+                                        title: "Success!",
+                                        mode:"pester",
+                                        message: "Appointment marked as completed and completion email sent to the patient.",
+                                        type:"success"
+                                    });
+                                } else {
+                                    var completionErrors = mailResponse.getError();
+                                    var completionMessage = "Appointment marked as completed, but the completion email could not be sent.";
+                                    if (completionErrors && completionErrors[0] && completionErrors[0].message) {
+                                        completionMessage += " " + completionErrors[0].message;
+                                    }
+                                    successToast.setParams({
+                                        title: "Warning",
+                                        mode:"dismissible",
+                                        message: completionMessage,
+                                        type:"warning"
+                                    });
+                                }
+                                successToast.fire();
+                                component.set("v.AppStatus", "Completed");
+                                component.set("v.activeTabId", "complete");
+                                helper.refreshCurrentView(component, event, helper);
+                            });
+                            $A.enqueueAction(completionMailAction);
                         } else {
                             var completeErrors = response.getError();
                             var completeMessage = 'Could not update appointment status.';

@@ -16,7 +16,7 @@
             { label: 'Facility', fieldName: 'Department',type:'text',hideDefaultActions: true},
             { label: 'Practitioner', fieldName: 'Provider',type:'text',hideDefaultActions: true},
             { label: 'Visit Type', fieldName: 'VisitType',hideDefaultActions: true},
-            { label: 'Status', fieldName: 'Status',hideDefaultActions: true},
+            { label: 'Status', fieldName: 'Status',hideDefaultActions: true, cellAttributes: { class: { fieldName: 'StatusClass' } }},
             {type: 'action', typeAttributes: { rowActions: actions } }
         ]);
     },
@@ -105,6 +105,7 @@
         component.set("v.ShowTable",true);
         var status='Scheduled';
         component.set("v.AppStatus",status);
+        component.set("v.activeTabId","badge");
         this.getTableData(component, event, helper);
         }
         else{
@@ -114,8 +115,6 @@
     },
     
     getTableData :  function(component, event, helper){
-        const mapAcc = new Map();
-        const mapStatus =new Map();
         this.showSpinner(component, event, helper);
         let baseUrlOfOrg= 'https://'+location.host+'/';
         var stat=component.get("v.AppStatus");
@@ -130,33 +129,9 @@
             if(state === "SUCCESS"){
                 var result=response.getReturnValue();
                 if(result.length > 0){
-                this.hideSpinner(component, event, helper);
-                for (var i = 0; i < result.length; i++) { 
-                    var row = result[i];  
-                    var jrows = row.HealthcarePractitionerFacility;
-                    row.Provider = jrows.Practitioner.Name;  
-                    row.Department = jrows.Account.Name;
-                    var Appointmentrows=row.ServiceAppointment;
-                    row.PatientName = Appointmentrows.Account ? Appointmentrows.Account.Name : '';
-                    row.SchedStartTime =$A.localizationService.formatDate(Appointmentrows.SchedStartTime, "MM/dd/yyyy, hh:mm a");
-                    row.Status = Appointmentrows.Status;
-                    row.AppointmentUrl =baseUrlOfOrg+Appointmentrows.Id;
-                    row.AppointmentNumber =Appointmentrows.AppointmentNumber;
-                    if(Appointmentrows.WorkType.Name){
-                        row.VisitType = Appointmentrows.WorkType.Name;
-                    }
-                    mapAcc.set(row.Id, Appointmentrows.Id);
-                    mapStatus.set(row.Id, Appointmentrows.Status);
-                }
-                component.set("v.AppointmentId",mapAcc);
-                component.set("v.AppointmentStatus",mapStatus);
-                component.set('v.allData', result);
-                component.set('v.showtabledata', true);
-                component.set('v.filteredData', result);
-                if(component.get('v.filteredData').length == 0){
-                    component.set('v.checkValue','false');
-                }
-                this.preparePagination(component, result);
+                    this.hideSpinner(component, event, helper);
+                    result = this.decorateAppointmentRows(result, baseUrlOfOrg);
+                    this.applyAppointmentRows(component, result);
                 }
                 else if(result.length == 0){
                     this.clearTableState(component);
@@ -184,28 +159,6 @@
             $A.util.addClass(lookUpTarget, 'slds-hide');
             $A.util.removeClass(lookUpTarget, 'slds-show');
         }
-    },
-    
-    preparePagination: function (component, imagesRecords) {
-        let countTotalPage = Math.ceil(imagesRecords.length/component.get("v.pageSize"));
-        let totalPage = countTotalPage > 0 ? countTotalPage : 1;
-        component.set("v.totalPages", totalPage);
-        component.set("v.currentPageNumber", 1);
-        this.setPageDataAsPerPagination(component);
-    },
-    
-    setPageDataAsPerPagination: function(component) {
-        let data = [];
-        let pageNumber = component.get("v.currentPageNumber");
-        let pageSize = component.get("v.pageSize");
-        let filteredData = component.get('v.filteredData');
-        let x = (pageNumber - 1) * pageSize;
-        for (; x < (pageNumber) * pageSize; x++){
-            if (filteredData[x]) {
-                data.push(filteredData[x]);
-            }
-        }
-        component.set("v.tableData", data);
     },
     
     showSpinner: function (component, event, helper) {
@@ -293,28 +246,8 @@
                     this.hideSpinner(component,event, helper);
                     var result=response.getReturnValue();
                     if(result.length > 0){
-                    for (var i = 0; i < result.length; i++) { 
-                        var row = result[i];  
-                        var jrows = row.HealthcarePractitionerFacility;
-                        row.Provider = jrows.Practitioner.Name;  
-                        row.Department = jrows.Account.Name;
-                        var Appointmentrows=row.ServiceAppointment;
-                        row.PatientName = Appointmentrows.Account ? Appointmentrows.Account.Name : '';
-                        row.SchedStartTime =$A.localizationService.formatDate(Appointmentrows.SchedStartTime, "MM/dd/yyyy, hh:mm a");
-                        row.Status = Appointmentrows.Status;
-                        row.AppointmentUrl =baseUrlOfOrg+Appointmentrows.Id;
-                        row.AppointmentNumber =Appointmentrows.AppointmentNumber;
-                        if(Appointmentrows.WorkType.Name){
-                            row.VisitType = Appointmentrows.WorkType.Name;
-                        }
-                    }
-                    component.set('v.allData', result);
-                        component.set('v.showtabledata', true);
-                    component.set('v.filteredData', result);
-                    if(component.get('v.filteredData').length == 0){
-                        component.set('v.checkValue','false');
-                    }
-                    this.preparePagination(component, result);
+                        result = this.decorateAppointmentRows(result, baseUrlOfOrg);
+                        this.applyAppointmentRows(component, result);
                     }
                     else if(result.length == 0){
                         this.clearTableState(component);
@@ -334,6 +267,7 @@
         var tab = event.getSource();
         switch (tab.get('v.id')) {
             case 'badge' :
+                component.set("v.activeTabId","badge");
                 var time=component.get("v.DateTime");
                 if(time==null){
                     var status='Scheduled';
@@ -348,6 +282,7 @@
                 break;
                 
             case 'cancel' :
+                component.set("v.activeTabId","cancel");
                 var time=component.get("v.DateTime");
                 if(time==null){
                     var status='Canceled';
@@ -362,6 +297,7 @@
                 break;
                 
                 case 'complete' :
+                component.set("v.activeTabId","complete");
                 var time=component.get("v.DateTime");
                 if(time==null){
                     var status='Completed';
@@ -376,6 +312,54 @@
                 break;
         }
     },
+
+    decorateAppointmentRows: function(result, baseUrlOfOrg) {
+        const mapAcc = new Map();
+        const mapStatus = new Map();
+
+        for (var i = 0; i < result.length; i++) {
+            var row = result[i];
+            var facilityRow = row.HealthcarePractitionerFacility;
+            var appointmentRow = row.ServiceAppointment;
+            row.Provider = facilityRow && facilityRow.Practitioner ? facilityRow.Practitioner.Name : '';
+            row.Department = facilityRow && facilityRow.Account ? facilityRow.Account.Name : '';
+            row.PatientName = appointmentRow.Account ? appointmentRow.Account.Name : '';
+            row.SchedStartTime = $A.localizationService.formatDate(appointmentRow.SchedStartTime, "MM/dd/yyyy, hh:mm a");
+            row.Status = appointmentRow.Status;
+            row.StatusClass = this.getStatusCellClass(appointmentRow.Status);
+            row.AppointmentUrl = baseUrlOfOrg + appointmentRow.Id;
+            row.AppointmentNumber = appointmentRow.AppointmentNumber;
+            row.VisitType = appointmentRow.WorkType && appointmentRow.WorkType.Name ? appointmentRow.WorkType.Name : '';
+            mapAcc.set(row.Id, appointmentRow.Id);
+            mapStatus.set(row.Id, appointmentRow.Status);
+        }
+
+        return {
+            rows: result,
+            appointmentIds: mapAcc,
+            appointmentStatuses: mapStatus
+        };
+    },
+
+    applyAppointmentRows: function(component, decoratedResult) {
+        component.set("v.AppointmentId", decoratedResult.appointmentIds);
+        component.set("v.AppointmentStatus", decoratedResult.appointmentStatuses);
+        component.set("v.showtabledata", true);
+        component.set("v.filteredData", decoratedResult.rows);
+        component.set("v.checkValue", decoratedResult.rows.length === 0 ? 'false' : 'true');
+        this.preparePagination(component, decoratedResult.rows);
+    },
+
+    getStatusCellClass: function(status) {
+        switch (status) {
+            case 'Completed':
+                return 'statusPill statusCompleted';
+            case 'Canceled':
+                return 'statusPill statusCanceled';
+            default:
+                return 'statusPill statusScheduled';
+        }
+    },
     
     preparePagination: function (component, imagesRecords) {
         let countTotalPage = Math.ceil(imagesRecords.length/component.get("v.pageSize"));
@@ -384,7 +368,7 @@
         component.set("v.currentPageNumber", 1);
         this.setPageDataAsPerPagination(component);
     },
-    
+
     setPageDataAsPerPagination: function(component) {
         let data = [];
         let pageNumber = component.get("v.currentPageNumber");

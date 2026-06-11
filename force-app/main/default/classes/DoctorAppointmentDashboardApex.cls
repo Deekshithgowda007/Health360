@@ -123,6 +123,11 @@ public with sharing class DoctorAppointmentDashboardApex {
     }
 
     @AuraEnabled
+    public static DoctorAppointmentController.AppointmentReminderResult sendAppointmentCompletion(String serviceAppointmentId) {
+        return DoctorAppointmentController.sendAppointmentCompletion(serviceAppointmentId);
+    }
+
+    @AuraEnabled
     public static ClinicalUpdateResult saveClinicalUpdate(
         String serviceAppointmentId,
         String clinicalPayloadJson
@@ -291,24 +296,44 @@ public with sharing class DoctorAppointmentDashboardApex {
     public static List<CarePractnFacilityAppt> fetchContact(String conId,String status){
         List<CarePractnFacilityAppt>  createfac=new List<CarePractnFacilityAppt>();
         if(conId !=null && status !=null){
-         createfac =[
-             select HealthcarePractitionerFacility.Account.Name,
-                    HealthcarePractitionerFacility.Practitioner.Name,
-                    ServiceAppointment.Account.Name,
-                    ServiceAppointment.AppointmentNumber,
-                    ServiceAppointmentId,
-                    ServiceAppointment.Status,
-                    ServiceAppointment.DueDate,
-                    ServiceAppointment.WorkType.name,
-                    ServiceAppointment.SchedStartTime
-             from CarePractnFacilityAppt
-             where HealthcarePractitionerFacility.PractitionerId =:conId
-             AND ServiceAppointment.Status=:status
-             WITH SECURITY_ENFORCED
-             ORDER BY ServiceAppointment.SchedStartTime DESC
-         ];
-    }
-            return createfac;
+            if (status == 'Completed') {
+                createfac =[
+                    select HealthcarePractitionerFacility.Account.Name,
+                           HealthcarePractitionerFacility.Practitioner.Name,
+                           ServiceAppointment.Account.Name,
+                           ServiceAppointment.AppointmentNumber,
+                           ServiceAppointmentId,
+                           ServiceAppointment.Status,
+                           ServiceAppointment.DueDate,
+                           ServiceAppointment.WorkType.name,
+                           ServiceAppointment.SchedStartTime,
+                           ServiceAppointment.LastModifiedDate
+                    from CarePractnFacilityAppt
+                    where HealthcarePractitionerFacility.PractitionerId =:conId
+                    AND ServiceAppointment.Status=:status
+                    WITH SECURITY_ENFORCED
+                    ORDER BY ServiceAppointment.LastModifiedDate DESC, ServiceAppointment.SchedStartTime DESC
+                ];
+            } else {
+                createfac =[
+                    select HealthcarePractitionerFacility.Account.Name,
+                           HealthcarePractitionerFacility.Practitioner.Name,
+                           ServiceAppointment.Account.Name,
+                           ServiceAppointment.AppointmentNumber,
+                           ServiceAppointmentId,
+                           ServiceAppointment.Status,
+                           ServiceAppointment.DueDate,
+                           ServiceAppointment.WorkType.name,
+                           ServiceAppointment.SchedStartTime
+                    from CarePractnFacilityAppt
+                    where HealthcarePractitionerFacility.PractitionerId =:conId
+                    AND ServiceAppointment.Status=:status
+                    WITH SECURITY_ENFORCED
+                    ORDER BY ServiceAppointment.SchedStartTime DESC
+                ];
+            }
+        }
+        return createfac;
     }
     
    @AuraEnabled
@@ -360,24 +385,46 @@ public with sharing class DoctorAppointmentDashboardApex {
         DateTime endTime=selectedDate.addHours(23);
         List<CarePractnFacilityAppt> createfaces=new List<CarePractnFacilityAppt>();
         try{
-         createfaces =[
-             select HealthcarePractitionerFacility.Account.Name,
-                    HealthcarePractitionerFacility.Practitioner.Name,
-                    ServiceAppointment.Account.Name,
-                    ServiceAppointment.AppointmentNumber,
-                    ServiceAppointmentId,
-                    ServiceAppointment.SchedStartTime,
-                    ServiceAppointment.Status,
-                    ServiceAppointment.DueDate,
-                    ServiceAppointment.WorkType.name
-             from CarePractnFacilityAppt
-             WHERE HealthcarePractitionerFacility.PractitionerId=:selectedCon
-             AND ServiceAppointment.SchedStartTime>=:selectedDate
-             AND ServiceAppointment.SchedEndTime<=:endTime
-             AND ServiceAppointment.Status=:status
-             WITH SECURITY_ENFORCED
-             ORDER BY ServiceAppointment.SchedStartTime DESC
-         ];
+            if (status == 'Completed') {
+                createfaces =[
+                    select HealthcarePractitionerFacility.Account.Name,
+                           HealthcarePractitionerFacility.Practitioner.Name,
+                           ServiceAppointment.Account.Name,
+                           ServiceAppointment.AppointmentNumber,
+                           ServiceAppointmentId,
+                           ServiceAppointment.SchedStartTime,
+                           ServiceAppointment.Status,
+                           ServiceAppointment.DueDate,
+                           ServiceAppointment.WorkType.name,
+                           ServiceAppointment.LastModifiedDate
+                    from CarePractnFacilityAppt
+                    WHERE HealthcarePractitionerFacility.PractitionerId=:selectedCon
+                    AND ServiceAppointment.SchedStartTime>=:selectedDate
+                    AND ServiceAppointment.SchedEndTime<=:endTime
+                    AND ServiceAppointment.Status=:status
+                    WITH SECURITY_ENFORCED
+                    ORDER BY ServiceAppointment.LastModifiedDate DESC, ServiceAppointment.SchedStartTime DESC
+                ];
+            } else {
+                createfaces =[
+                    select HealthcarePractitionerFacility.Account.Name,
+                           HealthcarePractitionerFacility.Practitioner.Name,
+                           ServiceAppointment.Account.Name,
+                           ServiceAppointment.AppointmentNumber,
+                           ServiceAppointmentId,
+                           ServiceAppointment.SchedStartTime,
+                           ServiceAppointment.Status,
+                           ServiceAppointment.DueDate,
+                           ServiceAppointment.WorkType.name
+                    from CarePractnFacilityAppt
+                    WHERE HealthcarePractitionerFacility.PractitionerId=:selectedCon
+                    AND ServiceAppointment.SchedStartTime>=:selectedDate
+                    AND ServiceAppointment.SchedEndTime<=:endTime
+                    AND ServiceAppointment.Status=:status
+                    WITH SECURITY_ENFORCED
+                    ORDER BY ServiceAppointment.SchedStartTime DESC
+                ];
+            }
         }
          catch(Exception e){
              System.debug('Exception>>'+ e);

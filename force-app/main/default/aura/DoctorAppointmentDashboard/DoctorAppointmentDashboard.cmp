@@ -31,6 +31,7 @@
     <aura:attribute name="showtabledata" type="boolean" default="false"/>
     <aura:attribute name="selectedLeads" type="List"/>
     <aura:attribute name="DateTime" type="DateTime"/>
+    <aura:attribute name="activeTabId" type="String" default="badge"/>
     <aura:attribute name="doctorResolved" type="Boolean" default="false"/>
     <aura:attribute name="doctorName" type="String"/>
     <aura:attribute name="doctorEmail" type="String"/>
@@ -58,17 +59,22 @@
     <ltng:require scripts="{!$Resource.jsOTP}" afterScriptsLoaded="{!c.afterLoad}" />
     
     <aura:if isTrue="{!v.Homepopup}">
-        <lightning:card>
+        <div class="dashboardShell">
+        <lightning:card class="dashboardShellCard">
             
             <aura:if isTrue="{!v.showmyspinner}">
                 <div class="outerBox spinner">
                     <lightning:spinner aura:id="mySpinner" variant="brand" size="medium" class='slds=hide'/>
                 </div>
             </aura:if>
-            <div class="slds-align_absolute-center fontsize">
-                <h1><b>{!$Label.c.Practitioner_Appointment_DashBoard}</b></h1>
+            <div class="dashboardHero fontsize">
+                <div class="dashboardHeroInner">
+                    <p class="dashboardEyebrow">Doctor workspace</p>
+                    <h1><b>{!$Label.c.Practitioner_Appointment_DashBoard}</b></h1>
+                    <p class="dashboardSubtitle">Review appointments, update clinical notes, and close visits with a clean production workflow.</p>
+                </div>
             </div>
-            <div class="slds-m-around_large">
+            <div class="dashboardIntroCard slds-m-around_large">
                 <aura:if isTrue="{!v.doctorResolved}">
                     <div class="slds-align_absolute-center">
                         <h3><b>Signed in as {!v.doctorName}</b></h3>
@@ -84,7 +90,7 @@
                     <div class="slds-align_absolute-center slds-m-top_medium">
                         <aura:if isTrue="{!and(v.doctorResolved, not(v.doctorAuthenticated))}">
                             <aura:if isTrue="{!v.doctorOtpSent}">
-                                <div style="width:320px;">
+                                <div class="dashboardAuthPanel">
                                     <lightning:input type="text" label="Enter OTP" value="{!v.doctorOtpInput}" maxlength="6"/>
                                     <div class="slds-m-top_medium slds-align_absolute-center">
                                         <lightning:button variant="neutral" label="Resend OTP" onclick="{!c.sendDoctorOtp}" class="slds-m-right_small"/>
@@ -105,7 +111,7 @@
                             <p>Enter your registered doctor email to receive OTP.</p>
                         </div>
                         <div class="slds-align_absolute-center slds-m-top_medium">
-                            <div style="width:320px;">
+                            <div class="dashboardAuthPanel">
                                 <lightning:input type="email" label="Doctor Email" value="{!v.doctorLoginEmail}"/>
                                 <div class="slds-m-top_medium slds-align_absolute-center">
                                     <lightning:button variant="brand" label="Send OTP" onclick="{!c.lookupDoctorByEmail}"/>
@@ -116,16 +122,16 @@
                 </aura:if>
                 <br/> 
             </div>
-            <lightning:card>                               
+            <lightning:card class="dashboardTableShell">                               
                 <aura:if isTrue="{!v.ShowToast}">
-                    <div class="slds-align_absolute-center" > 
+                    <div class="slds-align_absolute-center dashboardInfoBanner" > 
                         <h5><b>Verify doctor OTP to open your appointment dashboard.</b></h5>
                     </div>
                 </aura:if>
                 <aura:if isTrue="{!and(v.ShowTable, v.doctorAuthenticated)}">
-                    <div class="slds-grid slds-p-top_low">
+                    <div class="slds-grid slds-p-top_low dashboardFilterBar">
                         <aura:if isTrue="{!v.ShowTimeField}">
-                            <div class="slds-size_3-of-10 slds-p-left_xx-small slds-p-horizontal_x-large " >
+                            <div class="slds-size_3-of-10 slds-p-left_xx-small slds-p-horizontal_x-large dashboardFilterControl" >
                                 <lightning:select
                                                   label="{!$Label.c.Number_of_records_on_page}"
                                                   value="{!v.pageSize }"
@@ -135,19 +141,20 @@
                                     </aura:iteration>
                                 </lightning:select>
                             </div>
-                            <div class="slds-size_3-of-10 slds-p-left_xx-small slds-p-horizontal_x-large " >
+                            <div class="slds-size_3-of-10 slds-p-left_xx-small slds-p-horizontal_x-large dashboardFilterControl" >
                                 <lightning:input type="date" name="input1" label="{!$Label.c.Enter_a_date}" aura:id="DateChange" onchange="{!c.onPageDateChange}"/>
                             </div>
                         </aura:if>
                         <aura:if isTrue="{!v.ButtonShow}">
-                            <div class="buttonLeft">
-                                <lightning:button variant="brand" label="Cancel Appointment" title="Brand action" onclick="{!c.handleConfirmDialog }" class="slds-m-bottom_large"/>
+                            <div class="buttonLeft dashboardActionSlot">
+                                <lightning:button variant="brand" label="Cancel Appointment" title="Brand action" onclick="{!c.handleConfirmDialog }" class="dashboardPrimaryButton slds-m-bottom_large"/>
                             </div>
                         </aura:if>
                     </div>    
                     <br/>
-                    <lightning:tabset variant="scoped">
+                    <lightning:tabset variant="scoped" selectedTabId="{!v.activeTabId}" class="dashboardTabset">
                         <lightning:tab onactive="{! c.handleActive }" label="{!$Label.c.Scheduled_Appointments}" id="badge">
+                            <div class="dashboardTablePanel">
                             <aura:if isTrue="{!v.showtabledata}">
                             <lightning:datatable
                                                  aura:id="table"
@@ -159,16 +166,18 @@
                                                  onrowselection="{! c.updateSelectedText}"
                                                  onrowaction="{! c.handleAction }"/>
                              <aura:set attribute="else">
-                                  <center>
+                                  <center class="dashboardEmptyState">
                                       ...NO SCHEDULED APPOINTMENTS FOUND...
                                  </center>
                                      </aura:set>
                             </aura:if>
+                            </div>
                             
                         </lightning:tab>
                         
                         <lightning:tab onactive="{! c.handlecancel }" label="{!$Label.c.Canceled_Appointments}" id="cancel">
-                              <aura:if isTrue="{!v.showtabledata}">
+                            <div class="dashboardTablePanel">
+                            <aura:if isTrue="{!v.showtabledata}">
                             <lightning:datatable
                                                  aura:id="table"
                                                  columns="{! v.columns }"
@@ -176,18 +185,20 @@
                                                  hideCheckboxColumn="false"
                                                  keyField="Id" 
                                                  showRowNumberColumn="true"
-                                                 onrowselection="{! c.updateSelectedText}"
+                                  onrowselection="{! c.updateSelectedText}"
                                                  onrowaction="{! c.handleAction }"/>
                                   <aura:set attribute="else">
-                                  <center>
+                                  <center class="dashboardEmptyState">
                                       ...NO CANCELED APPOINTMENTS FOUND...
                                  </center>
                                      </aura:set>
                             </aura:if>
+                            </div>
                         </lightning:tab>
                         
                         <lightning:tab onactive="{! c.handlecompleted }" label="{!$Label.c.Completed_Appointments}" id="complete">
-                              <aura:if isTrue="{!v.showtabledata}">
+                            <div class="dashboardTablePanel">
+                            <aura:if isTrue="{!v.showtabledata}">
                             <lightning:datatable
                                                  aura:id="table"
                                                  columns="{! v.columns }"
@@ -198,11 +209,12 @@
                                                  onrowselection="{! c.updateSelectedText}"
                                                  onrowaction="{! c.handleAction }"/>
                             <aura:set attribute="else">
-                                  <center>
+                                  <center class="dashboardEmptyState">
                                       ...NO COMPLETED APPOINTMENTS FOUND...
                                  </center>
                                      </aura:set>
                             </aura:if>
+                            </div>
                         </lightning:tab>
                     </lightning:tabset>
                     <br/>
@@ -228,6 +240,7 @@
                 </aura:if>
             </lightning:card>
         </lightning:card>
+        </div>
     </aura:if>
     
     <aura:if isTrue="{!v.FlowPopup}">
