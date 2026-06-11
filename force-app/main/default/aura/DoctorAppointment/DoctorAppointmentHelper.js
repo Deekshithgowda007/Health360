@@ -1,4 +1,63 @@
 ({
+    persistPortalSession : function(component, currentView) {
+        try {
+            sessionStorage.setItem('doctorPortalSession', JSON.stringify({
+                portalAuthenticated: component.get("v.portalAuthenticated"),
+                portalPatientLabel: component.get("v.portalPatientLabel") || '',
+                patientId: component.get("v.PatientId") || '',
+                portalEntryIdentifier: component.get("v.portalEntryIdentifier") || '',
+                currentView: currentView || 'search'
+            }));
+        } catch (e) {
+        }
+    },
+
+    restorePortalSession : function(component, event, helper) {
+        try {
+            var storedSession = sessionStorage.getItem('doctorPortalSession');
+            if (!storedSession) {
+                return;
+            }
+
+            var sessionState = JSON.parse(storedSession);
+            if (!sessionState || !sessionState.portalAuthenticated) {
+                return;
+            }
+
+            component.set("v.portalAuthenticated", true);
+            component.set("v.portalPatientLabel", sessionState.portalPatientLabel || '');
+            component.set("v.portalEntryIdentifier", sessionState.portalEntryIdentifier || '');
+            component.set("v.guestUserForLoginOrSignUp", false);
+            component.set("v.isNextModalForSignUp", false);
+            component.set("v.isNextModalsForLogin", true);
+            component.set("v.FlowPopup", false);
+            component.set("v.MyAppointments", true);
+
+            if (sessionState.patientId) {
+                component.set("v.PatientId", sessionState.patientId);
+            }
+
+            if (sessionState.currentView === 'profile') {
+                component.set("v.showBookAppointment", false);
+                component.set("v.showrecords", false);
+                component.set("v.showPeronAccountAppointment", true);
+            } else {
+                component.set("v.showBookAppointment", true);
+                component.set("v.showrecords", false);
+                component.set("v.showPeronAccountAppointment", false);
+            }
+        } catch (e) {
+            this.clearPortalSession();
+        }
+    },
+
+    clearPortalSession : function() {
+        try {
+            sessionStorage.removeItem('doctorPortalSession');
+        } catch (e) {
+        }
+    },
+
     getSelectedPortalLocationLabel : function(component) {
         var selectedLocationId = component.get("v.selectedLocationId");
         if (!selectedLocationId) {
