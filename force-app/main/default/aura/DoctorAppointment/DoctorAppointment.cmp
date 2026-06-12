@@ -305,8 +305,6 @@
     <aura:attribute name="portalPatientLabel" type="String" default="" />
     <aura:attribute name="portalEntryIdentifier" type="String" default="" />
     <aura:attribute name="portalOtpInput" type="String" default="" />
-    <aura:attribute name="portalPassword" type="String" default="" />
-    <aura:attribute name="portalConfirmPassword" type="String" default="" />
     
     
     <aura:if isTrue="{!v.LeadFormComponent}">
@@ -355,12 +353,6 @@
                             <lightning:layoutItem size="12" mediumDeviceSize="6" largeDeviceSize="6" padding="around-small" class="portalRegistrationField">
                                 <lightning:input aura:id="Lead" label="Phone" type="phone" value="{!v.newLead.Phone}" required="true" maxlength="10" minlength="10" pattern="[0-9]*"/>
                             </lightning:layoutItem>
-                            <lightning:layoutItem size="12" mediumDeviceSize="6" largeDeviceSize="6" padding="around-small" class="portalRegistrationField">
-                                <lightning:input label="Password" type="password" value="{!v.portalPassword}" required="true"/>
-                            </lightning:layoutItem>
-                            <lightning:layoutItem size="12" mediumDeviceSize="6" largeDeviceSize="6" padding="around-small" class="portalRegistrationField">
-                                <lightning:input label="Confirm Password" type="password" value="{!v.portalConfirmPassword}" required="true"/>
-                            </lightning:layoutItem>
                             <lightning:layoutItem size="12" mediumDeviceSize="12" largeDeviceSize="12" padding="around-small" class="portalRegistrationField">
                                 <lightning:input aura:id="Lead" label="Street" type="text" value="{!v.newLead.Street}" required="true"/>
                             </lightning:layoutItem>
@@ -377,7 +369,6 @@
                                 <lightning:input aura:id="Lead" label="Country" type="text" value="{!v.newLead.Country}" required="true" pattern="[a-zA-Z ]*"/>
                             </lightning:layoutItem>
                         </lightning:layout>
-                        <p class="portalPasswordNote slds-p-horizontal_small">Email OTP verification is used for patient login in this portal. The password is validated on this form now, but secure password-based sign-in needs Experience Cloud or a dedicated auth service to store credentials safely.</p>
                         <div class="portalStandaloneActions slds-m-top_medium">
                             <lightning:button label="Back" variant="neutral" onclick="{!c.handleCancelFirstLead}" class="portalAuthActionButton" />
                             <lightning:button label="Create Account" variant="brand" onclick="{!c.handleCreateContactForLoginOrSignUp}" class="portalAuthActionButton" />

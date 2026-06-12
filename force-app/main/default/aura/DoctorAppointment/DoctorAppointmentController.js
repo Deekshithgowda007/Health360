@@ -89,8 +89,6 @@
         component.set("v.showBookAppointment", true);
         component.set("v.portalEntryIdentifier", "");
         component.set("v.portalOtpInput", "");
-        component.set("v.portalPassword", "");
-        component.set("v.portalConfirmPassword", "");
         component.set("v.guestUserForLoginOrSignUp", false);
         component.set("v.isNextModalForSignUp", false);
         component.set("v.isNextModalsForLogin", true);
@@ -119,8 +117,6 @@
         component.set("v.guestUserForLoginOrSignUp",false);
         component.set("v.showBookAppointment",true);
         component.set("v.portalOtpInput", "");
-        component.set("v.portalPassword", "");
-        component.set("v.portalConfirmPassword", "");
     },
     
     handleCancelforSecondLeadPage:function(component, event, helper){
@@ -2575,8 +2571,6 @@ if(sectionState == -1){
     handleCreateContactForLoginOrSignUp : function(component, event,helper) {
         try {
             var getLeadValue = component.get("v.newLead") || {};
-            var portalPassword = component.get("v.portalPassword");
-            var portalConfirmPassword = component.get("v.portalConfirmPassword");
 
             if (!/^[a-zA-Z ]*$/.test(getLeadValue.FirstName || '')) {
                 var firstNameToast = $A.get("e.force:showToast");
@@ -2662,48 +2656,6 @@ if(sectionState == -1){
                 return;
             }
 
-            if (!portalPassword) {
-                var passwordToast = $A.get("e.force:showToast");
-                passwordToast.setParams({
-                    title :$A.get("$Label.c.Error"),
-                    message:'Please enter a password.',
-                    duration:' 3000',
-                    key: 'info_alt',
-                    type: 'error',
-                    mode: 'pester'
-                });
-                passwordToast.fire();
-                return;
-            }
-
-            if (portalPassword.length < 8) {
-                var passwordLengthToast = $A.get("e.force:showToast");
-                passwordLengthToast.setParams({
-                    title :$A.get("$Label.c.Error"),
-                    message:'Password must contain at least 8 characters.',
-                    duration:' 3000',
-                    key: 'info_alt',
-                    type: 'error',
-                    mode: 'pester'
-                });
-                passwordLengthToast.fire();
-                return;
-            }
-
-            if (portalPassword !== portalConfirmPassword) {
-                var passwordMatchToast = $A.get("e.force:showToast");
-                passwordMatchToast.setParams({
-                    title :$A.get("$Label.c.Error"),
-                    message:'Password and confirm password must match.',
-                    duration:' 3000',
-                    key: 'info_alt',
-                    type: 'error',
-                    mode: 'pester'
-                });
-                passwordMatchToast.fire();
-                return;
-            }
-
             var leadInputs = component.find('Lead');
             if (!Array.isArray(leadInputs)) {
                 leadInputs = leadInputs ? [leadInputs] : [];
@@ -2768,8 +2720,6 @@ if(sectionState == -1){
                             component.set('v.showverifybotton',true);
                             component.set('v.showconfirmbotton',false);
                             component.set('v.portalOtpInput', '');
-                            component.set('v.portalPassword', '');
-                            component.set('v.portalConfirmPassword', '');
                             var successToast = $A.get("e.force:showToast");
                             successToast.setParams({
                                 title :$A.get("$Label.c.Success"),
